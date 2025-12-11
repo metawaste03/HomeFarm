@@ -1,0 +1,15 @@
+{
+  "short_name": "HomeFarm",
+  "name": "HomeFarm: Farm Management",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "type": "image/svg+xml",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#84cc16",
+  "background_color": "#ffffff"
+}
