@@ -16,6 +16,7 @@ export type Batch = {
     age: string;
     sector: Sector;
     scheduleId?: string;
+    stockCost?: number;
 };
 
 export type HealthScheduleTemplate = {
@@ -48,9 +49,9 @@ interface BatchManagementScreenProps {
 const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigate, isModalOpen, setIsModalOpen, farms, batches, onSaveBatch, onDeleteBatch, activeSector }) => {
     const [selectedFarm, setSelectedFarm] = useState("All Farms");
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-    
+
     const [currentUserRole] = useState<Role>('Owner');
-    
+
     const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
     const [deletingBatch, setDeletingBatch] = useState<Batch | null>(null);
 
@@ -66,7 +67,7 @@ const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigat
         onSaveBatch(batchToSave);
         closeForms();
     };
-    
+
     const handleConfirmDelete = () => {
         if (!deletingBatch) return;
         onDeleteBatch(deletingBatch.id);
@@ -102,8 +103,8 @@ const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigat
             </header>
 
             <div className="p-4 space-y-6">
-                 {/* Explicit Button for Desktop/Fallback - This ensures users always have a way to add a batch */}
-                 <button 
+                {/* Explicit Button for Desktop/Fallback - This ensures users always have a way to add a batch */}
+                <button
                     onClick={() => setIsModalOpen(true)}
                     className="w-full bg-primary text-white font-bold py-3 px-4 rounded-xl text-lg flex items-center justify-center gap-2 hover:bg-primary-600 active:bg-primary-700 transition-colors"
                 >
@@ -215,12 +216,12 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
     const [feedBrand, setFeedBrand] = useState('');
     const [feedQuantity, setFeedQuantity] = useState<number>(0);
     const [scheduleId, setScheduleId] = useState<string>(batchToEdit?.scheduleId || '');
-    
+
     useEffect(() => {
         if (!isEditing) {
-             setSector(activeSector);
-             // Reset schedule when switching context if not editing
-             setScheduleId(''); 
+            setSector(activeSector);
+            // Reset schedule when switching context if not editing
+            setScheduleId('');
         }
     }, [activeSector, isEditing]);
 
@@ -239,21 +240,22 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
         e.preventDefault();
         if (!sector || !name || stockCount <= 0) { alert("Please fill in all required fields: Sector, Name, and Number of Stock."); return; }
         if (!isEditing && stockCost <= 0) { alert("Please fill in the Total Cost of Stock."); return; }
-        onSave({ 
-            name, 
-            farm: batchToEdit?.farm || selectedFarm, 
-            sector, 
-            stockCount, 
-            status: batchToEdit?.status || 'Active', 
+        onSave({
+            name,
+            farm: batchToEdit?.farm || selectedFarm,
+            sector,
+            stockCount,
+            status: batchToEdit?.status || 'Active',
             age: stockAge || batchToEdit?.age || '1 day',
-            scheduleId: scheduleId || undefined
+            scheduleId: scheduleId || undefined,
+            stockCost: stockCost > 0 ? stockCost : undefined
         }, batchToEdit?.id);
     };
 
     const availableSchedules = MOCK_SCHEDULES.filter(s => s.sector === sector);
 
     const SectorCard: React.FC<{ value: Sector; label: string; icon: React.ReactNode }> = ({ value, label, icon }) => (
-        <button type="button" onClick={() => setSector(value)} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl w-full transition-all ${ sector === value ? 'border-primary bg-green-50 dark:bg-green-900/20 shadow-md' : 'border-border bg-card hover:border-gray-400 dark:hover:border-gray-500' }`}>
+        <button type="button" onClick={() => setSector(value)} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl w-full transition-all ${sector === value ? 'border-primary bg-green-50 dark:bg-green-900/20 shadow-md' : 'border-border bg-card hover:border-gray-400 dark:hover:border-gray-500'}`}>
             <div className={`mb-2 ${sector === value ? 'text-primary' : 'text-text-secondary'}`}>{icon}</div>
             <span className={`font-semibold ${sector === value ? 'text-primary' : 'text-text-primary'}`}>{label}</span>
         </button>
@@ -277,14 +279,14 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                             <label className="block text-sm font-semibold text-text-secondary mb-2">2. Batch Details *</label>
                             <div className="space-y-3">
                                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch - Nov 17, 2025)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
-                                {!isEditing && ( <div> <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label> <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" /> </div> )}
+                                {!isEditing && (<div> <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label> <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" /> </div>)}
                             </div>
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-text-secondary mb-2">3. Initial Stock *</label>
                             <div className="space-y-3">
                                 <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
-                                {!isEditing && ( <> <div className="relative"> <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span> <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required /> </div> <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age of ${sector === 'Fish' ? 'Fish (e.g., Fingerlings)' : 'Birds (e.g., Day-Old)'}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" /> </> )}
+                                {!isEditing && (<> <div className="relative"> <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span> <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required /> </div> <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age of ${sector === 'Fish' ? 'Fish (e.g., Fingerlings)' : 'Birds (e.g., Day-Old)'}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" /> </>)}
                             </div>
                         </div>
                         {!isEditing && (
