@@ -44,6 +44,7 @@ const MOCK_BATCHES_DATA: Batch[] = [
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
@@ -65,14 +66,16 @@ const App: React.FC = () => {
       if (currentUser) {
         try {
           await currentUser.reload();
-          // Force update with fresh status
-          setUser({ ...auth.currentUser } as User);
+          setUser(currentUser);
+          setIsEmailVerified(currentUser.emailVerified);
         } catch (error) {
           console.error("Error reloading user status:", error);
           setUser(currentUser);
+          setIsEmailVerified(currentUser.emailVerified);
         }
       } else {
         setUser(null);
+        setIsEmailVerified(false);
       }
       setAuthLoading(false);
     });
@@ -112,7 +115,7 @@ const App: React.FC = () => {
     return <LoginScreen />;
   }
 
-  if (!user.emailVerified) {
+  if (!isEmailVerified) {
     return <VerifyEmailScreen userEmail={user.email} onLogOut={handleLogout} />;
   }
 
