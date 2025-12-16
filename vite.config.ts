@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), 'REACT_APP_');
 
+  // Ensure NODE_ENV is set (critical for React in production)
+  env.NODE_ENV = mode;
+
   // Shim for Vercel/System envs: merge process.env values into the loaded env
   // avoiding conflicts with existing keys if already loaded, but Vercel injected vars should likely take precedence or exist where files don't.
   Object.keys(process.env).forEach(key => {
