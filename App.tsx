@@ -61,12 +61,20 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          await currentUser.reload();
+          // Force update with fresh status
+          setUser({ ...auth.currentUser } as User);
+        } catch (error) {
+          console.error("Error reloading user status:", error);
+          setUser(currentUser);
+        }
+      } else {
+        setUser(null);
+      }
       setAuthLoading(false);
-
-      // Optional: Check if new user via creation time or metadata if needed for isFirstTimeUser
-      // For now, we rely on existing logic or user metadata if we want to show welcome guide.
     });
     return unsubscribe;
   }, []);
