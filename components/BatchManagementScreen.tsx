@@ -156,7 +156,7 @@ const BatchCard: React.FC<{ batch: Batch; currentUserRole: Role; onEdit: (b: Bat
                     </div>
                     {currentUserRole === 'Owner' && (
                         <div className="relative">
-                            <button onClick={() => setMenuOpen(true)} className="p-1 text-text-secondary hover:bg-muted rounded-full">
+                            <button onClick={() => setMenuOpen(true)} className="p-1 text-text-secondary hover:bg-muted rounded-full" aria-label="Options">
                                 <EllipsisIcon className="w-5 h-5" />
                             </button>
                             {isMenuOpen && (
@@ -295,7 +295,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                                     <label className="block text-sm font-semibold text-text-secondary">4. Add Starting Feed Inventory? (Optional)</label>
                                     <label htmlFor="feed-toggle" className="flex items-center cursor-pointer">
                                         <div className="relative">
-                                            <input type="checkbox" id="feed-toggle" className="sr-only" checked={addFeed} onChange={() => setAddFeed(!addFeed)} />
+                                            <input type="checkbox" id="feed-toggle" className="sr-only" checked={addFeed} onChange={() => setAddFeed(!addFeed)} aria-label="Toggle feed inventory" />
                                             <div className="block bg-muted w-12 h-7 rounded-full"></div>
                                             <div className={`dot absolute left-1 top-1 bg-white dark:bg-slate-400 w-5 h-5 rounded-full transition-transform ${addFeed ? 'translate-x-full bg-primary' : ''}`}></div>
                                         </div>
@@ -311,9 +311,10 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                         )}
 
                         <div>
-                            <label className="block text-sm font-semibold text-text-secondary mb-2">5. Health Schedule (Optional)</label>
+                            <label htmlFor="health-schedule" className="block text-sm font-semibold text-text-secondary mb-2">5. Health Schedule (Optional)</label>
                             <div className="relative">
                                 <select
+                                    id="health-schedule"
                                     value={scheduleId}
                                     onChange={(e) => setScheduleId(e.target.value)}
                                     className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"

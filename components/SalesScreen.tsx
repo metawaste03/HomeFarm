@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 // Fix: Use `import type` for type-only imports to prevent circular dependency issues.
 import type { Screen } from '../App';
@@ -91,9 +90,9 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10">
                 <h1 className="text-2xl font-bold text-center text-text-primary">Income & Sales ({activeSector})</h1>
-                 <p className="text-center text-sm text-text-secondary mt-1">
+                <p className="text-center text-sm text-text-secondary mt-1">
                     Showing all sales data for your {activeSector} operations.
-                 </p>
+                </p>
             </header>
 
             <div className="p-4 space-y-4">
@@ -101,10 +100,10 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                     <div className="text-center">
                         <p className="text-xs text-text-secondary font-bold">REVENUE (30D)</p>
                         <p className="text-2xl font-bold text-primary">
-                             {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(totalRevenue)}
+                            {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(totalRevenue)}
                         </p>
                     </div>
-                     <div className="text-center">
+                    <div className="text-center">
                         <p className="text-xs text-text-secondary font-bold">ITEMS SOLD (30D)</p>
                         <p className="text-2xl font-bold text-primary">{totalItemsSold.toLocaleString()}</p>
                     </div>
@@ -119,7 +118,7 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                                 <p className="font-bold text-text-primary mt-1">{sale.quantity.toLocaleString()} {sale.unit} of {sale.item}</p>
                                 {sale.notes && <p className="text-xs text-text-secondary italic mt-1">"{sale.notes}"</p>}
                             </div>
-                             <div className="text-right flex-shrink-0 ml-4">
+                            <div className="text-right flex-shrink-0 ml-4">
                                 <p className="text-xl font-bold text-green-600 dark:text-green-400">
                                     + {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(sale.amount)}
                                 </p>
@@ -136,7 +135,7 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                     ))}
                 </div>
             </div>
-            
+
             {isModalOpen && <AddSaleForm sale={editingSale} onSave={handleSaveSale} onClose={handleCloseModal} activeSector={activeSector} />}
         </div>
     );
@@ -158,9 +157,9 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
             default: return '';
         }
     };
-    
+
     const getPlaceholder = () => {
-         switch (activeSector) {
+        switch (activeSector) {
             case 'Layer': return 'e.g., Large Eggs';
             case 'Broiler': return 'e.g., Live Birds';
             case 'Fish': return 'e.g., Live Tilapia';
@@ -191,34 +190,35 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
 
     return (
         <div className="fixed inset-0 bg-black/50 z-30 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            {/* Added max-h and overflow for desktop sizing issues, fixed accessibility lints */}
+            <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                 <h3 className="text-lg font-bold mb-4 text-text-primary">{sale ? 'Edit Sale' : 'Record a New Sale'}</h3>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-1">Date of Sale</label>
-                        <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary"/>
+                        <label htmlFor="sale-date" className="block text-sm font-medium text-text-secondary mb-1">Date of Sale</label>
+                        <input id="sale-date" type="date" name="date" value={formData.date} onChange={handleChange} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-1">Item Sold</label>
-                        <input type="text" name="item" value={formData.item} onChange={handleChange} placeholder={getPlaceholder()} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                        <label htmlFor="sale-item" className="block text-sm font-medium text-text-secondary mb-1">Item Sold</label>
+                        <input id="sale-item" type="text" name="item" value={formData.item} onChange={handleChange} placeholder={getPlaceholder()} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-1">Quantity</label>
-                            <input type="number" name="quantity" value={formData.quantity > 0 ? formData.quantity : ''} onChange={handleChange} placeholder="0" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                            <label htmlFor="sale-quantity" className="block text-sm font-medium text-text-secondary mb-1">Quantity</label>
+                            <input id="sale-quantity" type="number" name="quantity" value={formData.quantity > 0 ? formData.quantity : ''} onChange={handleChange} placeholder="0" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                         </div>
-                         <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
-                            <input type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder={`e.g., ${getDefaultUnit()}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                        <div>
+                            <label htmlFor="sale-unit" className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
+                            <input id="sale-unit" type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder={`e.g., ${getDefaultUnit()}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                         </div>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-1">Total Sale Amount (₦)</label>
-                        <input type="number" name="amount" value={formData.amount > 0 ? formData.amount : ''} onChange={handleChange} placeholder="0" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                        <label htmlFor="sale-amount" className="block text-sm font-medium text-text-secondary mb-1">Total Sale Amount (₦)</label>
+                        <input id="sale-amount" type="number" name="amount" value={formData.amount > 0 ? formData.amount : ''} onChange={handleChange} placeholder="0" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-1">Notes (Optional)</label>
-                        <textarea name="notes" value={formData.notes || ''} onChange={handleChange} placeholder="e.g., Sold to Mama B's Shop" className="w-full p-3 border border-border rounded-lg h-20 bg-card text-text-primary" />
+                        <label htmlFor="sale-notes" className="block text-sm font-medium text-text-secondary mb-1">Notes (Optional)</label>
+                        <textarea id="sale-notes" name="notes" value={formData.notes || ''} onChange={handleChange} placeholder="e.g., Sold to Mama B's Shop" className="w-full p-3 border border-border rounded-lg h-20 bg-card text-text-primary" />
                     </div>
                     <div className="flex justify-end gap-3 mt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>

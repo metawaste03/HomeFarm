@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { WarningIcon, CheckCircleIcon, CalculatorIcon, NairaIcon } from './icons';
-import type { Batch, Sector } from './BatchManagementScreen';
+import type { Batch } from './BatchManagementScreen';
 
 interface ProfitabilityCardProps {
     batch: Batch;
@@ -12,9 +11,9 @@ interface ProfitabilityCardProps {
 }
 
 const ProfitabilityCard: React.FC<ProfitabilityCardProps> = ({ batch, expenses, mortality, production = 0, stockCost }) => {
-    const [marketPrice, setMarketPrice] = useState<number>(0);
-    const [breakEvenPrice, setBreakEvenPrice] = useState<number>(0);
-    const [costPerUnit, setCostPerUnit] = useState<number>(0);
+    const [marketPrice, setMarketPrice] = useState(0);
+    const [breakEvenPrice, setBreakEvenPrice] = useState(0);
+    const [costPerUnit, setCostPerUnit] = useState(0);
 
     const isLayer = batch.sector === 'Layer';
     const liveStock = batch.stockCount - mortality;
