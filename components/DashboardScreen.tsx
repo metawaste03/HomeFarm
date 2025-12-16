@@ -292,6 +292,29 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, farms, ba
         </div>
     );
 
+    if (farms.length === 0) {
+        return (
+            <div className="bg-background min-h-screen flex flex-col items-center justify-center p-4 text-center">
+                <div className="max-w-md space-y-6">
+                    <div className="bg-primary/10 p-6 rounded-full inline-block mb-2">
+                        <span className="text-6xl">🏡</span>
+                    </div>
+                    <h1 className="text-3xl font-bold text-text-primary">Welcome to HomeFarm!</h1>
+                    <p className="text-text-secondary text-lg">
+                        Let's get your farm set up. Create your first farm and batch to start tracking your progress.
+                    </p>
+                    <button
+                        onClick={() => onNavigate('farms')}
+                        className="bg-primary text-white font-bold py-4 px-8 rounded-xl text-lg hover:bg-primary-600 transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                        + Create Your First Farm
+                    </button>
+                    <p className="text-sm text-text-secondary pt-4">Need help? Check out our <a href="#" className="text-primary hover:underline">User Guide</a>.</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-background min-h-screen">
             <header className={`bg-card shadow-md sticky top-0 z-10 transition-all duration-300 ${isScrolled ? 'py-2' : 'pt-6 pb-4'}`}>

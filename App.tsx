@@ -26,22 +26,6 @@ export type Screen = 'dashboard' | 'log' | 'sales' | 'batches' | 'settings' | 't
 export type Theme = 'light' | 'dark' | 'system';
 
 // Mock Data lifted to App level
-const MOCK_FARMS_DATA: Farm[] = [
-  { id: 1, name: "Ibadan Farm", location: "Abeokuta Road, Ibadan" },
-  { id: 2, name: "Abeokuta Farm", location: "Shagamu Interchange, Abeokuta" },
-  { id: 3, name: "Epe Fish Farm", location: "Epe, Lagos" },
-];
-
-const MOCK_BATCHES_DATA: Batch[] = [
-  { id: 1, name: "Layer Batch 2", farm: "Ibadan Farm", status: "Active", stockCount: 495, age: "18 weeks", sector: "Layer" },
-  { id: 2, name: "Broiler Batch 5", farm: "Ibadan Farm", status: "Active", stockCount: 1500, age: "8 weeks", sector: "Broiler" },
-  { id: 3, name: "Layer Batch 1", farm: "Abeokuta Farm", status: "Active", stockCount: 750, age: "32 weeks", sector: "Layer" },
-  { id: 4, name: "Tilapia Batch 1", farm: "Epe Fish Farm", status: "Active", stockCount: 2500, age: "6 weeks", sector: "Fish" },
-  { id: 5, name: "Catfish Batch 3", farm: "Epe Fish Farm", status: "Active", stockCount: 3000, age: "10 weeks", sector: "Fish" },
-];
-
-
-
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -51,11 +35,11 @@ const App: React.FC = () => {
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [isNewBatchModalOpen, setIsNewBatchModalOpen] = useState(false);
 
-  const [farms, setFarms] = useState<Farm[]>(MOCK_FARMS_DATA);
-  const [batches, setBatches] = useState<Batch[]>(MOCK_BATCHES_DATA);
+  const [farms, setFarms] = useState<Farm[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
 
   const [activeSector, setActiveSector] = useState<Sector>('Layer');
-  const [selectedScope, setSelectedScope] = useState("Ibadan Farm - Layer Batch 2");
+  const [selectedScope, setSelectedScope] = useState("");
 
   const [theme, setTheme] = useState<Theme>(() => {
     return (localStorage.getItem('theme') as Theme) || 'system';
