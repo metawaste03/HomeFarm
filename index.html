@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HomeFarm</title>
+    <link rel="manifest" href="/manifest.json" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --background-color: #f8fafc; /* slate-50 */
+        --card-background: #ffffff; /* white */
+        --muted-background: #f1f5f9; /* slate-100 */
+        --popover-background: #ffffff;
+        --border-color: #e2e8f0; /* slate-200 */
+        --primary-text-color: #1e293b; /* slate-800 */
+        --secondary-text-color: #64748b; /* slate-500 */
+        --accent-green: #84cc16; /* lime-500 */
+        --accent-green-darker: #65a30d; /* lime-600 */
+        --accent-green-darkest: #4d7c0f; /* lime-700 */
+        --accent-red: #ef4444;
+        --accent-orange: #f97316;
+        --chart-grid-color: rgba(0, 0, 0, 0.1);
+        --chart-label-color: #64748b;
+      }
+      html.dark {
+        --background-color: #020617; /* slate-950 */
+        --card-background: #0f172a; /* slate-900 */
+        --muted-background: #1e293b; /* slate-800 */
+        --popover-background: #0f172a;
+        --border-color: #334155; /* slate-700 */
+        --primary-text-color: #e2e8f0; /* slate-200 */
+        --secondary-text-color: #94a3b8; /* slate-400 */
+        --accent-green: #a3e635; /* lime-400 */
+        --accent-green-darker: #84cc16; /* lime-500 */
+        --accent-green-darkest: #65a30d; /* lime-600 */
+        --accent-red: #f87171; /* red-400 */
+        --accent-orange: #fb923c; /* orange-400 */
+        --chart-grid-color: rgba(255, 255, 255, 0.1);
+        --chart-label-color: #94a3b8;
+      }
+      .dot { transform: translateX(0); }
+      input:checked ~ .dot { transform: translateX(100%); }
+      @keyframes slideInRight {
+        from { transform: translateX(100%); }
+        to { transform: translateX(0); }
+      }
+      .animate-slide-in-right {
+        animation: slideInRight 0.3s ease-out forwards;
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              background: 'var(--background-color)',
+              card: 'var(--card-background)',
+              'muted': 'var(--muted-background)',
+              'popover': 'var(--popover-background)',
+              border: 'var(--border-color)',
+              'text-primary': 'var(--primary-text-color)',
+              'text-secondary': 'var(--secondary-text-color)',
+              primary: {
+                DEFAULT: 'var(--accent-green)',
+                '600': 'var(--accent-green-darker)',
+                '700': 'var(--accent-green-darkest)',
+              },
+              secondary: 'var(--text-primary)',
+              accent: 'var(--accent-orange)',
+              danger: 'var(--accent-red)',
+            },
+            keyframes: {
+              slideInRight: {
+                '0%': { transform: 'translateX(100%)' },
+                '100%': { transform: 'translateX(0)' },
+              },
+              fadeIn: {
+                '0%': { opacity: 0 },
+                '100%': { opacity: 1 },
+              }
+            },
+            animation: {
+              'slide-in-right': 'slideInRight 0.3s ease-out forwards',
+              'fade-in': 'fadeIn 0.2s ease-in-out forwards',
+            }
+          }
+        }
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "chart.js/": "https://aistudiocdn.com/chart.js@^4.5.1/",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-background lg:bg-muted">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

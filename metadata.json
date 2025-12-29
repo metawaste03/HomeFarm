@@ -1,0 +1,5 @@
+{
+  "name": "HomeFarm: Farm Daily Log",
+  "description": "A mobile-first daily log screen for layer farms to track egg production, feed consumption, and mortality. Designed for simplicity and ease of use by farm staff.",
+  "requestFramePermissions": []
+}
