@@ -1,0 +1,419 @@
+// TypeScript types for the Supabase database schema
+// These types provide type safety when querying the database
+
+export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[];
+
+export type Sector = 'Layer' | 'Broiler' | 'Fish';
+export type BatchStatus = 'Active' | 'Completed';
+export type TaskStatus = 'pending' | 'completed';
+export type RecurringType = 'No' | 'Daily' | 'Weekly' | 'Monthly';
+export type TransactionType = 'purchase' | 'usage';
+export type InventoryCategory = 'Feed' | 'Medication' | 'Equipment' | 'Other';
+export type FarmRole = 'owner' | 'manager' | 'worker';
+
+export interface Database {
+    public: {
+        Tables: {
+            users: {
+                Row: {
+                    id: string;
+                    email: string;
+                    full_name: string | null;
+                    avatar_url: string | null;
+                    created_at: string;
+                    last_sign_in: string | null;
+                };
+                Insert: {
+                    id: string;
+                    email: string;
+                    full_name?: string | null;
+                    avatar_url?: string | null;
+                    created_at?: string;
+                    last_sign_in?: string | null;
+                };
+                Update: {
+                    id?: string;
+                    email?: string;
+                    full_name?: string | null;
+                    avatar_url?: string | null;
+                    created_at?: string;
+                    last_sign_in?: string | null;
+                };
+            };
+            farms: {
+                Row: {
+                    id: string;
+                    name: string;
+                    location: string | null;
+                    owner_id: string;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    name: string;
+                    location?: string | null;
+                    owner_id: string;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    name?: string;
+                    location?: string | null;
+                    owner_id?: string;
+                    created_at?: string;
+                };
+            };
+            farm_members: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    user_id: string;
+                    role: FarmRole;
+                    joined_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    user_id: string;
+                    role?: FarmRole;
+                    joined_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    user_id?: string;
+                    role?: FarmRole;
+                    joined_at?: string;
+                };
+            };
+            batches: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    name: string;
+                    sector: Sector;
+                    status: BatchStatus;
+                    stock_count: number;
+                    age: string | null;
+                    schedule_id: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    name: string;
+                    sector: Sector;
+                    status?: BatchStatus;
+                    stock_count?: number;
+                    age?: string | null;
+                    schedule_id?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    name?: string;
+                    sector?: Sector;
+                    status?: BatchStatus;
+                    stock_count?: number;
+                    age?: string | null;
+                    schedule_id?: string | null;
+                    created_at?: string;
+                };
+            };
+            daily_logs: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    batch_id: string | null;
+                    log_date: string;
+                    weather: string | null;
+                    activities: Json | null;
+                    notes: string | null;
+                    created_by: string;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    batch_id?: string | null;
+                    log_date: string;
+                    weather?: string | null;
+                    activities?: Json | null;
+                    notes?: string | null;
+                    created_by: string;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    batch_id?: string | null;
+                    log_date?: string;
+                    weather?: string | null;
+                    activities?: Json | null;
+                    notes?: string | null;
+                    created_by?: string;
+                    created_at?: string;
+                };
+            };
+            tasks: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    title: string;
+                    assigned_to: string | null;
+                    due_date: string | null;
+                    recurring: RecurringType;
+                    notes: string | null;
+                    status: TaskStatus;
+                    created_by: string;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    title: string;
+                    assigned_to?: string | null;
+                    due_date?: string | null;
+                    recurring?: RecurringType;
+                    notes?: string | null;
+                    status?: TaskStatus;
+                    created_by: string;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    title?: string;
+                    assigned_to?: string | null;
+                    due_date?: string | null;
+                    recurring?: RecurringType;
+                    notes?: string | null;
+                    status?: TaskStatus;
+                    created_by?: string;
+                    created_at?: string;
+                };
+            };
+            sales: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    sale_date: string;
+                    item: string;
+                    quantity: number;
+                    unit: string;
+                    amount: number;
+                    sector: Sector;
+                    notes: string | null;
+                    created_by: string;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    sale_date: string;
+                    item: string;
+                    quantity: number;
+                    unit: string;
+                    amount: number;
+                    sector: Sector;
+                    notes?: string | null;
+                    created_by: string;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    sale_date?: string;
+                    item?: string;
+                    quantity?: number;
+                    unit?: string;
+                    amount?: number;
+                    sector?: Sector;
+                    notes?: string | null;
+                    created_by?: string;
+                    created_at?: string;
+                };
+            };
+            inventory_items: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    name: string;
+                    category: InventoryCategory;
+                    quantity: number;
+                    unit: string;
+                    min_threshold: number;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    name: string;
+                    category: InventoryCategory;
+                    quantity?: number;
+                    unit: string;
+                    min_threshold?: number;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    name?: string;
+                    category?: InventoryCategory;
+                    quantity?: number;
+                    unit?: string;
+                    min_threshold?: number;
+                    created_at?: string;
+                };
+            };
+            transactions: {
+                Row: {
+                    id: string;
+                    item_id: string;
+                    transaction_date: string;
+                    type: TransactionType;
+                    quantity: number;
+                    unit: string;
+                    cost: number | null;
+                    supplier: string | null;
+                    notes: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    item_id: string;
+                    transaction_date: string;
+                    type: TransactionType;
+                    quantity: number;
+                    unit: string;
+                    cost?: number | null;
+                    supplier?: string | null;
+                    notes?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    item_id?: string;
+                    transaction_date?: string;
+                    type?: TransactionType;
+                    quantity?: number;
+                    unit?: string;
+                    cost?: number | null;
+                    supplier?: string | null;
+                    notes?: string | null;
+                    created_at?: string;
+                };
+            };
+            expenses: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    amount: number;
+                    category: string;
+                    expense_date: string;
+                    description: string | null;
+                    created_by: string;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    amount: number;
+                    category: string;
+                    expense_date: string;
+                    description?: string | null;
+                    created_by: string;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    amount?: number;
+                    category?: string;
+                    expense_date?: string;
+                    description?: string | null;
+                    created_by?: string;
+                    created_at?: string;
+                };
+            };
+            suppliers: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    name: string;
+                    contact: string | null;
+                    category: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    name: string;
+                    contact?: string | null;
+                    category?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    name?: string;
+                    contact?: string | null;
+                    category?: string | null;
+                    created_at?: string;
+                };
+            };
+            health_schedules: {
+                Row: {
+                    id: string;
+                    batch_id: string;
+                    vaccine_name: string;
+                    scheduled_date: string;
+                    completed: boolean;
+                    notes: string | null;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    batch_id: string;
+                    vaccine_name: string;
+                    scheduled_date: string;
+                    completed?: boolean;
+                    notes?: string | null;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    batch_id?: string;
+                    vaccine_name?: string;
+                    scheduled_date?: string;
+                    completed?: boolean;
+                    notes?: string | null;
+                    created_at?: string;
+                };
+            };
+        };
+        Views: {};
+        Functions: {};
+        Enums: {
+            sector: Sector;
+            batch_status: BatchStatus;
+            task_status: TaskStatus;
+            recurring_type: RecurringType;
+            transaction_type: TransactionType;
+            inventory_category: InventoryCategory;
+            farm_role: FarmRole;
+        };
+    };
+}
+
+// Convenience type aliases for easier usage
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Insertable<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
+export type Updatable<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];

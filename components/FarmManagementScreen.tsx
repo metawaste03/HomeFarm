@@ -5,7 +5,7 @@ import { PlusIcon, ChevronLeftIcon, EllipsisIcon, PencilIcon, TrashIcon, Warning
 import { Batch } from './BatchManagementScreen';
 
 export type Farm = {
-    id: number;
+    id: string | number;
     name: string;
     location?: string;
 };
@@ -15,7 +15,7 @@ interface FarmManagementScreenProps {
     farms: Farm[];
     batches: Batch[];
     onSaveFarm: (farm: Farm | Omit<Farm, 'id'>) => void;
-    onDeleteFarm: (farmId: number) => void;
+    onDeleteFarm: (farmId: string | number) => void;
 }
 
 const FarmManagementScreen: React.FC<FarmManagementScreenProps> = ({ onNavigate, farms, batches, onSaveFarm, onDeleteFarm }) => {
@@ -49,7 +49,7 @@ const FarmManagementScreen: React.FC<FarmManagementScreenProps> = ({ onNavigate,
                 <h1 className="text-xl font-bold text-center flex-grow text-text-primary">My Farms</h1>
                 <div className="w-6"></div>
             </header>
-            
+
             <div className="p-4 space-y-4">
                 <button
                     onClick={() => handleOpenForm()}
@@ -58,15 +58,15 @@ const FarmManagementScreen: React.FC<FarmManagementScreenProps> = ({ onNavigate,
                     <PlusIcon className="w-6 h-6" />
                     ADD A NEW FARM
                 </button>
-                
+
                 <div className="space-y-3">
                     {farms.map(farm => (
-                        <FarmCard 
-                          key={farm.id} 
-                          farm={farm} 
-                          batchCount={batches.filter(b => b.farm === farm.name && b.status === 'Active').length}
-                          onEdit={() => handleOpenForm(farm)} 
-                          onDelete={() => setDeletingFarm(farm)} 
+                        <FarmCard
+                            key={farm.id}
+                            farm={farm}
+                            batchCount={batches.filter(b => b.farm === farm.name && b.status === 'Active').length}
+                            onEdit={() => handleOpenForm(farm)}
+                            onDelete={() => setDeletingFarm(farm)}
                         />
                     ))}
                 </div>
@@ -78,9 +78,9 @@ const FarmManagementScreen: React.FC<FarmManagementScreenProps> = ({ onNavigate,
     );
 };
 
-const FarmCard: React.FC<{farm: Farm, batchCount: number, onEdit: () => void, onDelete: () => void}> = ({ farm, batchCount, onEdit, onDelete }) => {
+const FarmCard: React.FC<{ farm: Farm, batchCount: number, onEdit: () => void, onDelete: () => void }> = ({ farm, batchCount, onEdit, onDelete }) => {
     const [isMenuOpen, setMenuOpen] = useState(false);
-    
+
     return (
         <div className="bg-card rounded-2xl shadow-md p-4">
             <div className="flex justify-between items-start">
@@ -89,15 +89,15 @@ const FarmCard: React.FC<{farm: Farm, batchCount: number, onEdit: () => void, on
                     {farm.location && <p className="text-sm text-text-secondary mt-1">{farm.location}</p>}
                 </div>
                 <div className="relative">
-                     <button onClick={() => setMenuOpen(!isMenuOpen)} className="p-2 text-text-secondary hover:bg-muted rounded-full">
+                    <button onClick={() => setMenuOpen(!isMenuOpen)} className="p-2 text-text-secondary hover:bg-muted rounded-full">
                         <EllipsisIcon className="w-6 h-6" />
                     </button>
                     {isMenuOpen && (
-                         <div 
+                        <div
                             className="absolute right-0 mt-2 w-48 bg-popover rounded-md shadow-lg z-20 border border-border"
                             onMouseLeave={() => setMenuOpen(false)}
                         >
-                           <button className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-muted flex items-center gap-2" onClick={() => { onEdit(); setMenuOpen(false); }}>
+                            <button className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-muted flex items-center gap-2" onClick={() => { onEdit(); setMenuOpen(false); }}>
                                 <PencilIcon className="w-4 h-4" /> Edit Farm Details
                             </button>
                             <button className="w-full text-left px-4 py-2 text-sm text-danger hover:bg-red-500/10 flex items-center gap-2" onClick={() => { onDelete(); setMenuOpen(false); }}>
@@ -108,7 +108,7 @@ const FarmCard: React.FC<{farm: Farm, batchCount: number, onEdit: () => void, on
                 </div>
             </div>
             <div className="mt-4 border-t border-border pt-3">
-                 <p className="text-sm text-text-secondary font-medium">{batchCount} active batch{batchCount !== 1 ? 'es' : ''}</p>
+                <p className="text-sm text-text-secondary font-medium">{batchCount} active batch{batchCount !== 1 ? 'es' : ''}</p>
             </div>
         </div>
     );

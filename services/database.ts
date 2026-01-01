@@ -1,0 +1,468 @@
+// @ts-nocheck
+// Database service layer for Supabase CRUD operations
+// Using @ts-nocheck due to complex Supabase generics/type inference issues
+// Return types are still properly typed for consumers of this service
+
+import { supabase } from '../lib/supabase';
+import type { Tables, Insertable, Updatable } from '../types/database';
+
+// ============================================
+// FARMS
+// ============================================
+
+export const farmsService = {
+    async list() {
+        const { data, error } = await supabase
+            .from('farms')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data || []) as Tables<'farms'>[];
+    },
+
+    async getById(id: string) {
+        const { data, error } = await supabase
+            .from('farms')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'farms'>;
+    },
+
+    async create(farm: Insertable<'farms'>) {
+        const { data, error } = await supabase
+            .from('farms')
+            .insert(farm as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'farms'>;
+    },
+
+    async update(id: string, farm: Updatable<'farms'>) {
+        const { data, error } = await supabase
+            .from('farms')
+            .update(farm as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'farms'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('farms')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// BATCHES
+// ============================================
+
+export const batchesService = {
+    async list(farmId?: string) {
+        let query = supabase
+            .from('batches')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (farmId) {
+            query = query.eq('farm_id', farmId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Tables<'batches'>[];
+    },
+
+    async create(batch: Insertable<'batches'>) {
+        const { data, error } = await supabase
+            .from('batches')
+            .insert(batch as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'batches'>;
+    },
+
+    async update(id: string, batch: Updatable<'batches'>) {
+        const { data, error } = await supabase
+            .from('batches')
+            .update(batch as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'batches'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('batches')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// TASKS
+// ============================================
+
+export const tasksService = {
+    async list(farmId?: string) {
+        let query = supabase
+            .from('tasks')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (farmId) {
+            query = query.eq('farm_id', farmId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Tables<'tasks'>[];
+    },
+
+    async create(task: Insertable<'tasks'>) {
+        const { data, error } = await supabase
+            .from('tasks')
+            .insert(task as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'tasks'>;
+    },
+
+    async update(id: string, task: Updatable<'tasks'>) {
+        const { data, error } = await supabase
+            .from('tasks')
+            .update(task as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'tasks'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('tasks')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// SALES
+// ============================================
+
+export const salesService = {
+    async list(farmId?: string) {
+        let query = supabase
+            .from('sales')
+            .select('*')
+            .order('sale_date', { ascending: false });
+
+        if (farmId) {
+            query = query.eq('farm_id', farmId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Tables<'sales'>[];
+    },
+
+    async create(sale: Insertable<'sales'>) {
+        const { data, error } = await supabase
+            .from('sales')
+            .insert(sale as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'sales'>;
+    },
+
+    async update(id: string, sale: Updatable<'sales'>) {
+        const { data, error } = await supabase
+            .from('sales')
+            .update(sale as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'sales'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('sales')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// INVENTORY ITEMS
+// ============================================
+
+export const inventoryService = {
+    async list(farmId?: string) {
+        let query = supabase
+            .from('inventory_items')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (farmId) {
+            query = query.eq('farm_id', farmId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Tables<'inventory_items'>[];
+    },
+
+    async create(item: Insertable<'inventory_items'>) {
+        const { data, error } = await supabase
+            .from('inventory_items')
+            .insert(item as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'inventory_items'>;
+    },
+
+    async update(id: string, item: Updatable<'inventory_items'>) {
+        const { data, error } = await supabase
+            .from('inventory_items')
+            .update(item as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'inventory_items'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('inventory_items')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// TRANSACTIONS (for inventory)
+// ============================================
+
+export const transactionsService = {
+    async list(itemId: string) {
+        const { data, error } = await supabase
+            .from('transactions')
+            .select('*')
+            .eq('item_id', itemId)
+            .order('transaction_date', { ascending: false });
+
+        if (error) throw error;
+        return (data || []) as Tables<'transactions'>[];
+    },
+
+    async create(transaction: Insertable<'transactions'>) {
+        const { data, error } = await supabase
+            .from('transactions')
+            .insert(transaction as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'transactions'>;
+    },
+};
+
+// ============================================
+// SUPPLIERS
+// ============================================
+
+export const suppliersService = {
+    async list(farmId?: string) {
+        let query = supabase
+            .from('suppliers')
+            .select('*')
+            .order('name', { ascending: true });
+
+        if (farmId) {
+            query = query.eq('farm_id', farmId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Tables<'suppliers'>[];
+    },
+
+    async create(supplier: Insertable<'suppliers'>) {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .insert(supplier as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'suppliers'>;
+    },
+
+    async update(id: string, supplier: Updatable<'suppliers'>) {
+        const { data, error } = await supabase
+            .from('suppliers')
+            .update(supplier as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'suppliers'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('suppliers')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// DAILY LOGS
+// ============================================
+
+export const dailyLogsService = {
+    async list(farmId?: string, batchId?: string) {
+        let query = supabase
+            .from('daily_logs')
+            .select('*')
+            .order('log_date', { ascending: false });
+
+        if (farmId) {
+            query = query.eq('farm_id', farmId);
+        }
+        if (batchId) {
+            query = query.eq('batch_id', batchId);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Tables<'daily_logs'>[];
+    },
+
+    async create(log: Insertable<'daily_logs'>) {
+        const { data, error } = await supabase
+            .from('daily_logs')
+            .insert(log as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'daily_logs'>;
+    },
+
+    async update(id: string, log: Updatable<'daily_logs'>) {
+        const { data, error } = await supabase
+            .from('daily_logs')
+            .update(log as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'daily_logs'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('daily_logs')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// HEALTH SCHEDULES
+// ============================================
+
+export const healthSchedulesService = {
+    async list(batchId: string) {
+        const { data, error } = await supabase
+            .from('health_schedules')
+            .select('*')
+            .eq('batch_id', batchId)
+            .order('scheduled_date', { ascending: true });
+
+        if (error) throw error;
+        return (data || []) as Tables<'health_schedules'>[];
+    },
+
+    async create(schedule: Insertable<'health_schedules'>) {
+        const { data, error } = await supabase
+            .from('health_schedules')
+            .insert(schedule as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'health_schedules'>;
+    },
+
+    async update(id: string, schedule: Updatable<'health_schedules'>) {
+        const { data, error } = await supabase
+            .from('health_schedules')
+            .update(schedule as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'health_schedules'>;
+    },
+
+    async delete(id: string) {
+        const { error } = await supabase
+            .from('health_schedules')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    },
+
+    async toggleComplete(id: string, completed: boolean) {
+        return this.update(id, { completed: !completed });
+    },
+};

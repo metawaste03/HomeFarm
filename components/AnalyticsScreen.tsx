@@ -90,11 +90,11 @@ const iconMap: { [key: string]: React.FC<any> } = {
 
 const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, batches, activeSector, onSectorChange, theme }) => {
     const [dateRange, setDateRange] = useState('Last 30 Days');
-    const [selectedBatchId, setSelectedBatchId] = useState<number | null>(null);
+    const [selectedBatchId, setSelectedBatchId] = useState<string | number | null>(null);
     const [viewMode, setViewMode] = useState<'summary' | 'charts' | 'health'>('summary');
     const [isExportModalOpen, setExportModalOpen] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-    
+
     const chartRefs = {
         incomeExpense: useRef<HTMLCanvasElement>(null),
         expenseBreakdown: useRef<HTMLCanvasElement>(null),
@@ -111,13 +111,13 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
     }, [selectedBatchId, batches]);
 
     useEffect(() => {
-        if(sectorBatches.length > 0 && (!selectedBatchId || !sectorBatches.find(b => b.id === selectedBatchId))) {
+        if (sectorBatches.length > 0 && (!selectedBatchId || !sectorBatches.find(b => b.id === selectedBatchId))) {
             setSelectedBatchId(sectorBatches[0].id);
         } else if (sectorBatches.length === 0) {
             setSelectedBatchId(null);
         }
     }, [activeSector, sectorBatches, selectedBatchId]);
-    
+
     const data = MOCK_ANALYTICS_DATA[activeSector];
 
     useEffect(() => {
@@ -131,14 +131,14 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
         const isDark = document.documentElement.classList.contains('dark');
         const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
         const labelColor = isDark ? '#94a3b8' : '#64748b';
-        
+
         const baseChartOptions: ChartOptions = {
             scales: { y: { grid: { color: gridColor }, ticks: { color: labelColor } }, x: { grid: { color: gridColor }, ticks: { color: labelColor } } },
             plugins: { legend: { labels: { color: labelColor } } }
         };
 
         const doughnutChartOptions: ChartOptions = { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: labelColor } } } }
-        
+
         const lineChartOptions: ChartOptions = { plugins: { legend: { display: false } }, scales: { y: { grid: { color: gridColor }, ticks: { color: labelColor } }, x: { grid: { color: gridColor }, ticks: { color: labelColor } } } }
 
         if (chartRefs.incomeExpense.current) {
@@ -174,11 +174,11 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                 });
             }
         }
-        
+
         if (chartRefs.expenseBreakdown.current) {
             const ctx = chartRefs.expenseBreakdown.current.getContext('2d');
             if (ctx) {
-                const doughnutColors = isDark 
+                const doughnutColors = isDark
                     ? ['#22c55e', '#fb923c', '#60a5fa', '#94a3b8']
                     : ['#16a34a', '#f97316', '#3b82f6', '#6b7280'];
                 chartInstances.current.expenseBreakdown = new Chart(ctx, {
@@ -188,7 +188,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                 });
             }
         }
-        
+
         if (chartRefs.kpi1.current) {
             const ctx = chartRefs.kpi1.current.getContext('2d');
             if (ctx) {
@@ -202,11 +202,11 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                             tension: 0.1, fill: true, backgroundColor: isDark ? 'rgba(74, 222, 128, 0.1)' : 'rgba(22, 163, 74, 0.1)'
                         }]
                     },
-                     options: lineChartOptions
+                    options: lineChartOptions
                 });
             }
         }
-        
+
         if (chartRefs.kpi2.current) {
             const ctx = chartRefs.kpi2.current.getContext('2d');
             if (ctx) {
@@ -226,19 +226,18 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
         };
 
     }, [activeSector, selectedBatchId, dateRange, data, viewMode, theme]);
-    
+
     const SectorTab: React.FC<{ sector: Sector, label: string }> = ({ sector, label }) => (
         <button
             onClick={() => onSectorChange(sector)}
-            className={`px-4 py-2 text-sm font-bold rounded-full transition-colors duration-200 w-full ${
-                activeSector === sector ? 'bg-primary text-white shadow' : 'bg-muted text-text-secondary hover:bg-border'
-            }`}
+            className={`px-4 py-2 text-sm font-bold rounded-full transition-colors duration-200 w-full ${activeSector === sector ? 'bg-primary text-white shadow' : 'bg-muted text-text-secondary hover:bg-border'
+                }`}
         >
             {label}
         </button>
     );
-    
-    const FinancialCard: React.FC<{label: string; value: number; isProfit?: boolean;}> = ({label, value, isProfit}) => {
+
+    const FinancialCard: React.FC<{ label: string; value: number; isProfit?: boolean; }> = ({ label, value, isProfit }) => {
         const valueColor = isProfit ? (value >= 0 ? 'text-green-500' : 'text-danger') : 'text-text-primary';
         return (
             <div className="flex flex-col text-center bg-card p-3 rounded-lg justify-center">
@@ -247,8 +246,8 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
             </div>
         )
     };
-    
-    const ChartCard: React.FC<{title: string; subTitle?: string; children: React.ReactNode}> = ({ title, subTitle, children }) => (
+
+    const ChartCard: React.FC<{ title: string; subTitle?: string; children: React.ReactNode }> = ({ title, subTitle, children }) => (
         <div className="bg-card p-4 rounded-xl shadow-sm">
             <h3 className="font-bold text-lg text-text-primary">{title}</h3>
             {subTitle && <p className="text-sm text-text-secondary mb-2">{subTitle}</p>}
@@ -293,7 +292,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
 
     return (
         <div className="bg-background min-h-screen">
-             <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10 space-y-4">
+            <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10 space-y-4">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold text-text-primary">Detailed Analytics</h1>
                     <div className="flex items-center gap-2">
@@ -312,7 +311,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                     <SectorTab sector="Broiler" label="Broilers" />
                     <SectorTab sector="Fish" label="Fish" />
                 </div>
-             </header>
+            </header>
 
             <div className="p-4 space-y-4">
                 {selectedBatchId && data ? (
@@ -324,13 +323,13 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                         </div>
 
                         <ViewToggle />
-                        
+
                         {viewMode === 'summary' && (
                             <div className="space-y-3 animate-fade-in pt-2">
                                 {data.insights.map((insight, index) => {
                                     const IconComponent = iconMap[insight.icon];
                                     return IconComponent ? (
-                                        <InsightCard 
+                                        <InsightCard
                                             key={index}
                                             icon={<IconComponent className="w-6 h-6" />}
                                             title={insight.title}
@@ -346,14 +345,14 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                                 <ChartCard title="Income vs. Expenses" subTitle="When did my investment start paying off?">
                                     <canvas ref={chartRefs.incomeExpense}></canvas>
                                 </ChartCard>
-                                
+
                                 <div className="grid md:grid-cols-2 gap-4">
                                     <ChartCard title="Expense Breakdown" subTitle="What did I spend my money on?">
                                         <canvas ref={chartRefs.expenseBreakdown}></canvas>
                                     </ChartCard>
-                                    
+
                                     <div className="space-y-4">
-                                       <ChartCard title={data.kpi1.title}>
+                                        <ChartCard title={data.kpi1.title}>
                                             <canvas ref={chartRefs.kpi1}></canvas>
                                         </ChartCard>
                                         <ChartCard title={data.kpi2.title}>
@@ -381,7 +380,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                                                     </div>
                                                 )}
                                             </div>
-                                            
+
                                             <div className="flex flex-wrap gap-2 mb-3">
                                                 {log.symptoms.map(sym => (
                                                     <span key={sym} className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-danger dark:bg-red-900/30">
@@ -389,7 +388,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                                                     </span>
                                                 ))}
                                             </div>
-                                            
+
                                             <div className="bg-muted/50 p-3 rounded-lg mb-3">
                                                 <div className="flex items-center gap-2 text-sm font-semibold text-text-primary mb-1">
                                                     <PillIcon className="w-4 h-4 text-primary" />
@@ -413,62 +412,62 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                     </div>
                 )}
             </div>
-            
+
             {isExportModalOpen && selectedBatch && (
-                <ExportDataModal 
-                    onClose={() => setExportModalOpen(false)} 
-                    initialBatch={selectedBatch} 
-                    initialDateRange={dateRange} 
+                <ExportDataModal
+                    onClose={() => setExportModalOpen(false)}
+                    initialBatch={selectedBatch}
+                    initialDateRange={dateRange}
                 />
             )}
             {isFilterModalOpen && (
-               <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsFilterModalOpen(false)}>
-                   <div 
-                       className="absolute top-0 right-0 bottom-0 bg-card w-full max-w-sm p-6 shadow-lg animate-slide-in-right"
-                       onClick={(e) => e.stopPropagation()}
-                   >
-                       <h3 className="text-xl font-bold text-text-primary mb-6">Filters</h3>
-                       <div className="space-y-4">
-                           <div>
-                               <label className="block text-sm font-semibold text-text-secondary mb-1">Select Batch</label>
-                               <div className="relative">
-                                   <select
-                                       value={selectedBatchId || ''}
-                                       onChange={(e) => setSelectedBatchId(Number(e.target.value))}
-                                       className="w-full text-left bg-muted p-3 rounded-lg font-semibold text-primary appearance-none"
-                                   >
-                                       {sectorBatches.length > 0 ? sectorBatches.map(batch => (
-                                           <option key={batch.id} value={batch.id}>{batch.name}</option>
-                                       )) : <option disabled>No batches in this sector</option>}
-                                   </select>
-                                   <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary" />
-                               </div>
-                           </div>
-                           <div>
-                               <label className="block text-sm font-semibold text-text-secondary mb-1">Select Date Range</label>
-                               <div className="relative">
-                                   <select
-                                       value={dateRange}
-                                       onChange={(e) => setDateRange(e.target.value)}
-                                       className="w-full text-left bg-muted p-3 rounded-lg font-semibold text-primary appearance-none"
-                                   >
-                                       <option>Last 30 Days</option>
-                                       <option>This Week</option>
-                                       <option>This Month</option>
-                                       <option>Entire Batch</option>
-                                   </select>
-                                   <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary" />
-                               </div>
-                           </div>
-                       </div>
-                       <div className="mt-8">
+                <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsFilterModalOpen(false)}>
+                    <div
+                        className="absolute top-0 right-0 bottom-0 bg-card w-full max-w-sm p-6 shadow-lg animate-slide-in-right"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-xl font-bold text-text-primary mb-6">Filters</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-text-secondary mb-1">Select Batch</label>
+                                <div className="relative">
+                                    <select
+                                        value={selectedBatchId || ''}
+                                        onChange={(e) => setSelectedBatchId(e.target.value)}
+                                        className="w-full text-left bg-muted p-3 rounded-lg font-semibold text-primary appearance-none"
+                                    >
+                                        {sectorBatches.length > 0 ? sectorBatches.map(batch => (
+                                            <option key={batch.id} value={batch.id}>{batch.name}</option>
+                                        )) : <option disabled>No batches in this sector</option>}
+                                    </select>
+                                    <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-text-secondary mb-1">Select Date Range</label>
+                                <div className="relative">
+                                    <select
+                                        value={dateRange}
+                                        onChange={(e) => setDateRange(e.target.value)}
+                                        className="w-full text-left bg-muted p-3 rounded-lg font-semibold text-primary appearance-none"
+                                    >
+                                        <option>Last 30 Days</option>
+                                        <option>This Week</option>
+                                        <option>This Month</option>
+                                        <option>Entire Batch</option>
+                                    </select>
+                                    <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-8">
                             <button onClick={() => setIsFilterModalOpen(false)} className="w-full bg-primary text-white font-bold py-3 rounded-lg">
                                 Apply Filters
                             </button>
-                       </div>
-                   </div>
-               </div>
-           )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

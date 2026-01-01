@@ -23,7 +23,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
     const [isLoadingKpis, setIsLoadingKpis] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [showChart, setShowChart] = useState(false);
-    
+
     const productionChartRef = useRef<HTMLCanvasElement>(null);
     const chartInstances = useRef<{ production?: Chart }>({});
 
@@ -42,7 +42,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
         const [farmName, batchName] = selectedScope.split(' - ');
         return batches.find(b => b.farm === farmName && b.name === batchName && b.sector === activeSector) || null;
     }, [selectedScope, batches, activeSector]);
-    
+
     useEffect(() => {
         if (farms.length > 0) {
             const firstBatchOfSector = sectorBatches[0];
@@ -71,21 +71,21 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
 
     // Financial/production data would normally be in the kpiData from context
     // For now, we return null if no farms exist, else we'd fetch actual data
-    const data = null; 
-    
+    const data = null;
+
     useEffect(() => {
         if (chartInstances.current.production) chartInstances.current.production.destroy();
         // Charts would be initialized here if data existed
         return () => { if (chartInstances.current.production) chartInstances.current.production.destroy(); }
     }, [selectedScope, activeSector, theme, showChart]);
-    
+
     const handleSelectScope = (scope: string) => {
         onScopeChange(scope);
         setIsSelectorOpen(false);
     }
-    
-    const KpiCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; trend: string; valueClass?: string;}> = ({ icon, label, value, trend, valueClass }) => (
-         <div className="bg-card p-4 rounded-2xl shadow-md flex flex-col justify-between gap-2">
+
+    const KpiCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; trend: string; valueClass?: string; }> = ({ icon, label, value, trend, valueClass }) => (
+        <div className="bg-card p-4 rounded-2xl shadow-md flex flex-col justify-between gap-2">
             <div className="flex items-center gap-2">
                 {icon}
                 <p className="text-sm text-text-secondary font-bold uppercase">{label}</p>
@@ -94,7 +94,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
             <div className={`text-sm font-semibold ${trend.startsWith('+') ? 'text-green-500' : (trend.startsWith('-') ? 'text-danger' : 'text-text-secondary')}`}>{trend}</div>
         </div>
     );
-    
+
     const SectorButton: React.FC<{
         sector: Sector;
         label: string;
@@ -104,9 +104,8 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
         return (
             <button
                 onClick={() => onSectorChange(sector)}
-                className={`flex flex-col items-center justify-center gap-1 w-full rounded-2xl transition-all duration-300 p-2 ${
-                    isActive ? 'bg-primary/10 text-primary border-2 border-primary' : 'bg-card text-text-secondary hover:bg-muted'
-                }`}
+                className={`flex flex-col items-center justify-center gap-1 w-full rounded-2xl transition-all duration-300 p-2 ${isActive ? 'bg-primary/10 text-primary border-2 border-primary' : 'bg-card text-text-secondary hover:bg-muted'
+                    }`}
             >
                 <Icon className={`transition-all duration-300 ${isScrolled ? 'w-5 h-5' : 'w-8 h-8'}`} />
                 <span className={`font-bold transition-all duration-300 ${isScrolled ? 'text-xs' : 'text-sm'}`}>{label}</span>
@@ -125,7 +124,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
                     <p className="text-text-secondary text-lg mb-8 leading-relaxed">
                         Let's get your operation set up. The first step is to create your first farm.
                     </p>
-                    <button 
+                    <button
                         onClick={() => onNavigate('farms')}
                         className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                     >
@@ -140,7 +139,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
     return (
         <div className="bg-background min-h-screen">
             <header className={`bg-card shadow-md sticky top-0 z-10 transition-all duration-300 ${isScrolled ? 'py-2' : 'pt-6 pb-4'}`}>
-                <div className={`px-4 transition-all duration-300 overflow-hidden ${isScrolled ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100 mb-4'}`}>
+                <div className={`px-4 transition-all duration-300 ${isScrolled ? 'h-0 opacity-0 overflow-hidden pointer-events-none' : 'opacity-100 mb-4'}`}>
                     <h2 className="text-2xl font-bold text-text-primary">Hello, Farmer 👋</h2>
                     <p className="text-text-secondary">Here's your farm's pulse for today.</p>
                 </div>
@@ -167,7 +166,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
                             <DownloadIcon className="w-6 h-6" />
                         </button>
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-3">
                         <SectorButton sector="Layer" label="Layers" icon={LayerIcon} />
                         <SectorButton sector="Broiler" label="Broilers" icon={BroilerIcon} />
@@ -185,7 +184,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
                         <button onClick={() => onNavigate('log')} className="mt-4 text-primary font-bold hover:underline">Log today's activity &rarr;</button>
                     </div>
                 </div>
-                
+
                 <div className="bg-card rounded-2xl shadow-md p-4 space-y-3">
                     <h3 className="font-bold text-lg text-text-primary px-1 text-center">Your proactive farm partner</h3>
                     <p className="text-text-secondary text-sm text-center">Once you log your daily activities, insights and alerts will appear here to help you optimize production.</p>

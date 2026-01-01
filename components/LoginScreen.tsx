@@ -1,21 +1,11 @@
-
 import React, { useState } from 'react';
-import { GoogleIcon, CameraIcon, BellIcon } from './icons';
-import { auth } from '../lib/firebase';
-import { 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
-  sendEmailVerification,
-  sendPasswordResetEmail,
-  signOut,
-  GoogleAuthProvider,
-  signInWithPopup
-} from 'firebase/auth';
-import VerificationScreen from './VerificationScreen';
+import { CameraIcon, BellIcon } from './icons';
+import { useAuth } from '../contexts/AuthContext';
 
-type AuthMode = 'signin' | 'signup' | 'forgot-password' | 'reset-sent';
+type AuthMode = 'signin' | 'signup' | 'forgot-password' | 'reset-sent' | 'verify-email';
 
 const LoginScreen: React.FC = () => {
+  const { signUp, signIn, resetPassword } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,29 +13,10 @@ const LoginScreen: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
 
   const handleModeChange = (newMode: AuthMode) => {
     setMode(newMode);
     setError(null);
-  };
-
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
-    try {
-      // Note: In some environments, signInWithRedirect might be preferred, 
-      // but signInWithPopup is more common for web apps.
-      await signInWithPopup(auth, provider);
-    } catch (err: any) {
-      console.error("Google Auth Error:", err.code, err.message);
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError("Failed to sign in with Google. Please try again.");
-      }
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -53,17 +24,18 @@ const LoginScreen: React.FC = () => {
     setError(null);
     setLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email);
-      setMode('reset-sent');
-    } catch (err: any) {
-      console.error("Reset Error:", err.code, err.message);
-      if (err.code === 'auth/user-not-found') {
-        setError("No account found with this email.");
-      } else if (err.code === 'auth/invalid-email') {
-        setError("Invalid email address format.");
+      const { error } = await resetPassword(email);
+      if (error) {
+        if (error.message.includes('not found')) {
+          setError("No account found with this email.");
+        } else {
+          setError(error.message);
+        }
       } else {
-        setError("An error occurred. Please try again.");
+        setMode('reset-sent');
       }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -85,62 +57,74 @@ const LoginScreen: React.FC = () => {
           setLoading(false);
           return;
         }
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        await sendEmailVerification(user);
-        await signOut(auth);
-        setVerificationEmail(email);
-      } else {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        if (!user.emailVerified) {
-          await sendEmailVerification(user);
-          await signOut(auth);
-          setVerificationEmail(email);
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters");
+          setLoading(false);
+          return;
         }
-      }
-    } catch (err: any) {
-      console.error("Auth Error:", err.code, err.message);
-      const errorCode = err.code;
-
-      if (mode === 'signup') {
-        if (errorCode === 'auth/email-already-in-use') {
-          setError("User already exists. Sign in?");
-        } else if (errorCode === 'auth/invalid-email') {
-          setError("Invalid email address format.");
-        } else if (errorCode === 'auth/weak-password') {
-          setError("Password is too weak. Use at least 6 characters.");
+        const { error } = await signUp(email, password, fullName);
+        if (error) {
+          if (error.message.includes('already registered')) {
+            setError("User already exists. Sign in?");
+          } else if (error.message.includes('Invalid email')) {
+            setError("Invalid email address format.");
+          } else if (error.message.includes('Password')) {
+            setError("Password is too weak. Use at least 6 characters.");
+          } else {
+            setError(error.message);
+          }
         } else {
-          setError("An error occurred during signup. Please try again.");
+          // Supabase sends confirmation email automatically
+          setMode('verify-email');
         }
       } else {
-        if (errorCode === 'auth/invalid-credential' || 
-            errorCode === 'auth/user-not-found' || 
-            errorCode === 'auth/wrong-password') {
-          setError("Password or Email Incorrect");
-        } else if (errorCode === 'auth/invalid-email') {
-          setError("Invalid email address format.");
-        } else if (errorCode === 'auth/too-many-requests') {
-          setError("Too many failed attempts. Please try again later.");
-        } else {
-          setError("An error occurred during sign-in. Please try again.");
+        const { error } = await signIn(email, password);
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            setError("Password or Email Incorrect");
+          } else if (error.message.includes('Email not confirmed')) {
+            setMode('verify-email');
+          } else if (error.message.includes('Invalid email')) {
+            setError("Invalid email address format.");
+          } else if (error.message.includes('rate limit')) {
+            setError("Too many failed attempts. Please try again later.");
+          } else {
+            setError(error.message);
+          }
         }
+        // Success: AuthContext will update and App.tsx will show main content
       }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (verificationEmail) {
+  // Email verification screen
+  if (mode === 'verify-email') {
     return (
-      <VerificationScreen 
-        email={verificationEmail} 
-        onBackToLogin={() => setVerificationEmail(null)} 
-      />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 animate-fade-in">
+        <div className="w-full max-w-sm bg-card rounded-2xl shadow-xl p-8 border border-border text-center">
+          <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <BellIcon className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-text-primary mb-4">Check your inbox</h2>
+          <p className="text-text-secondary mb-8 leading-relaxed">
+            We sent a confirmation link to <span className="font-bold text-text-primary">{email}</span>. Click the link to verify your email and complete sign up.
+          </p>
+          <button
+            onClick={() => handleModeChange('signin')}
+            className="w-full bg-primary text-white font-bold py-4 px-4 rounded-xl text-lg hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
+          >
+            BACK TO SIGN IN
+          </button>
+        </div>
+      </div>
     );
   }
 
+  // Password reset sent screen
   if (mode === 'reset-sent') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 animate-fade-in">
@@ -150,7 +134,7 @@ const LoginScreen: React.FC = () => {
           </div>
           <h2 className="text-2xl font-bold text-text-primary mb-4">Check your inbox</h2>
           <p className="text-text-secondary mb-8 leading-relaxed">
-            We sent you a password change link to <span className="font-bold text-text-primary">{email}</span>. Verify it and log in.
+            We sent you a password reset link to <span className="font-bold text-text-primary">{email}</span>. Click the link to reset your password.
           </p>
           <button
             onClick={() => handleModeChange('signin')}
@@ -167,10 +151,10 @@ const LoginScreen: React.FC = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 animate-fade-in">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-           <h1 className="text-4xl font-bold text-primary">HomeFarm</h1>
-           <p className="text-text-secondary mt-2">Your Farm's Data, Simplified.</p>
+          <h1 className="text-4xl font-bold text-primary">HomeFarm</h1>
+          <p className="text-text-secondary mt-2">Your Farm's Data, Simplified.</p>
         </div>
-        
+
         <div className="bg-card rounded-2xl shadow-xl p-8 border border-border">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -246,7 +230,7 @@ const LoginScreen: React.FC = () => {
                 />
               </div>
             )}
-            
+
             <button
               type="submit"
               disabled={loading}
@@ -269,29 +253,6 @@ const LoginScreen: React.FC = () => {
               </button>
             )}
           </form>
-
-          {mode !== 'forgot-password' && (
-            <>
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-card px-2 text-text-secondary font-bold uppercase">or</span>
-                </div>
-              </div>
-              
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={loading}
-                className="w-full bg-card border border-border text-text-primary font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-3 hover:bg-muted transition-all active:scale-95 disabled:opacity-50"
-              >
-                <GoogleIcon className="w-5 h-5" />
-                {loading ? 'Processing...' : 'Continue with Google'}
-              </button>
-            </>
-          )}
         </div>
 
         <div className="text-center mt-8">
