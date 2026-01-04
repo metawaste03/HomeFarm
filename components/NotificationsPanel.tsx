@@ -47,6 +47,21 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications =
             <div className="space-y-3">
                 {notifications.map((notif) => {
                     const Icon = iconMap[notif.type];
+                    const textColors = {
+                        warning: 'text-orange-800 dark:text-orange-200',
+                        info: 'text-blue-800 dark:text-blue-200',
+                        health: 'text-red-800 dark:text-red-200',
+                    };
+                    const messageColors = {
+                        warning: 'text-orange-700 dark:text-orange-300',
+                        info: 'text-blue-700 dark:text-blue-300',
+                        health: 'text-red-700 dark:text-red-300',
+                    };
+                    const timeColors = {
+                        warning: 'text-orange-600 dark:text-orange-400',
+                        info: 'text-blue-600 dark:text-blue-400',
+                        health: 'text-red-600 dark:text-red-400',
+                    };
                     return (
                         <div
                             key={notif.id}
@@ -55,10 +70,10 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications =
                             <div className="flex items-start gap-2">
                                 <Icon className="w-4 h-4 flex-shrink-0 mt-0.5" />
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm">{notif.title}</p>
-                                    <p className="text-xs opacity-80 mt-0.5">{notif.message}</p>
+                                    <p className={`font-semibold text-sm ${textColors[notif.type]}`}>{notif.title}</p>
+                                    <p className={`text-xs mt-0.5 ${messageColors[notif.type]}`}>{notif.message}</p>
                                     {notif.time && (
-                                        <p className="text-xs opacity-60 mt-1 flex items-center gap-1">
+                                        <p className={`text-xs mt-1 flex items-center gap-1 ${timeColors[notif.type]}`}>
                                             <ClockIcon className="w-3 h-3" />
                                             {notif.time}
                                         </p>

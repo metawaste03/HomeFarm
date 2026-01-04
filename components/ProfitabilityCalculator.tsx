@@ -140,30 +140,30 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
             </div>
 
             {/* Results - Enhanced with depth and visual appeal */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 p-6 shadow-inner">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 p-4 shadow-inner">
                 {/* Background decoration */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-lime-400/20 to-green-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
 
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 relative">
-                    <div className="bg-card p-4 rounded-xl shadow-md border border-border text-center transform hover:scale-105 transition-transform">
-                        <p className="text-xs text-text-secondary uppercase mb-2 font-medium">Total Costs</p>
-                        <p className="text-2xl font-bold text-red-500">{formatCurrency(calculations.totalCosts)}</p>
+                <div className="grid grid-cols-2 gap-3 relative">
+                    <div className="bg-card p-3 rounded-xl shadow-md border border-border text-center">
+                        <p className="text-xs text-text-secondary uppercase mb-1 font-medium">Total Costs</p>
+                        <p className="text-lg font-bold text-red-500 truncate">{formatCurrency(calculations.totalCosts)}</p>
                     </div>
-                    <div className="bg-card p-4 rounded-xl shadow-md border border-border text-center transform hover:scale-105 transition-transform">
-                        <p className="text-xs text-text-secondary uppercase mb-2 font-medium">Expected Revenue</p>
-                        <p className="text-2xl font-bold text-blue-500">{formatCurrency(calculations.totalRevenue)}</p>
+                    <div className="bg-card p-3 rounded-xl shadow-md border border-border text-center">
+                        <p className="text-xs text-text-secondary uppercase mb-1 font-medium">Revenue</p>
+                        <p className="text-lg font-bold text-blue-500 truncate">{formatCurrency(calculations.totalRevenue)}</p>
                     </div>
-                    <div className={`p-4 rounded-xl shadow-lg text-center transform hover:scale-105 transition-transform ${calculations.profit >= 0
-                            ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white'
-                            : 'bg-gradient-to-br from-red-500 to-rose-600 text-white'
+                    <div className={`p-3 rounded-xl shadow-lg text-center ${calculations.profit >= 0
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white'
+                        : 'bg-gradient-to-br from-red-500 to-rose-600 text-white'
                         }`}>
-                        <p className="text-xs uppercase mb-2 font-medium opacity-90">Net Profit</p>
-                        <p className="text-2xl font-bold">{formatCurrency(calculations.profit)}</p>
-                        {calculations.profit >= 0 && <span className="text-xs">🎉 Looking good!</span>}
+                        <p className="text-xs uppercase mb-1 font-medium opacity-90">Net Profit</p>
+                        <p className="text-lg font-bold truncate">{formatCurrency(calculations.profit)}</p>
+                        {calculations.profit >= 0 && <span className="text-xs">🎉</span>}
                     </div>
-                    <div className="bg-card p-4 rounded-xl shadow-md border border-border text-center transform hover:scale-105 transition-transform">
-                        <p className="text-xs text-text-secondary uppercase mb-2 font-medium">Break-even Price</p>
-                        <p className="text-2xl font-bold text-purple-500">₦{calculations.breakEvenPrice.toFixed(2)}</p>
+                    <div className="bg-card p-3 rounded-xl shadow-md border border-border text-center">
+                        <p className="text-xs text-text-secondary uppercase mb-1 font-medium">Break-even</p>
+                        <p className="text-lg font-bold text-purple-500 truncate">₦{calculations.breakEvenPrice.toFixed(0)}</p>
                     </div>
                 </div>
 
