@@ -1,17 +1,31 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables. Please check your .env file.');
+// Check for missing environment variables
+const isMissingEnvVars = !supabaseUrl || !supabaseAnonKey;
+
+if (isMissingEnvVars) {
+    console.error(
+        '⚠️ Supabase environment variables are not configured.\n' +
+        'Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in:\n' +
+        '- Local: .env.local file\n' +
+        '- Vercel: Project Settings > Environment Variables'
+    );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true,
-    },
-});
+// Create a client even if env vars are missing (will fail on actual API calls)
+// This prevents the app from crashing on load
+export const supabase: SupabaseClient<Database> = isMissingEnvVars
+    ? createClient<Database>('https://placeholder.supabase.co', 'placeholder_key')
+    : createClient<Database>(supabaseUrl, supabaseAnonKey, {
+        auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true,
+        },
+    });
+
+export const isSupabaseConfigured = !isMissingEnvVars;

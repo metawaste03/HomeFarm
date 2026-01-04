@@ -39,7 +39,7 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
     const [notes, setNotes] = useState('');
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
-    
+
     const averageWeightInGrams = useMemo(() => {
         if (sampledfish > 0 && totalWeight > 0) {
             return Math.round((totalWeight / sampledfish) * 1000);
@@ -52,12 +52,12 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
         const num = parser(e.target.value);
         setter(isNaN(num) || num < 0 ? 0 : num);
     };
-    
+
     const handleWaterQualityChange = (param: keyof WaterQuality, value: string) => {
         const num = parseFloat(value);
         setWaterQuality(prev => ({ ...prev, [param]: isNaN(num) || num < 0 ? 0 : num }));
     };
-    
+
     const getParamStatusColor = (param: keyof WaterQuality): string => {
         const value = waterQuality[param];
         if (value === 0) return 'text-text-primary';
@@ -88,11 +88,17 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
             onNavigate('dashboard');
         }, 2000);
     };
-    
+
     const handleSaveHealthLog = (data: HealthLogData) => {
         console.log('Health Log Saved:', data);
         alert('Health Note Recorded!');
     };
+
+    // Track if user has started filling the form
+    const hasInteracted = useMemo(() => {
+        const hasWaterQuality = waterQuality.ph > 0 || waterQuality.temperature > 0 || waterQuality.ammonia > 0 || waterQuality.dissolvedOxygen > 0;
+        return feedKg > 0 || mortality > 0 || notes.trim().length > 0 || feedBrand.trim().length > 0 || sampledfish > 0 || totalWeight > 0 || hasWaterQuality;
+    }, [feedKg, mortality, notes, feedBrand, sampledfish, totalWeight, waterQuality]);
 
     const WaterQualityInput: React.FC<{ param: keyof WaterQuality, label: string, unit: string, optimal: string }> = ({ param, label, unit, optimal }) => (
         <div>
@@ -115,28 +121,40 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
     return (
         <div className="bg-background min-h-screen">
             <div className="relative">
-                <header className="bg-card p-4 shadow-sm sticky top-0 z-10">
-                    <div className="flex justify-between items-center">
-                        <button onClick={() => onNavigate('dashboard')} className="text-primary font-semibold">&larr; Back</button>
-                         <div className="text-center">
-                            <h1 className="text-xl font-bold text-text-primary">{farm?.name || "Select a Farm"}</h1>
-                            <p className="text-sm text-text-secondary">{batch?.name || "Select a Batch"}</p>
+                {/* Clean Header - Title + Date Badge Only */}
+                <header className="bg-card p-4 pt-6 shadow-sm">
+                    <div className="max-w-2xl mx-auto text-center">
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className="px-3 py-1 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 text-xs font-bold rounded-full uppercase">
+                                Fish
+                            </span>
                         </div>
-                        <div className="w-20"></div>
-                    </div>
-                    <div className="relative mt-4">
-                        <label htmlFor="date-picker" className="flex items-center justify-center gap-2 text-lg font-semibold text-primary cursor-pointer">
-                            <CalendarIcon className="w-6 h-6" />
-                            <span>{new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        </label>
-                        <input id="date-picker" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" />
+                        <h1 className="text-2xl font-bold text-text-primary">Daily Log</h1>
+
+                        {/* Date Badge */}
+                        <div className="relative mt-3 inline-block">
+                            <label
+                                htmlFor="date-picker"
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm font-medium text-text-primary cursor-pointer hover:bg-border transition-colors"
+                            >
+                                <CalendarIcon className="w-4 h-4 text-primary" />
+                                <span>{new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                            </label>
+                            <input
+                                id="date-picker"
+                                type="date"
+                                value={date}
+                                onChange={(e) => setDate(e.target.value)}
+                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                            />
+                        </div>
                     </div>
                 </header>
 
-                <div className="p-4 space-y-4 pb-32">
+                <div className="p-4 space-y-4 pb-32 lg:max-w-2xl lg:mx-auto">
                     <div className="bg-card rounded-xl shadow-sm p-4 space-y-4">
-                         <div className="flex items-center gap-3">
-                            <DropletIcon className="w-8 h-8 text-cyan-500 dark:text-cyan-400"/>
+                        <div className="flex items-center gap-3">
+                            <DropletIcon className="w-8 h-8 text-cyan-500 dark:text-cyan-400" />
                             <h3 className="text-lg font-semibold text-text-primary">Water Quality Parameters</h3>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -146,27 +164,27 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
                             <WaterQualityInput param="dissolvedOxygen" label="Oxygen" unit="mg/L" optimal="> 5" />
                         </div>
                     </div>
-                    
-                     <div className="bg-card rounded-xl shadow-sm p-4">
+
+                    <div className="bg-card rounded-xl shadow-sm p-4">
                         <div className="flex items-center gap-3 mb-4">
-                            <FeedBagIcon className="w-8 h-8 text-yellow-600 dark:text-yellow-400"/>
+                            <FeedBagIcon className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
                             <h3 className="text-lg font-semibold text-text-primary">Feed Consumed (kg)</h3>
                         </div>
                         <div className="flex items-center justify-between gap-4">
-                            <button onClick={() => setFeedKg(f => Math.max(0, f - 0.1))} className="bg-muted rounded-full p-3 text-text-secondary hover:bg-border active:bg-slate-400 transition-colors transform active:scale-90"> <MinusIcon className="w-8 h-8" /> </button>
+                            <button onClick={() => setFeedKg(f => Math.max(0, f - 0.1))} className="bg-muted rounded-full p-3 text-text-secondary hover:bg-border active:bg-slate-400 transition-colors transform active:scale-90" aria-label="Decrease feed consumed"> <MinusIcon className="w-8 h-8" /> </button>
                             <div className="flex items-baseline justify-center w-full">
                                 <input type="number" step="0.1" value={feedKg > 0 ? feedKg.toString() : ''} onChange={handleNumericInput(setFeedKg, true)} placeholder="0.0" className="text-6xl font-bold text-center bg-transparent focus:outline-none w-full text-text-primary" />
                                 <span className="text-2xl font-semibold text-text-secondary">kg</span>
                             </div>
-                            <button onClick={() => setFeedKg(f => f + 0.1)} className="bg-primary rounded-full p-3 text-white hover:bg-primary-600 active:bg-primary-700 transition-colors transform active:scale-90"> <PlusIcon className="w-8 h-8" /> </button>
+                            <button onClick={() => setFeedKg(f => f + 0.1)} className="bg-primary rounded-full p-3 text-white hover:bg-primary-600 active:bg-primary-700 transition-colors transform active:scale-90" aria-label="Increase feed consumed"> <PlusIcon className="w-8 h-8" /> </button>
                         </div>
-                         <div className="mt-4 pt-4 border-t border-border">
+                        <div className="mt-4 pt-4 border-t border-border">
                             <label htmlFor="feed-brand" className="block text-sm font-medium text-text-secondary mb-1">Feed Brand / Type</label>
                             <input id="feed-brand" type="text" value={feedBrand} onChange={(e) => setFeedBrand(e.target.value)} placeholder="e.g., Aller Aqua Tilapia" className="w-full p-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition bg-card text-text-primary" />
                         </div>
                     </div>
 
-                    <InputCard icon={<MortalityIcon className="w-8 h-8 text-danger"/>} label="Mortality" value={mortality} onValueChange={setMortality} onIncrement={() => setMortality(c => c + 1)} onDecrement={() => setMortality(c => Math.max(0, c - 1))} />
+                    <InputCard icon={<MortalityIcon className="w-8 h-8 text-danger" />} label="Mortality" value={mortality} onValueChange={setMortality} onIncrement={() => setMortality(c => c + 1)} onDecrement={() => setMortality(c => Math.max(0, c - 1))} />
 
                     <div className="grid grid-cols-2 gap-3">
                         <button onClick={() => setWeightModalOpen(true)} className="bg-card p-4 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-muted transition-colors">
@@ -174,11 +192,11 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
                             <span className="text-sm font-bold text-text-primary text-center">Record Sampling</span>
                         </button>
                         <button onClick={() => setIsHealthModalOpen(true)} className="bg-card p-4 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-muted transition-colors">
-                             <StethoscopeIcon className="w-8 h-8 text-danger" />
-                             <span className="text-sm font-bold text-text-primary text-center">Record Health</span>
+                            <StethoscopeIcon className="w-8 h-8 text-danger" />
+                            <span className="text-sm font-bold text-text-primary text-center">Record Health</span>
                         </button>
                     </div>
-                    
+
                     <div className="bg-card rounded-xl shadow-sm p-4">
                         <div className="flex items-center gap-3 mb-2">
                             <NotepadIcon className="w-6 h-6 text-text-secondary" />
@@ -188,13 +206,35 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
                     </div>
                 </div>
 
-                <div className="fixed bottom-16 left-0 right-0 p-4 bg-card/80 backdrop-blur-sm border-t border-border z-10">
-                    <div className="max-w-md mx-auto">
-                        <button onClick={handleSave} disabled={!batch || showConfirmation} className={`w-full text-white font-bold py-4 px-4 rounded-xl text-lg transition-all duration-300 ease-in-out transform flex items-center justify-center ${ showConfirmation ? 'bg-green-500' : !batch ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed' : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95' }`}>
-                            {showConfirmation ? ( <> <CheckCircleIcon className="w-6 h-6 mr-2 animate-pulse" /> Saved! </> ) : ( 'SAVE DAILY LOG' )}
-                        </button>
+                {/* Save Button - Only appears after user starts filling */}
+                {(hasInteracted || showConfirmation) && (
+                    <div className="fixed bottom-16 left-0 right-0 p-4 bg-card/90 backdrop-blur-sm border-t border-border z-10 lg:static lg:bg-transparent lg:border-0 lg:p-0 animate-slide-in-right">
+                        <div className="max-w-md mx-auto lg:max-w-2xl space-y-2">
+                            <button
+                                onClick={handleSave}
+                                disabled={showConfirmation}
+                                className={`w-full text-white font-bold py-4 px-4 rounded-2xl text-lg transition-all duration-300 ease-in-out transform flex items-center justify-center ${showConfirmation
+                                    ? 'bg-green-500'
+                                    : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95'
+                                    }`}
+                            >
+                                {showConfirmation ? (
+                                    <>
+                                        <CheckCircleIcon className="w-6 h-6 mr-2 animate-pulse" />
+                                        Recorded!
+                                    </>
+                                ) : (
+                                    'SAVE DAILY LOG'
+                                )}
+                            </button>
+                            {showConfirmation && (
+                                <p className="text-center text-sm text-lime-600 dark:text-lime-400 font-medium animate-fade-in">
+                                    ✨ This improves your yield forecast.
+                                </p>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {isWeightModalOpen && (
                     <div className="fixed inset-0 bg-black/50 z-30 flex items-center justify-center p-4 animate-fade-in" onClick={() => setWeightModalOpen(false)}>
@@ -224,8 +264,8 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
                         </div>
                     </div>
                 )}
-                
-                <HealthLogModal 
+
+                <HealthLogModal
                     isOpen={isHealthModalOpen}
                     onClose={() => setIsHealthModalOpen(false)}
                     onSave={handleSaveHealthLog}

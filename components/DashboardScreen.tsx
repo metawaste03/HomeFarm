@@ -1,11 +1,15 @@
-
-import React, { useEffect, useRef, useMemo, useState } from 'react';
-import { Chart, ChartOptions } from 'chart.js/auto';
-import { EggIcon, ChickenIcon, ChevronDownIcon, ScaleIcon, DropletIcon, FishIcon, DownloadIcon, LayerIcon, BroilerIcon, ArrowTrendingUpIcon, LightbulbIcon, BellIcon, InfoIcon, HomeIcon, PlusIcon } from './icons';
-import { MortalityIcon, BirdStockIcon, FeedBagIcon as CustomFeedBagIcon } from './CustomIcons';
-import type { Screen, Theme } from '../App';
-import ExportDataModal from './ExportDataModal';
+import React, { useState, useMemo } from 'react';
+import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, PlusIcon, HomeIcon, ChickenIcon, BatchIcon, WalletIcon, TaskIcon } from './icons';
+import type { Screen } from '../App';
 import { useFarm, Sector } from '../contexts/FarmContext';
+import { useTasks } from '../contexts/TaskContext';
+import { useSales } from '../contexts/SalesContext';
+import KpiCard from './KpiCard';
+import TimeFilter from './TimeFilter';
+import ProfitabilityCalculator from './ProfitabilityCalculator';
+import SmartAdvisor from './SmartAdvisor';
+import ActivityFeed from './ActivityFeed';
+import NotificationsPanel from './NotificationsPanel';
 
 interface DashboardScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -13,87 +17,51 @@ interface DashboardScreenProps {
     onScopeChange: (scope: string) => void;
     activeSector: Sector;
     onSectorChange: (sector: Sector) => void;
-    theme: Theme;
+    theme: string;
 }
 
-const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedScope, onScopeChange, activeSector, onSectorChange, theme }) => {
+const DashboardScreen: React.FC<DashboardScreenProps> = ({
+    onNavigate,
+    selectedScope,
+    onScopeChange,
+    activeSector,
+    onSectorChange,
+}) => {
     const { farms, batches } = useFarm();
+    const { tasks } = useTasks();
+    const { sales } = useSales();
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-    const [isExportModalOpen, setExportModalOpen] = useState(false);
-    const [isLoadingKpis, setIsLoadingKpis] = useState(false);
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [showChart, setShowChart] = useState(false);
-
-    const productionChartRef = useRef<HTMLCanvasElement>(null);
-    const chartInstances = useRef<{ production?: Chart }>({});
-
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 30);
-        };
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
+    const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
 
     const sectorBatches = useMemo(() => batches.filter(b => b.sector === activeSector), [batches, activeSector]);
+    const activeBatches = useMemo(() => sectorBatches.filter(b => b.status === 'Active'), [sectorBatches]);
+    const totalStock = useMemo(() => activeBatches.reduce((sum, b) => sum + (b.stockCount || 0), 0), [activeBatches]);
+    const pendingTasks = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
 
-    const selectedBatch = useMemo(() => {
-        if (!selectedScope.includes(' - ')) return null;
-        const [farmName, batchName] = selectedScope.split(' - ');
-        return batches.find(b => b.farm === farmName && b.name === batchName && b.sector === activeSector) || null;
-    }, [selectedScope, batches, activeSector]);
-
-    useEffect(() => {
-        if (farms.length > 0) {
-            const firstBatchOfSector = sectorBatches[0];
-            if (firstBatchOfSector && (selectedBatch?.sector !== activeSector || !selectedBatch)) {
-                onScopeChange(`${firstBatchOfSector.farm} - ${firstBatchOfSector.name}`);
-            } else if (!firstBatchOfSector) {
-                onScopeChange(`All ${activeSector} Farms`);
-            }
-        }
-    }, [activeSector, sectorBatches, onScopeChange, selectedBatch, farms.length]);
-
-    useEffect(() => {
-        setIsLoadingKpis(true);
-        const timer = setTimeout(() => setIsLoadingKpis(false), 300);
-        return () => clearTimeout(timer);
-    }, [activeSector, selectedScope]);
+    // Calculate today's sales
+    const todaySales = useMemo(() => {
+        const today = new Date().toISOString().split('T')[0];
+        return sales
+            .filter(s => s.date === today)
+            .reduce((sum, s) => sum + s.amount, 0);
+    }, [sales]);
 
     const farmOptions = useMemo(() => {
         const sectorFarms = [...new Set<string>(sectorBatches.map(b => b.farm))];
-        const options = [{ name: `All ${activeSector} Farms`, children: [] }];
+        const options = [{ name: `All ${activeSector} Farms`, children: [] as string[] }];
         sectorFarms.forEach(farmName => {
-            options.push({ name: farmName, children: sectorBatches.filter(b => b.farm === farmName).map(b => b.name) });
+            options.push({
+                name: farmName,
+                children: sectorBatches.filter(b => b.farm === farmName).map(b => b.name)
+            });
         });
         return options;
     }, [sectorBatches, activeSector]);
 
-    // Financial/production data would normally be in the kpiData from context
-    // For now, we return null if no farms exist, else we'd fetch actual data
-    const data = null;
-
-    useEffect(() => {
-        if (chartInstances.current.production) chartInstances.current.production.destroy();
-        // Charts would be initialized here if data existed
-        return () => { if (chartInstances.current.production) chartInstances.current.production.destroy(); }
-    }, [selectedScope, activeSector, theme, showChart]);
-
     const handleSelectScope = (scope: string) => {
         onScopeChange(scope);
         setIsSelectorOpen(false);
-    }
-
-    const KpiCard: React.FC<{ icon: React.ReactNode; label: string; value: string | number; trend: string; valueClass?: string; }> = ({ icon, label, value, trend, valueClass }) => (
-        <div className="bg-card p-4 rounded-2xl shadow-md flex flex-col justify-between gap-2">
-            <div className="flex items-center gap-2">
-                {icon}
-                <p className="text-sm text-text-secondary font-bold uppercase">{label}</p>
-            </div>
-            <p className={`text-4xl font-bold ${valueClass || 'text-text-primary'}`}>{value}</p>
-            <div className={`text-sm font-semibold ${trend.startsWith('+') ? 'text-green-500' : (trend.startsWith('-') ? 'text-danger' : 'text-text-secondary')}`}>{trend}</div>
-        </div>
-    );
+    };
 
     const SectorButton: React.FC<{
         sector: Sector;
@@ -104,15 +72,18 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
         return (
             <button
                 onClick={() => onSectorChange(sector)}
-                className={`flex flex-col items-center justify-center gap-1 w-full rounded-2xl transition-all duration-300 p-2 ${isActive ? 'bg-primary/10 text-primary border-2 border-primary' : 'bg-card text-text-secondary hover:bg-muted'
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 ${isActive
+                    ? 'bg-primary text-white shadow-md'
+                    : 'bg-muted text-text-secondary hover:bg-slate-200 dark:hover:bg-slate-700'
                     }`}
             >
-                <Icon className={`transition-all duration-300 ${isScrolled ? 'w-5 h-5' : 'w-8 h-8'}`} />
-                <span className={`font-bold transition-all duration-300 ${isScrolled ? 'text-xs' : 'text-sm'}`}>{label}</span>
+                <Icon className="w-5 h-5" />
+                <span className="font-medium">{label}</span>
             </button>
         );
     };
 
+    // Empty state for new users
     if (farms.length === 0) {
         return (
             <div className="bg-background min-h-screen flex items-center justify-center p-6">
@@ -138,60 +109,135 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigate, selectedS
 
     return (
         <div className="bg-background min-h-screen">
-            <header className={`bg-card shadow-md sticky top-0 z-10 transition-all duration-300 ${isScrolled ? 'py-2' : 'pt-6 pb-4'}`}>
-                <div className={`px-4 transition-all duration-300 ${isScrolled ? 'h-0 opacity-0 overflow-hidden pointer-events-none' : 'opacity-100 mb-4'}`}>
-                    <h2 className="text-2xl font-bold text-text-primary">Hello, Farmer 👋</h2>
-                    <p className="text-text-secondary">Here's your farm's pulse for today.</p>
-                </div>
+            {/* Main Content Area */}
+            <div className="lg:flex">
+                {/* Left: Main Content */}
+                <main className="flex-1 p-4 lg:p-6 lg:pr-3 space-y-6">
+                    {/* Header */}
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        <div>
+                            <h1 className="text-2xl lg:text-3xl font-bold text-text-primary">
+                                Hello, Farmer 👋
+                            </h1>
+                            <p className="text-text-secondary">Here's your farm's pulse for today.</p>
+                        </div>
 
-                <div className="px-4 space-y-4">
-                    <div className="flex justify-between items-center gap-2">
-                        <div className="relative flex-grow">
-                            <button onClick={() => setIsSelectorOpen(!isSelectorOpen)} className="w-full text-left bg-muted p-3 rounded-full flex justify-between items-center pr-10">
-                                <span className="font-bold text-text-primary truncate">{selectedScope || `All ${activeSector} Farms`}</span>
-                                <ChevronDownIcon className={`w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 transition-transform text-text-secondary ${isSelectorOpen ? 'rotate-180' : ''}`} />
+                        {/* Scope Selector */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsSelectorOpen(!isSelectorOpen)}
+                                className="w-full lg:w-auto min-w-[200px] text-left bg-muted p-3 rounded-xl flex justify-between items-center gap-4 border border-border"
+                            >
+                                <span className="font-medium text-text-primary truncate">
+                                    {selectedScope || `All ${activeSector} Farms`}
+                                </span>
+                                <ChevronDownIcon className={`w-5 h-5 text-text-secondary transition-transform ${isSelectorOpen ? 'rotate-180' : ''}`} />
                             </button>
                             {isSelectorOpen && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-popover shadow-lg rounded-2xl z-20 border border-border max-h-60 overflow-y-auto">
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-popover shadow-lg rounded-xl z-20 border border-border max-h-60 overflow-y-auto">
                                     {farmOptions.map(opt => (
                                         <React.Fragment key={opt.name}>
-                                            <div onClick={() => handleSelectScope(opt.name)} className="p-3 hover:bg-muted cursor-pointer font-bold">{opt.name}</div>
-                                            {opt.children.map(child => (<div key={child} onClick={() => handleSelectScope(`${opt.name} - ${child}`)} className="p-3 pl-8 hover:bg-muted cursor-pointer">- {child}</div>))}
+                                            <div
+                                                onClick={() => handleSelectScope(opt.name)}
+                                                className="p-3 hover:bg-muted cursor-pointer font-medium text-text-primary"
+                                            >
+                                                {opt.name}
+                                            </div>
+                                            {opt.children.map(child => (
+                                                <div
+                                                    key={child}
+                                                    onClick={() => handleSelectScope(`${opt.name} - ${child}`)}
+                                                    className="p-3 pl-8 hover:bg-muted cursor-pointer text-text-secondary"
+                                                >
+                                                    {child}
+                                                </div>
+                                            ))}
                                         </React.Fragment>
                                     ))}
                                 </div>
                             )}
                         </div>
-                        <button onClick={() => setExportModalOpen(true)} className="p-2 text-text-secondary hover:text-primary rounded-full flex-shrink-0" aria-label="Export Data">
-                            <DownloadIcon className="w-6 h-6" />
-                        </button>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Sector Tabs */}
+                    <div className="flex gap-2 overflow-x-auto pb-2">
                         <SectorButton sector="Layer" label="Layers" icon={LayerIcon} />
                         <SectorButton sector="Broiler" label="Broilers" icon={BroilerIcon} />
                         <SectorButton sector="Fish" label="Fish" icon={FishIcon} />
                     </div>
-                </div>
-            </header>
 
-            <div className="p-4 space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {/* Placeholder for real data when connected to context/backend */}
-                    <div className="col-span-2 md:col-span-4 bg-card p-10 rounded-2xl shadow-md text-center text-text-secondary">
-                        <ArrowTrendingUpIcon className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        <p className="font-medium">No performance data yet for this batch.</p>
-                        <button onClick={() => onNavigate('log')} className="mt-4 text-primary font-bold hover:underline">Log today's activity &rarr;</button>
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <KpiCard
+                            icon={<ChickenIcon className="w-5 h-5 text-blue-500" />}
+                            label="Total Stock"
+                            value={totalStock.toLocaleString()}
+                            trend={totalStock > 0 ? '+5%' : undefined}
+                            accentColor="blue"
+                            staggerIndex={0}
+                        />
+                        <KpiCard
+                            icon={<BatchIcon className="w-5 h-5 text-lime-500" />}
+                            label="Active Batches"
+                            value={activeBatches.length}
+                            accentColor="green"
+                            staggerIndex={1}
+                        />
+                        <KpiCard
+                            icon={<WalletIcon className="w-5 h-5 text-purple-500" />}
+                            label="Today's Sales"
+                            value={`₦${todaySales.toLocaleString()}`}
+                            accentColor="purple"
+                            staggerIndex={2}
+                        />
+                        <KpiCard
+                            icon={<TaskIcon className="w-5 h-5 text-orange-500" />}
+                            label="Pending Tasks"
+                            value={pendingTasks}
+                            accentColor="orange"
+                            staggerIndex={3}
+                        />
                     </div>
-                </div>
 
-                <div className="bg-card rounded-2xl shadow-md p-4 space-y-3">
-                    <h3 className="font-bold text-lg text-text-primary px-1 text-center">Your proactive farm partner</h3>
-                    <p className="text-text-secondary text-sm text-center">Once you log your daily activities, insights and alerts will appear here to help you optimize production.</p>
-                </div>
+                    {/* Time Filter */}
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-bold text-text-primary">Production Overview</h2>
+                        <TimeFilter selected={timeFilter} onChange={setTimeFilter} />
+                    </div>
+
+                    {/* Chart Placeholder */}
+                    <div className="bg-card rounded-2xl shadow-sm border border-border p-6 h-64 flex items-center justify-center">
+                        <div className="text-center text-text-secondary">
+                            <p className="font-medium">Production chart will appear here</p>
+                            <p className="text-sm mt-1">Start logging daily activities to see trends</p>
+                            <button
+                                onClick={() => onNavigate('log')}
+                                className="mt-4 text-primary font-medium hover:underline"
+                            >
+                                Log today's activity →
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Profitability Calculator */}
+                    <ProfitabilityCalculator sector={activeSector} />
+
+                    {/* Smart Advisor */}
+                    <SmartAdvisor sector={activeSector} />
+                </main>
+
+                {/* Right Panel - Desktop Only */}
+                <aside className="hidden lg:block w-80 p-6 pl-3 space-y-6">
+                    <NotificationsPanel />
+                    <ActivityFeed />
+                </aside>
             </div>
 
-            {isExportModalOpen && selectedBatch && <ExportDataModal onClose={() => setExportModalOpen(false)} initialBatch={selectedBatch} initialDateRange={"Last 7 Days"} />}
+            {/* Mobile Activity Section */}
+            <div className="lg:hidden p-4 space-y-6">
+                <NotificationsPanel />
+                <ActivityFeed />
+            </div>
         </div>
     );
 };

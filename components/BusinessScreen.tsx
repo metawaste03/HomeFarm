@@ -12,11 +12,11 @@ const BusinessScreen: React.FC<BusinessScreenProps> = ({ onNavigate }) => {
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10">
                 <h1 className="text-2xl font-bold text-center text-text-primary">Business Hub</h1>
-                <p className="text-center text-sm text-text-secondary mt-1">Manage your farm's operations and finances.</p>
             </header>
 
             <div className="p-4 space-y-4">
-                <button 
+                {/* Income & Sales - Now First */}
+                <button
                     onClick={() => onNavigate('sales')}
                     className="w-full bg-card rounded-xl shadow-sm p-6 flex items-center justify-between hover:bg-muted transition-colors group"
                 >
@@ -32,7 +32,8 @@ const BusinessScreen: React.FC<BusinessScreenProps> = ({ onNavigate }) => {
                     <ChevronRightIcon className="w-6 h-6 text-text-secondary group-hover:text-primary transition-colors" />
                 </button>
 
-                <button 
+                {/* Inventory - Now Second */}
+                <button
                     onClick={() => onNavigate('inventory')}
                     className="w-full bg-card rounded-xl shadow-sm p-6 flex items-center justify-between hover:bg-muted transition-colors group"
                 >
@@ -47,6 +48,11 @@ const BusinessScreen: React.FC<BusinessScreenProps> = ({ onNavigate }) => {
                     </div>
                     <ChevronRightIcon className="w-6 h-6 text-text-secondary group-hover:text-primary transition-colors" />
                 </button>
+
+                {/* Description moved to bottom */}
+                <p className="text-center text-sm text-text-secondary pt-4">
+                    Manage your farm's operations and finances.
+                </p>
             </div>
         </div>
     );
