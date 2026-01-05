@@ -189,46 +189,36 @@ const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({ farm, batches, onClos
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
-                {/* Warning Icon */}
-                <div className="mx-auto bg-red-100 dark:bg-red-900/30 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                    <WarningIcon className="w-8 h-8 text-danger" />
+        <div className="fixed inset-0 bg-black/50 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+            <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg p-4 sm:p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                {/* Warning Icon - smaller on mobile */}
+                <div className="mx-auto bg-red-100 dark:bg-red-900/30 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mb-3">
+                    <WarningIcon className="w-6 h-6 sm:w-7 sm:h-7 text-danger" />
                 </div>
 
-                {/* Title */}
-                <h3 className="text-xl font-bold mb-2 text-text-primary text-center">Delete Farm?</h3>
-
-                {/* Farm Name */}
-                <p className="text-center mb-4">
-                    <span className="font-bold text-lg text-danger">"{farm.name}"</span>
+                {/* Title & Farm Name Combined */}
+                <h3 className="text-lg font-bold text-text-primary text-center mb-1">Delete Farm?</h3>
+                <p className="text-center mb-3">
+                    <span className="font-bold text-danger">"{farm.name}"</span>
                 </p>
 
-                {/* Cascading Warning - What will be deleted */}
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-4">
-                    <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">
-                        ⚠️ This will permanently delete:
+                {/* Compact Cascading Warning */}
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-3">
+                    <p className="text-xs font-semibold text-red-700 dark:text-red-400 mb-1">⚠️ This will permanently delete:</p>
+                    <p className="text-xs text-red-600 dark:text-red-300">
+                        Farm settings{totalBatchCount > 0 ? `, ${totalBatchCount} batch${totalBatchCount !== 1 ? 'es' : ''}` : ''}, all logs, sales & tasks
                     </p>
-                    <ul className="text-sm text-red-600 dark:text-red-300 space-y-1 ml-4">
-                        <li>• The farm and all its settings</li>
-                        {totalBatchCount > 0 && (
-                            <li>• {totalBatchCount} batch{totalBatchCount !== 1 ? 'es' : ''} ({activeBatchCount} active)</li>
-                        )}
-                        <li>• All associated daily logs</li>
-                        <li>• All sales records for this farm</li>
-                        <li>• All tasks linked to this farm</li>
-                    </ul>
                 </div>
 
-                <p className="text-xs text-text-secondary text-center mb-4">
+                <p className="text-xs text-text-secondary text-center mb-3">
                     This action <span className="font-bold">cannot be undone</span>.
                 </p>
 
-                {/* Action Buttons */}
-                <div className="flex justify-center gap-3">
+                {/* Compact Action Buttons */}
+                <div className="flex gap-2">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold transition-colors"
+                        className="flex-1 py-2.5 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold transition-colors text-sm"
                         disabled={isDeleting}
                     >
                         Cancel
@@ -236,7 +226,7 @@ const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({ farm, batches, onClos
                     <button
                         onClick={handleConfirm}
                         disabled={countdown > 0 || isDeleting}
-                        className={`px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${countdown > 0
+                        className={`flex-1 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-1 text-sm ${countdown > 0
                             ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                             : 'bg-danger hover:bg-red-600 text-white'
                             }`}
@@ -246,7 +236,7 @@ const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({ farm, batches, onClos
                         ) : countdown > 0 ? (
                             <>DELETE ({countdown})</>
                         ) : (
-                            'DELETE PERMANENTLY'
+                            'DELETE'
                         )}
                     </button>
                 </div>
