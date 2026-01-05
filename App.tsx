@@ -59,6 +59,8 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
 
   const navigateTo = useCallback((screen: Screen) => {
     setCurrentScreen(screen);
+    // Scroll to top when navigating to a new screen
+    window.scrollTo(0, 0);
   }, []);
 
   const handleFabClick = () => {
