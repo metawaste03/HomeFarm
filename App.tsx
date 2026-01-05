@@ -190,7 +190,9 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
           <div className="flex-grow relative">
             {isFirstTimeUser && <WelcomeGuide onClose={() => setIsFirstTimeUser(false)} />}
             <main className="pb-24 lg:pb-4">
-              {renderScreen()}
+              <div key={currentScreen} className="animate-fade-in">
+                {renderScreen()}
+              </div>
             </main>
 
             {showFab && (
