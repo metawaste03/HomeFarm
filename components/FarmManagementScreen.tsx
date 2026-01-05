@@ -73,7 +73,7 @@ const FarmManagementScreen: React.FC<FarmManagementScreenProps> = ({ onNavigate,
             </div>
 
             {isFormOpen && <FarmFormModal farmToEdit={editingFarm} onSave={handleSaveFarm} onClose={() => setFormOpen(false)} />}
-            {deletingFarm && <DeleteFarmModal farm={deletingFarm} onConfirm={handleConfirmDelete} onClose={() => setDeletingFarm(null)} />}
+            {deletingFarm && <DeleteFarmModal farm={deletingFarm} batches={batches} onConfirm={handleConfirmDelete} onClose={() => setDeletingFarm(null)} />}
         </div>
     );
 };
@@ -155,21 +155,104 @@ const FarmFormModal: React.FC<FarmFormModalProps> = ({ farmToEdit, onSave, onClo
     );
 };
 
-interface DeleteFarmModalProps { farm: Farm; onClose: () => void; onConfirm: () => void; }
-const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({ farm, onClose, onConfirm }) => (
-    <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
-            <div className="mx-auto bg-red-100 dark:bg-red-900/30 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                <WarningIcon className="w-6 h-6 text-danger" />
-            </div>
-            <h3 className="text-xl font-bold mb-2 text-text-primary">Delete Farm?</h3>
-            <p className="text-text-secondary text-sm mb-6">This will permanently delete '<span className="font-semibold">{farm.name}</span>' and all of its batches. This action cannot be undone.</p>
-            <div className="flex justify-center gap-4">
-                <button onClick={onClose} className="px-8 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
-                <button onClick={onConfirm} className="px-8 py-2 rounded-lg text-white bg-danger hover:bg-red-600 font-semibold">DELETE</button>
+interface DeleteFarmModalProps {
+    farm: Farm;
+    batches: Batch[];
+    onClose: () => void;
+    onConfirm: () => void;
+}
+
+const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({ farm, batches, onClose, onConfirm }) => {
+    const [countdown, setCountdown] = React.useState(5);
+    const [isDeleting, setIsDeleting] = React.useState(false);
+
+    // Count related data that will be deleted
+    const relatedBatches = batches.filter(b => b.farm === farm.name);
+    const activeBatchCount = relatedBatches.filter(b => b.status === 'Active').length;
+    const totalBatchCount = relatedBatches.length;
+
+    // Countdown timer
+    React.useEffect(() => {
+        if (countdown > 0) {
+            const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [countdown]);
+
+    const handleConfirm = async () => {
+        setIsDeleting(true);
+        try {
+            await onConfirm();
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+                {/* Warning Icon */}
+                <div className="mx-auto bg-red-100 dark:bg-red-900/30 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                    <WarningIcon className="w-8 h-8 text-danger" />
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-bold mb-2 text-text-primary text-center">Delete Farm?</h3>
+
+                {/* Farm Name */}
+                <p className="text-center mb-4">
+                    <span className="font-bold text-lg text-danger">"{farm.name}"</span>
+                </p>
+
+                {/* Cascading Warning - What will be deleted */}
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-4">
+                    <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-2">
+                        ⚠️ This will permanently delete:
+                    </p>
+                    <ul className="text-sm text-red-600 dark:text-red-300 space-y-1 ml-4">
+                        <li>• The farm and all its settings</li>
+                        {totalBatchCount > 0 && (
+                            <li>• {totalBatchCount} batch{totalBatchCount !== 1 ? 'es' : ''} ({activeBatchCount} active)</li>
+                        )}
+                        <li>• All associated daily logs</li>
+                        <li>• All sales records for this farm</li>
+                        <li>• All tasks linked to this farm</li>
+                    </ul>
+                </div>
+
+                <p className="text-xs text-text-secondary text-center mb-4">
+                    This action <span className="font-bold">cannot be undone</span>.
+                </p>
+
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-3">
+                    <button
+                        onClick={onClose}
+                        className="px-6 py-2.5 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold transition-colors"
+                        disabled={isDeleting}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleConfirm}
+                        disabled={countdown > 0 || isDeleting}
+                        className={`px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 ${countdown > 0
+                            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                            : 'bg-danger hover:bg-red-600 text-white'
+                            }`}
+                    >
+                        {isDeleting ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : countdown > 0 ? (
+                            <>DELETE ({countdown})</>
+                        ) : (
+                            'DELETE PERMANENTLY'
+                        )}
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 export { FarmManagementScreen };
