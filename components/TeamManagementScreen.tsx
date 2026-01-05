@@ -45,7 +45,7 @@ const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate 
     return (
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10 flex items-center justify-between">
-                <button onClick={() => onNavigate('settings')} className="p-2 -ml-2 text-text-secondary hover:text-primary">
+                <button onClick={() => onNavigate('settings')} className="p-2 -ml-2 text-text-secondary hover:text-primary" aria-label="Go back to settings">
                     <ChevronLeftIcon className="w-6 h-6" />
                 </button>
                 <div className="absolute left-1/2 -translate-x-1/2 text-center">
@@ -108,7 +108,7 @@ const UserCard: React.FC<{ user: User, onRemove: () => void, onChangeRole: () =>
             </div>
             {user.role !== 'Owner' && (
                 <div className="relative">
-                    <button onClick={() => setMenuOpen(!isMenuOpen)} className="p-2 text-text-secondary hover:bg-muted rounded-full">
+                    <button onClick={() => setMenuOpen(!isMenuOpen)} className="p-2 text-text-secondary hover:bg-muted rounded-full" aria-label="Team member options menu">
                         <EllipsisIcon className="w-6 h-6" />
                     </button>
                     {isMenuOpen && (

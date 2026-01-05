@@ -43,7 +43,7 @@ const FarmManagementScreen: React.FC<FarmManagementScreenProps> = ({ onNavigate,
     return (
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10 flex items-center">
-                <button onClick={() => onNavigate('settings')} className="p-2 -ml-2 text-text-secondary hover:text-primary">
+                <button onClick={() => onNavigate('settings')} className="p-2 -ml-2 text-text-secondary hover:text-primary" aria-label="Go back to settings">
                     <ChevronLeftIcon className="w-6 h-6" />
                 </button>
                 <h1 className="text-xl font-bold text-center flex-grow text-text-primary">My Farms</h1>
@@ -89,7 +89,7 @@ const FarmCard: React.FC<{ farm: Farm, batchCount: number, onEdit: () => void, o
                     {farm.location && <p className="text-sm text-text-secondary mt-1">{farm.location}</p>}
                 </div>
                 <div className="relative">
-                    <button onClick={() => setMenuOpen(!isMenuOpen)} className="p-2 text-text-secondary hover:bg-muted rounded-full">
+                    <button onClick={() => setMenuOpen(!isMenuOpen)} className="p-2 text-text-secondary hover:bg-muted rounded-full" aria-label="Farm options menu">
                         <EllipsisIcon className="w-6 h-6" />
                     </button>
                     {isMenuOpen && (
@@ -139,11 +139,11 @@ const FarmFormModal: React.FC<FarmFormModalProps> = ({ farmToEdit, onSave, onClo
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">Farm Name *</label>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                        <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter farm name" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-text-secondary mb-1">Location (Optional)</label>
-                        <input type="text" value={location} onChange={e => setLocation(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                        <input type="text" value={location} onChange={e => setLocation(e.target.value)} placeholder="Enter location" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
                     </div>
                     <div className="flex justify-end gap-3 mt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>

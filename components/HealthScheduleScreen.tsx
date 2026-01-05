@@ -45,7 +45,7 @@ const MOCK_TEMPLATES: ScheduleTemplate[] = [
         sector: 'Layer',
         isDefault: true,
         tasks: [
-             { id: 't4', timeValue: 1, timeUnit: 'Day', title: 'Marek\'s Vaccine', dosage: '0.2ml/bird', method: 'Subcutaneous Injection' },
+            { id: 't4', timeValue: 1, timeUnit: 'Day', title: 'Marek\'s Vaccine', dosage: '0.2ml/bird', method: 'Subcutaneous Injection' },
         ]
     }
 ];
@@ -100,7 +100,7 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
     return (
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10 flex items-center justify-between">
-                <button onClick={() => onNavigate('settings')} className="p-2 -ml-2 text-text-secondary hover:text-primary">
+                <button onClick={() => onNavigate('settings')} className="p-2 -ml-2 text-text-secondary hover:text-primary" aria-label="Go back to settings">
                     <ChevronLeftIcon className="w-6 h-6" />
                 </button>
                 <div className="text-center">
@@ -111,7 +111,7 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
             </header>
 
             <div className="p-4 space-y-6">
-                <button 
+                <button
                     onClick={handleCreateNew}
                     className="w-full bg-primary text-white font-bold py-3 px-4 rounded-xl text-lg flex items-center justify-center gap-2 hover:bg-primary-600 active:bg-primary-700 transition-colors"
                 >
@@ -178,15 +178,15 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
             </div>
 
             {isEditorOpen && (
-                <TemplateEditorModal 
-                    template={templateToEdit} 
-                    onSave={handleSaveTemplate} 
-                    onClose={() => setIsEditorOpen(false)} 
+                <TemplateEditorModal
+                    template={templateToEdit}
+                    onSave={handleSaveTemplate}
+                    onClose={() => setIsEditorOpen(false)}
                 />
             )}
-            
+
             {templateToDelete && (
-                <DeleteConfirmationModal 
+                <DeleteConfirmationModal
                     template={templateToDelete}
                     onConfirm={confirmDelete}
                     onClose={() => setTemplateToDelete(null)}
@@ -241,7 +241,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                     <h3 className="text-xl font-bold text-text-primary">{template ? 'Edit Template' : 'Create New Template'}</h3>
                     <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary"><CloseIcon className="w-6 h-6" /></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="p-5 space-y-6 flex-grow overflow-y-auto">
                     <div className="grid md:grid-cols-2 gap-4">
                         <div>
@@ -263,7 +263,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                             <h4 className="text-sm font-bold text-text-primary uppercase">Schedule Tasks</h4>
                             <span className="text-xs text-text-secondary">{tasks.length} tasks</span>
                         </div>
-                        
+
                         <div className="space-y-3">
                             {tasks.map((task, index) => (
                                 <div key={task.id} className="bg-card p-4 rounded-xl border border-border shadow-sm relative group">
@@ -271,16 +271,16 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                         <div className="col-span-4 md:col-span-2">
                                             <label className="block text-xs font-semibold text-text-secondary mb-1">Timeline</label>
                                             <div className="flex">
-                                                <input 
-                                                    type="number" 
+                                                <input
+                                                    type="number"
                                                     min="1"
-                                                    value={task.timeValue} 
-                                                    onChange={e => updateTask(task.id, 'timeValue', parseInt(e.target.value))} 
-                                                    className="w-full p-2 border border-border rounded-l-lg bg-background text-text-primary text-center font-bold" 
+                                                    value={task.timeValue}
+                                                    onChange={e => updateTask(task.id, 'timeValue', parseInt(e.target.value))}
+                                                    className="w-full p-2 border border-border rounded-l-lg bg-background text-text-primary text-center font-bold"
                                                 />
-                                                <select 
-                                                    value={task.timeUnit} 
-                                                    onChange={e => updateTask(task.id, 'timeUnit', e.target.value)} 
+                                                <select
+                                                    value={task.timeUnit}
+                                                    onChange={e => updateTask(task.id, 'timeUnit', e.target.value)}
                                                     className="bg-muted border-y border-r border-border rounded-r-lg text-xs font-medium px-1 text-text-primary"
                                                 >
                                                     <option value="Day">Day</option>
@@ -290,34 +290,34 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                         </div>
                                         <div className="col-span-8 md:col-span-4">
                                             <label className="block text-xs font-semibold text-text-secondary mb-1">Task Name</label>
-                                            <input 
-                                                type="text" 
-                                                value={task.title} 
-                                                onChange={e => updateTask(task.id, 'title', e.target.value)} 
-                                                placeholder="e.g. Gumboro Vaccine" 
-                                                className="w-full p-2 border border-border rounded-lg bg-background text-text-primary" 
+                                            <input
+                                                type="text"
+                                                value={task.title}
+                                                onChange={e => updateTask(task.id, 'title', e.target.value)}
+                                                placeholder="e.g. Gumboro Vaccine"
+                                                className="w-full p-2 border border-border rounded-lg bg-background text-text-primary"
                                                 required
                                             />
                                         </div>
                                         <div className="col-span-6 md:col-span-3">
                                             <label className="block text-xs font-semibold text-text-secondary mb-1">Dosage</label>
-                                            <input 
-                                                type="text" 
-                                                value={task.dosage} 
-                                                onChange={e => updateTask(task.id, 'dosage', e.target.value)} 
-                                                placeholder="e.g. 10g/L" 
-                                                className="w-full p-2 border border-border rounded-lg bg-background text-text-primary" 
+                                            <input
+                                                type="text"
+                                                value={task.dosage}
+                                                onChange={e => updateTask(task.id, 'dosage', e.target.value)}
+                                                placeholder="e.g. 10g/L"
+                                                className="w-full p-2 border border-border rounded-lg bg-background text-text-primary"
                                             />
                                         </div>
                                         <div className="col-span-6 md:col-span-3">
                                             <label className="block text-xs font-semibold text-text-secondary mb-1">Method</label>
-                                            <input 
-                                                type="text" 
-                                                value={task.method} 
-                                                onChange={e => updateTask(task.id, 'method', e.target.value)} 
-                                                placeholder="e.g. Water" 
+                                            <input
+                                                type="text"
+                                                value={task.method}
+                                                onChange={e => updateTask(task.id, 'method', e.target.value)}
+                                                placeholder="e.g. Water"
                                                 list="methods"
-                                                className="w-full p-2 border border-border rounded-lg bg-background text-text-primary" 
+                                                className="w-full p-2 border border-border rounded-lg bg-background text-text-primary"
                                             />
                                             <datalist id="methods">
                                                 <option value="Drinking Water" />
@@ -328,9 +328,9 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                             </datalist>
                                         </div>
                                     </div>
-                                    
-                                    <button 
-                                        type="button" 
+
+                                    <button
+                                        type="button"
                                         onClick={() => handleRemoveTask(task.id)}
                                         className="absolute -top-2 -right-2 bg-red-100 text-danger p-1 rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-200"
                                         title="Remove task"
@@ -340,9 +340,9 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                 </div>
                             ))}
                         </div>
-                        
-                        <button 
-                            type="button" 
+
+                        <button
+                            type="button"
                             onClick={handleAddTask}
                             className="mt-4 w-full py-2 border-2 border-dashed border-primary/50 text-primary font-bold rounded-xl hover:bg-primary/5 hover:border-primary transition-colors flex items-center justify-center gap-2"
                         >
@@ -352,7 +352,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                 </form>
 
                 <div className="p-4 border-t border-border bg-popover sticky bottom-0 z-10">
-                    <button 
+                    <button
                         onClick={handleSubmit}
                         className="w-full bg-primary text-white font-bold py-3 px-4 rounded-xl text-lg hover:bg-primary-600 active:scale-95 transition-all shadow-md"
                     >
@@ -373,7 +373,7 @@ interface DeleteConfirmationModalProps {
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ template, onConfirm, onClose }) => {
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-             <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
+            <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
                 <div className="mx-auto bg-red-100 dark:bg-red-900/30 w-12 h-12 rounded-full flex items-center justify-center mb-4">
                     <WarningIcon className="w-6 h-6 text-danger" />
                 </div>

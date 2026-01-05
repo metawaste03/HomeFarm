@@ -37,7 +37,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
 
     const handleSavePurchase = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         addPurchase({
             isNewItem,
             itemId: purchaseItemId,
@@ -49,7 +49,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
             date: purchaseDate,
             supplier: supplier
         });
-        
+
         // Reset and close
         setIsPurchaseModalOpen(false);
         setIsNewItem(false);
@@ -59,11 +59,11 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
         setNewItemUnit('');
         setSupplier('');
     };
-    
+
     const handleUpdateThreshold = (itemId: string, newThreshold: number) => {
         updateThreshold(itemId, newThreshold);
         if (selectedItem && selectedItem.id === itemId) {
-             setSelectedItem(prev => prev ? { ...prev, minThreshold: newThreshold } : null);
+            setSelectedItem(prev => prev ? { ...prev, minThreshold: newThreshold } : null);
         }
     };
 
@@ -94,7 +94,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                     <p className="text-text-secondary text-lg mb-8 leading-relaxed">
                         Log your purchases for feed, medication, and equipment to always know your stock levels.
                     </p>
-                    <button 
+                    <button
                         onClick={() => setIsPurchaseModalOpen(true)}
                         className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                     >
@@ -102,7 +102,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                         Log Your First Purchase
                     </button>
                     {isPurchaseModalOpen && (
-                        <PurchaseModal 
+                        <PurchaseModal
                             isOpen={isPurchaseModalOpen}
                             onClose={() => setIsPurchaseModalOpen(false)}
                             items={items}
@@ -129,7 +129,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
         return (
             <div className="bg-background min-h-screen flex flex-col">
                 <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10 flex items-center gap-2">
-                    <button onClick={handleBackToList} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full">
+                    <button onClick={handleBackToList} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full" aria-label="Go back to inventory list">
                         <ChevronLeftIcon className="w-6 h-6" />
                     </button>
                     <div>
@@ -147,44 +147,44 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                     </div>
 
                     <div className="bg-card rounded-xl shadow-sm p-4">
-                         <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-3 mb-4">
                             <BellIcon className="w-6 h-6 text-text-secondary" />
                             <h3 className="text-lg font-semibold text-text-primary">Low Stock Alert</h3>
                         </div>
                         <div className="flex items-center justify-between gap-4">
-                             <button onClick={() => handleUpdateThreshold(selectedItem.id, Math.max(0, selectedItem.minThreshold - 1))} className="bg-muted rounded-lg p-2 hover:bg-border"><MinusIcon className="w-5 h-5" /></button>
-                             <div className="text-center">
-                                 <p className="text-2xl font-bold text-text-primary">{selectedItem.minThreshold}</p>
-                                 <p className="text-xs text-text-secondary">Alert below this level</p>
-                             </div>
-                             <button onClick={() => handleUpdateThreshold(selectedItem.id, selectedItem.minThreshold + 1)} className="bg-muted rounded-lg p-2 hover:bg-border"><PlusIcon className="w-5 h-5" /></button>
+                            <button onClick={() => handleUpdateThreshold(selectedItem.id, Math.max(0, selectedItem.minThreshold - 1))} className="bg-muted rounded-lg p-2 hover:bg-border"><MinusIcon className="w-5 h-5" /></button>
+                            <div className="text-center">
+                                <p className="text-2xl font-bold text-text-primary">{selectedItem.minThreshold}</p>
+                                <p className="text-xs text-text-secondary">Alert below this level</p>
+                            </div>
+                            <button onClick={() => handleUpdateThreshold(selectedItem.id, selectedItem.minThreshold + 1)} className="bg-muted rounded-lg p-2 hover:bg-border"><PlusIcon className="w-5 h-5" /></button>
                         </div>
                     </div>
 
                     <div>
-                         <h3 className="text-lg font-bold text-text-primary mb-3">Transaction History</h3>
-                         <div className="space-y-3">
-                             {selectedItem.transactions.map(tx => (
-                                 <div key={tx.id} className="bg-card p-3 rounded-lg shadow-sm flex justify-between items-center">
-                                     <div>
-                                         <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-text-primary mb-3">Transaction History</h3>
+                        <div className="space-y-3">
+                            {selectedItem.transactions.map(tx => (
+                                <div key={tx.id} className="bg-card p-3 rounded-lg shadow-sm flex justify-between items-center">
+                                    <div>
+                                        <div className="flex items-center gap-2">
                                             <span className={`text-xs font-bold px-2 py-0.5 rounded ${tx.type === 'purchase' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
                                                 {tx.type === 'purchase' ? 'Purchase' : 'Used'}
                                             </span>
                                             <span className="text-xs text-text-secondary">{new Date(tx.date).toLocaleDateString()}</span>
-                                         </div>
-                                         {tx.notes && <p className="text-sm text-text-secondary mt-1 italic">"{tx.notes}"</p>}
-                                         {tx.supplier && <p className="text-sm text-text-secondary mt-1">Supplier: {tx.supplier}</p>}
-                                     </div>
-                                     <div className="text-right">
-                                         <p className={`font-bold text-lg ${tx.type === 'purchase' ? 'text-green-600' : 'text-text-primary'}`}>
-                                             {tx.type === 'purchase' ? '+' : '-'}{tx.quantity} <span className="text-sm font-normal text-text-secondary">{tx.unit}</span>
-                                         </p>
-                                         {tx.cost && <p className="text-xs text-text-secondary">{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(tx.cost)}</p>}
-                                     </div>
-                                 </div>
-                             ))}
-                         </div>
+                                        </div>
+                                        {tx.notes && <p className="text-sm text-text-secondary mt-1 italic">"{tx.notes}"</p>}
+                                        {tx.supplier && <p className="text-sm text-text-secondary mt-1">Supplier: {tx.supplier}</p>}
+                                    </div>
+                                    <div className="text-right">
+                                        <p className={`font-bold text-lg ${tx.type === 'purchase' ? 'text-green-600' : 'text-text-primary'}`}>
+                                            {tx.type === 'purchase' ? '+' : '-'}{tx.quantity} <span className="text-sm font-normal text-text-secondary">{tx.unit}</span>
+                                        </p>
+                                        {tx.cost && <p className="text-xs text-text-secondary">{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(tx.cost)}</p>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -193,14 +193,14 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
 
     return (
         <div className="bg-background min-h-screen flex flex-col">
-             <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10 flex justify-between items-center">
-                 <div className="flex items-center gap-2">
-                     <button onClick={() => onNavigate('sales')} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full">
+            <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <button onClick={() => onNavigate('sales')} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full" aria-label="Go back to sales">
                         <ChevronLeftIcon className="w-6 h-6" />
                     </button>
                     <h1 className="text-2xl font-bold text-text-primary">Inventory</h1>
-                 </div>
-                <button 
+                </div>
+                <button
                     onClick={() => setIsPurchaseModalOpen(true)}
                     className="bg-primary text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-1 hover:bg-primary-600 transition"
                 >
@@ -214,8 +214,8 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                         <h3 className="text-sm font-bold text-text-secondary uppercase mb-2 px-1">{category}</h3>
                         <div className="space-y-3">
                             {categoryItems.map(item => (
-                                <div 
-                                    key={item.id} 
+                                <div
+                                    key={item.id}
                                     onClick={() => handleItemClick(item)}
                                     className="bg-card p-4 rounded-xl shadow-sm flex justify-between items-center cursor-pointer hover:bg-muted transition-colors"
                                 >
@@ -241,7 +241,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
             </div>
 
             {isPurchaseModalOpen && (
-                <PurchaseModal 
+                <PurchaseModal
                     isOpen={isPurchaseModalOpen}
                     onClose={() => setIsPurchaseModalOpen(false)}
                     items={items}
@@ -330,7 +330,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, o
                                 <input type="number" value={formData.purchaseCost > 0 ? formData.purchaseCost : ''} onChange={e => formData.setPurchaseCost(parseFloat(e.target.value))} placeholder="0" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required />
                             </div>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-text-secondary mb-1">Supplier (Optional)</label>
                             <input type="text" value={formData.supplier} onChange={e => formData.setSupplier(e.target.value)} placeholder="e.g., Feed Depot" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" />
