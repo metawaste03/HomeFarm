@@ -2,6 +2,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { FeedBagIcon, MortalityIcon, NotepadIcon, CalendarIcon, CheckCircleIcon, PlusIcon, MinusIcon, ScaleIcon, DropletIcon, FishIcon, StethoscopeIcon } from './icons';
 import InputCard from './InputCard';
+import { dailyLogsService } from '../services/database';
+import { useAuth } from '../contexts/AuthContext';
 import { Screen } from '../App';
 import { Farm } from './FarmManagementScreen';
 import { Batch } from './BatchManagementScreen';
@@ -28,6 +30,7 @@ const OPTIMAL_RANGES = {
 };
 
 const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }) => {
+    const { user } = useAuth();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isWeightModalOpen, setWeightModalOpen] = useState(false);
     const [sampledfish, setSampledFish] = useState<number>(0);
@@ -39,6 +42,7 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
     const [notes, setNotes] = useState('');
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const averageWeightInGrams = useMemo(() => {
         if (sampledfish > 0 && totalWeight > 0) {
@@ -79,14 +83,44 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
         setWeightModalOpen(false);
     };
 
-    const handleSave = () => {
-        console.log({ date, farm: farm?.name, batch: batch?.name, feed: { kg: feedKg, brand: feedBrand }, mortality, waterQuality, notes });
-        setShowConfirmation(true);
-        setTimeout(() => {
-            setShowConfirmation(false);
-            resetForm();
-            onNavigate('dashboard');
-        }, 2000);
+    const handleSave = async () => {
+        if (!user || !farm) {
+            alert('Please select a farm before saving.');
+            return;
+        }
+
+        setIsSaving(true);
+
+        const activities = {
+            sector: 'Fish',
+            feed: { kg: feedKg, brand: feedBrand },
+            mortality,
+            waterQuality,
+            weightSample: sampledfish > 0 ? { sampledfish, totalWeight, averageWeightGrams: averageWeightInGrams } : null,
+        };
+
+        try {
+            await dailyLogsService.create({
+                farm_id: String(farm.id),
+                batch_id: batch ? String(batch.id) : null,
+                log_date: date,
+                activities,
+                notes: notes || null,
+                created_by: user.id,
+            });
+
+            setShowConfirmation(true);
+            setTimeout(() => {
+                setShowConfirmation(false);
+                resetForm();
+                onNavigate('dashboard');
+            }, 2000);
+        } catch (error) {
+            console.error('Error saving log:', error);
+            alert('Failed to save log. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleSaveHealthLog = (data: HealthLogData) => {

@@ -22,6 +22,7 @@ import { TaskProvider } from './contexts/TaskContext';
 import { BusinessProvider } from './contexts/BusinessContext';
 import { SalesProvider } from './contexts/SalesContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ActivityProvider } from './contexts/ActivityContext';
 
 export type Screen = 'dashboard' | 'log' | 'tasks' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules';
 export type Theme = 'light' | 'dark' | 'system';
@@ -279,7 +280,9 @@ const AuthenticatedApp: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }>
       <TaskProvider>
         <BusinessProvider>
           <SalesProvider>
-            <AppContent theme={theme} setTheme={setTheme} />
+            <ActivityProvider>
+              <AppContent theme={theme} setTheme={setTheme} />
+            </ActivityProvider>
           </SalesProvider>
         </BusinessProvider>
       </TaskProvider>

@@ -3,6 +3,8 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { EggIcon, FeedBagIcon, MortalityIcon, CalendarIcon, CheckCircleIcon, PlusIcon, MinusIcon, StethoscopeIcon, NotepadIcon } from './icons';
 import InputCard from './InputCard';
+import { dailyLogsService } from '../services/database';
+import { useAuth } from '../contexts/AuthContext';
 // Fix: Use `import type` for type-only imports to prevent circular dependency issues.
 import type { Screen } from '../App';
 import type { Farm } from './FarmManagementScreen';
@@ -24,7 +26,9 @@ interface DailyLogScreenProps {
 }
 
 const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch }) => {
+    const { user } = useAuth();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [isSaving, setIsSaving] = useState(false);
 
     // Egg Production State ('Crate-First' Logic)
     const [eggCategories, setEggCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -130,7 +134,14 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
         setNotes('');
     }, []);
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        if (!user || !farm) {
+            alert('Please select a farm before saving.');
+            return;
+        }
+
+        setIsSaving(true);
+
         const eggData = Object.fromEntries(
             Array.from(activeCategories).map(category => [
                 category,
@@ -138,27 +149,39 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                     ...eggCounts[category],
                     subTotal: calculateSubtotal(eggCounts[category].crates, eggCounts[category].eggs)
                 }
-                // FIX: Add type assertion because TypeScript incorrectly infers entry[1] as a union type with string.
             ]).filter(entry => (entry[1] as { subTotal: number }).subTotal > 0)
         );
 
-        console.log({
-            date,
-            farm: farm?.name,
-            batch: batch?.name,
+        const activities = {
+            sector: 'Layer',
             eggCollection: { total: grandTotalEggs, breakdown: eggData },
             feed: { kg: feedKg, brand: feedBrand },
             mortality,
-            notes
-        });
+        };
 
-        setShowConfirmation(true);
+        try {
+            await dailyLogsService.create({
+                farm_id: String(farm.id),
+                batch_id: batch ? String(batch.id) : null,
+                log_date: date,
+                activities,
+                notes: notes || null,
+                created_by: user.id,
+            });
 
-        setTimeout(() => {
-            setShowConfirmation(false);
-            resetForm();
-            onNavigate('dashboard');
-        }, 2000);
+            setShowConfirmation(true);
+
+            setTimeout(() => {
+                setShowConfirmation(false);
+                resetForm();
+                onNavigate('dashboard');
+            }, 2000);
+        } catch (error) {
+            console.error('Error saving log:', error);
+            alert('Failed to save log. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleSaveHealthLog = (data: HealthLogData) => {
@@ -372,8 +395,8 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                                 onClick={handleSave}
                                 disabled={showConfirmation}
                                 className={`w-full text-white font-bold py-4 px-4 rounded-2xl text-lg transition-all duration-300 ease-in-out transform flex items-center justify-center ${showConfirmation
-                                        ? 'bg-green-500'
-                                        : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95'
+                                    ? 'bg-green-500'
+                                    : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95'
                                     }`}
                             >
                                 {showConfirmation ? (

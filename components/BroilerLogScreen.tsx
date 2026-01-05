@@ -2,6 +2,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { FeedBagIcon, MortalityIcon, NotepadIcon, CalendarIcon, CheckCircleIcon, PlusIcon, MinusIcon, ScaleIcon, StethoscopeIcon } from './icons';
 import InputCard from './InputCard';
+import { dailyLogsService } from '../services/database';
+import { useAuth } from '../contexts/AuthContext';
 import { Screen } from '../App';
 import { Farm } from './FarmManagementScreen';
 import { Batch } from './BatchManagementScreen';
@@ -14,6 +16,7 @@ interface BroilerLogScreenProps {
 }
 
 const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, batch }) => {
+    const { user } = useAuth();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isWeightModalOpen, setWeightModalOpen] = useState(false);
     const [sampledBirds, setSampledBirds] = useState<number>(0);
@@ -24,6 +27,7 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
     const [notes, setNotes] = useState('');
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const averageWeightInGrams = useMemo(() => {
         if (sampledBirds > 0 && totalWeight > 0) {
@@ -49,14 +53,43 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
         setWeightModalOpen(false);
     };
 
-    const handleSave = () => {
-        console.log({ date, farm: farm?.name, batch: batch?.name, feed: { kg: feedKg, brand: feedBrand }, mortality, notes });
-        setShowConfirmation(true);
-        setTimeout(() => {
-            setShowConfirmation(false);
-            resetForm();
-            onNavigate('dashboard');
-        }, 2000);
+    const handleSave = async () => {
+        if (!user || !farm) {
+            alert('Please select a farm before saving.');
+            return;
+        }
+
+        setIsSaving(true);
+
+        const activities = {
+            sector: 'Broiler',
+            feed: { kg: feedKg, brand: feedBrand },
+            mortality,
+            weightSample: sampledBirds > 0 ? { sampledBirds, totalWeight, averageWeightGrams: averageWeightInGrams } : null,
+        };
+
+        try {
+            await dailyLogsService.create({
+                farm_id: String(farm.id),
+                batch_id: batch ? String(batch.id) : null,
+                log_date: date,
+                activities,
+                notes: notes || null,
+                created_by: user.id,
+            });
+
+            setShowConfirmation(true);
+            setTimeout(() => {
+                setShowConfirmation(false);
+                resetForm();
+                onNavigate('dashboard');
+            }, 2000);
+        } catch (error) {
+            console.error('Error saving log:', error);
+            alert('Failed to save log. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleSaveHealthLog = (data: HealthLogData) => {
@@ -156,8 +189,8 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
                                 onClick={handleSave}
                                 disabled={showConfirmation}
                                 className={`w-full text-white font-bold py-4 px-4 rounded-2xl text-lg transition-all duration-300 ease-in-out transform flex items-center justify-center ${showConfirmation
-                                        ? 'bg-green-500'
-                                        : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95'
+                                    ? 'bg-green-500'
+                                    : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95'
                                     }`}
                             >
                                 {showConfirmation ? (

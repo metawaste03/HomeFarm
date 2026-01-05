@@ -1,5 +1,6 @@
 import React from 'react';
 import { ClipboardListIcon, WalletIcon, TaskIcon, ClockIcon } from './icons';
+import { useActivity } from '../contexts/ActivityContext';
 
 interface Activity {
     id: string;
@@ -26,7 +27,10 @@ const colorMap = {
     task: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
 };
 
-const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities = [], onNavigate }) => {
+const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities: propActivities, onNavigate }) => {
+    // Use context if no activities prop provided
+    const { activities: contextActivities, loading } = useActivity();
+    const activities = propActivities ?? contextActivities;
     const hasActivities = activities.length > 0;
 
     return (
@@ -40,7 +44,12 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activities = [], onNavigate
                 )}
             </div>
 
-            {hasActivities ? (
+            {loading ? (
+                <div className="text-center py-6">
+                    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-sm text-text-secondary">Loading activities...</p>
+                </div>
+            ) : hasActivities ? (
                 <div className="space-y-3">
                     {activities.map((activity) => {
                         const Icon = iconMap[activity.type];
