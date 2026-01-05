@@ -229,14 +229,14 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 {/* Right Panel - Desktop Only */}
                 <aside className="hidden lg:block w-80 p-6 pl-3 space-y-6">
                     <NotificationsPanel />
-                    <ActivityFeed />
+                    <ActivityFeed onNavigate={onNavigate} />
                 </aside>
             </div>
 
             {/* Mobile Activity Section */}
             <div className="lg:hidden p-4 space-y-6">
                 <NotificationsPanel />
-                <ActivityFeed />
+                <ActivityFeed onNavigate={onNavigate} />
             </div>
         </div>
     );
