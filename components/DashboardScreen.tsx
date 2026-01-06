@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, PlusIcon, HomeIcon, ChickenIcon, BatchIcon, WalletIcon, TaskIcon } from './icons';
 import type { Screen } from '../App';
 import { useFarm, Sector } from '../contexts/FarmContext';
 import { useTasks } from '../contexts/TaskContext';
 import { useSales } from '../contexts/SalesContext';
+import { useAuth } from '../contexts/AuthContext';
 import KpiCard from './KpiCard';
 import TimeFilter from './TimeFilter';
 import ProfitabilityCalculator from './ProfitabilityCalculator';
@@ -30,8 +31,17 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const { farms, batches } = useFarm();
     const { tasks } = useTasks();
     const { sales } = useSales();
+    const { user } = useAuth();
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+
+    // Get user's first name for greeting
+    const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'Farmer';
+
+    // Reset scope when sector changes
+    useEffect(() => {
+        onScopeChange(`All ${activeSector} Farms`);
+    }, [activeSector]);
 
     const sectorBatches = useMemo(() => batches.filter(b => b.sector === activeSector), [batches, activeSector]);
     const activeBatches = useMemo(() => sectorBatches.filter(b => b.status === 'Active'), [sectorBatches]);
@@ -100,7 +110,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                     >
                         <PlusIcon className="w-6 h-6" />
-                        Create Your First Farm
+                        + A Farm
                     </button>
                 </div>
             </div>
@@ -117,7 +127,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>
                             <h1 className="text-2xl lg:text-3xl font-bold text-text-primary">
-                                Hello, Farmer 👋
+                                Hello, {userName} 👋
                             </h1>
                             <p className="text-text-secondary">Here's your farm's pulse for today.</p>
                         </div>
