@@ -115,8 +115,8 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
                     onClick={handleCreateNew}
                     className="w-full bg-primary text-white font-bold py-3 px-4 rounded-xl text-lg flex items-center justify-center gap-2 hover:bg-primary-600 active:bg-primary-700 transition-colors"
                 >
-                    <PlusIcon className="w-6 h-6" />
-                    CREATE NEW TEMPLATE
+                    <PlusIcon className="w-5 h-5" />
+                    + NEW TEMPLATE
                 </button>
 
                 <div>
@@ -235,8 +235,8 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-popover rounded-t-2xl md:rounded-xl shadow-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-4 sm:pt-8 px-4 pb-4 overflow-y-auto" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-border flex justify-between items-center sticky top-0 bg-popover z-10">
                     <h3 className="text-xl font-bold text-text-primary">{template ? 'Edit Template' : 'Create New Template'}</h3>
                     <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary"><CloseIcon className="w-6 h-6" /></button>

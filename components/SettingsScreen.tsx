@@ -186,8 +186,8 @@ const ProfileModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg p-4 sm:p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-8 sm:pt-16 px-4 pb-4" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-lg p-4 sm:p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
                 <h3 className="text-lg font-bold mb-4 text-text-primary text-center">Edit Profile</h3>
 
                 {/* Avatar */}

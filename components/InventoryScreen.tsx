@@ -273,9 +273,9 @@ interface PurchaseModalProps {
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, onSubmit, formData }) => {
     return (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-popover rounded-t-2xl md:rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                <div className="p-6">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-4 sm:pt-8 px-4 pb-4 overflow-y-auto" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="p-4 sm:p-6">
                     <h3 className="text-xl font-bold mb-4 text-center text-text-primary">Log a Purchase</h3>
                     <form onSubmit={onSubmit} className="space-y-4">
                         <div className="flex bg-muted p-1 rounded-lg mb-4">
