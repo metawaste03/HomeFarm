@@ -260,9 +260,9 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
     );
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-                <div className="p-4 sm:p-6">
+        <div className="fixed inset-0 bg-black/50 z-30 flex items-start justify-center pt-4 sm:pt-8 px-4 pb-4 overflow-y-auto" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-lg w-full max-w-md my-auto" onClick={e => e.stopPropagation()}>
+                <div className="p-4 sm:p-6 max-h-[85vh] overflow-y-auto">
                     <h3 className="text-xl font-bold mb-4 text-center text-text-primary">{isEditing ? 'Edit Batch' : 'Start a New Batch'}</h3>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>

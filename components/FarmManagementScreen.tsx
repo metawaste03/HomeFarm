@@ -189,8 +189,8 @@ const DeleteFarmModal: React.FC<DeleteFarmModalProps> = ({ farm, batches, onClos
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-40 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg p-4 sm:p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-40 flex items-start justify-center pt-16 sm:pt-24 p-4" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-lg p-4 sm:p-5 w-full max-w-sm" onClick={e => e.stopPropagation()}>
                 {/* Warning Icon - smaller on mobile */}
                 <div className="mx-auto bg-red-100 dark:bg-red-900/30 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mb-3">
                     <WarningIcon className="w-6 h-6 sm:w-7 sm:h-7 text-danger" />
