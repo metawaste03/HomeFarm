@@ -178,7 +178,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                     </div>
                                     <div className="text-right">
                                         <p className={`font-bold text-lg ${tx.type === 'purchase' ? 'text-green-600' : 'text-text-primary'}`}>
-                                            {tx.type === 'purchase' ? '+' : '-'}{tx.quantity} <span className="text-sm font-normal text-text-secondary">{tx.unit}</span>
+                                            {tx.type === 'purchase' ? '+' : '-'}{tx.quantity.toLocaleString()} <span className="text-sm font-normal text-text-secondary">{tx.unit}</span>
                                         </p>
                                         {tx.cost && <p className="text-xs text-text-secondary">{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(tx.cost)}</p>}
                                     </div>

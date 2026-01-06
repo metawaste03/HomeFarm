@@ -163,7 +163,7 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
                     </div>
                     <div className="bg-card p-3 rounded-xl shadow-md border border-border text-center">
                         <p className="text-xs text-text-secondary uppercase mb-1 font-medium">Break-even</p>
-                        <p className="text-lg font-bold text-purple-500 truncate">₦{calculations.breakEvenPrice.toFixed(0)}</p>
+                        <p className="text-lg font-bold text-purple-500 truncate">₦{calculations.breakEvenPrice.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
                     </div>
                 </div>
 
