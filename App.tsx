@@ -15,6 +15,7 @@ import BusinessScreen from './components/BusinessScreen';
 import InventoryScreen from './components/InventoryScreen';
 import HealthScheduleScreen from './components/HealthScheduleScreen';
 import TaskManagementScreen from './components/TaskManagementScreen';
+import ResetPasswordScreen from './components/ResetPasswordScreen';
 import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, BatchIcon, TaskIcon } from './components/icons';
 import { AnalyticsIcon, SettingsIcon } from './components/CustomIcons';
 import { FarmProvider, useFarm, Sector, Batch, Farm } from './contexts/FarmContext';
@@ -266,6 +267,9 @@ const App: React.FC = () => {
 // Separate component to use auth context
 const AuthenticatedApp: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => {
   const { user, loading } = useAuth();
+  const [showResetPassword, setShowResetPassword] = useState(
+    window.location.pathname.includes('reset-password')
+  );
 
   if (loading) {
     return (
@@ -273,6 +277,11 @@ const AuthenticatedApp: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
+  }
+
+  // Show reset password screen if URL contains reset-password and user is authenticated via magic link
+  if (showResetPassword && user) {
+    return <ResetPasswordScreen onComplete={() => setShowResetPassword(false)} />;
   }
 
   if (!user) {
