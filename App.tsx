@@ -166,8 +166,8 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   }
 
-  const screensWithoutFab: Screen[] = ['team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks'];
-  const showFab = !screensWithoutFab.includes(currentScreen);
+  const screensWithoutFab: Screen[] = ['team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business'];
+  const showFab = !screensWithoutFab.includes(currentScreen) && farms.length > 0;
 
   return (
     <div className="antialiased font-sans text-text-primary">

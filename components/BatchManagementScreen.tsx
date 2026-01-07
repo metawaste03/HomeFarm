@@ -260,11 +260,16 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
     );
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-start justify-center pt-4 sm:pt-8 px-4 pb-4 overflow-y-auto" onClick={onClose}>
-            <div className="bg-popover rounded-2xl shadow-lg w-full max-w-md my-auto" onClick={e => e.stopPropagation()}>
-                <div className="p-4 sm:p-6 max-h-[85vh] overflow-y-auto">
-                    <h3 className="text-xl font-bold mb-4 text-center text-text-primary">{isEditing ? 'Edit Batch' : 'Start a New Batch'}</h3>
-                    <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="fixed inset-0 bg-black/50 z-30 flex items-end sm:items-center justify-center" onClick={onClose}>
+            <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                {/* Fixed Header */}
+                <div className="p-4 border-b border-border flex-shrink-0">
+                    <h3 className="text-xl font-bold text-center text-text-primary">{isEditing ? 'Edit Batch' : 'Start a New Batch'}</h3>
+                </div>
+
+                {/* Scrollable Form Content */}
+                <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+                    <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-6">
                         <div>
                             <label className="block text-sm font-semibold text-text-secondary mb-2">1. Select Sector *</label>
                             <div className="grid grid-cols-3 gap-3">
@@ -330,13 +335,14 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                                 </div>
                             )}
                         </div>
+                    </div>
 
-                        <div className="flex justify-end gap-3 pt-4">
-                            <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
-                            <button type="submit" className="flex-grow text-white font-bold py-3 px-4 rounded-xl text-lg bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95 transition-all">{isEditing ? 'SAVE CHANGES' : 'CREATE BATCH'}</button>
-                        </div>
-                    </form>
-                </div>
+                    {/* Sticky Footer */}
+                    <div className="p-4 border-t border-border flex-shrink-0 bg-popover flex justify-end gap-3">
+                        <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
+                        <button type="submit" className="flex-grow text-white font-bold py-3 px-4 rounded-xl text-lg bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95 transition-all">{isEditing ? 'SAVE CHANGES' : 'CREATE BATCH'}</button>
+                    </div>
+                </form>
             </div>
         </div>
     );

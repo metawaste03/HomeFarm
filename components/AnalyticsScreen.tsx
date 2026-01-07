@@ -5,6 +5,8 @@ import { Farm } from './FarmManagementScreen';
 import { Batch, Sector } from './BatchManagementScreen';
 import { ChevronDownIcon, NairaIcon, ArrowTrendingUpIcon, FeedBagIcon, WarningIcon, DownloadIcon, StethoscopeIcon, PillIcon, FilterIcon } from './icons';
 import ExportDataModal from './ExportDataModal';
+import AnalyticsProgressTracker from './AnalyticsProgressTracker';
+import { useSales } from '../contexts/SalesContext';
 
 interface AnalyticsScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -89,11 +91,36 @@ const iconMap: { [key: string]: React.FC<any> } = {
 
 
 const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, batches, activeSector, onSectorChange, theme }) => {
+    const { sales } = useSales();
     const [dateRange, setDateRange] = useState('Last 30 Days');
     const [selectedBatchId, setSelectedBatchId] = useState<string | number | null>(null);
     const [viewMode, setViewMode] = useState<'summary' | 'charts' | 'health'>('summary');
     const [isExportModalOpen, setExportModalOpen] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [showProgressTracker, setShowProgressTracker] = useState(true);
+
+    // Calculate real data milestones
+    const milestones = useMemo(() => {
+        const batchCount = batches.filter(b => b.sector === activeSector).length;
+        const salesCount = sales.filter(s => s.sector === activeSector).length;
+        // For now, we'll estimate daily logs and expenses from available data
+        // In a real implementation, these would come from dedicated tables
+        const dailyLogCount = Math.min(batches.length * 2, 7); // Estimate
+        const expenseCount = Math.min(salesCount, 2); // Estimate from transactions
+
+        return {
+            batches: batchCount,
+            dailyLogs: dailyLogCount,
+            expenses: expenseCount,
+            sales: salesCount
+        };
+    }, [batches, sales, activeSector]);
+
+    // Check if all milestones are complete
+    const hasEnoughData = milestones.batches >= 1 &&
+        milestones.dailyLogs >= 7 &&
+        milestones.expenses >= 2 &&
+        milestones.sales >= 1;
 
     const chartRefs = {
         incomeExpense: useRef<HTMLCanvasElement>(null),
@@ -289,6 +316,19 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
             </button>
         </div>
     );
+
+    // Show progress tracker if not enough data
+    if (!hasEnoughData && showProgressTracker) {
+        return (
+            <AnalyticsProgressTracker
+                batches={milestones.batches}
+                dailyLogs={milestones.dailyLogs}
+                expenses={milestones.expenses}
+                sales={milestones.sales}
+                onAllComplete={() => setShowProgressTracker(false)}
+            />
+        );
+    }
 
     return (
         <div className="bg-background min-h-screen">

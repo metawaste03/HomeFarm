@@ -59,19 +59,19 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                     <p className="text-text-secondary text-lg mb-8 leading-relaxed">
                         Log your sales of eggs, birds, fish, and more to see your income grow in real-time.
                     </p>
-                    <button 
+                    <button
                         onClick={() => handleOpenModal()}
                         className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                     >
                         <PlusIcon className="w-6 h-6" />
-                        Record Your First Sale
+                        Record Sale
                     </button>
                     {isModalOpen && (
-                        <AddSaleForm 
-                            sale={editingSale} 
-                            onSave={handleSaveSale} 
-                            onClose={handleCloseModal} 
-                            activeSector={activeSector} 
+                        <AddSaleForm
+                            sale={editingSale}
+                            onSave={handleSaveSale}
+                            onClose={handleCloseModal}
+                            activeSector={activeSector}
                         />
                     )}
                 </div>
@@ -83,9 +83,9 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10">
                 <h1 className="text-2xl font-bold text-center text-text-primary">Income & Sales ({activeSector})</h1>
-                 <p className="text-center text-sm text-text-secondary mt-1">
+                <p className="text-center text-sm text-text-secondary mt-1">
                     Showing all sales data for your {activeSector} operations.
-                 </p>
+                </p>
             </header>
 
             <div className="p-4 space-y-4">
@@ -93,10 +93,10 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                     <div className="text-center">
                         <p className="text-xs text-text-secondary font-bold">REVENUE (30D)</p>
                         <p className="text-2xl font-bold text-primary">
-                             {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(totalRevenue)}
+                            {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(totalRevenue)}
                         </p>
                     </div>
-                     <div className="text-center">
+                    <div className="text-center">
                         <p className="text-xs text-text-secondary font-bold">ITEMS SOLD (30D)</p>
                         <p className="text-2xl font-bold text-primary">{totalItemsSold.toLocaleString()}</p>
                     </div>
@@ -105,7 +105,7 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                 <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-center mb-1">
                         <h3 className="text-lg font-bold text-text-primary">Recent Transactions</h3>
-                        <button 
+                        <button
                             onClick={() => handleOpenModal()}
                             className="text-primary font-bold text-sm flex items-center gap-1 hover:underline"
                         >
@@ -124,7 +124,7 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                                     <p className="font-bold text-text-primary mt-1">{sale.quantity.toLocaleString()} {sale.unit} of {sale.item}</p>
                                     {sale.notes && <p className="text-xs text-text-secondary italic mt-1">"{sale.notes}"</p>}
                                 </div>
-                                 <div className="text-right flex-shrink-0 ml-4">
+                                <div className="text-right flex-shrink-0 ml-4">
                                     <p className="text-xl font-bold text-green-600 dark:text-green-400">
                                         + {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(sale.amount)}
                                     </p>
@@ -142,7 +142,7 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                     )}
                 </div>
             </div>
-            
+
             {isModalOpen && <AddSaleForm sale={editingSale} onSave={handleSaveSale} onClose={handleCloseModal} activeSector={activeSector} />}
         </div>
     );
@@ -164,9 +164,9 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
             default: return '';
         }
     };
-    
+
     const getPlaceholder = () => {
-         switch (activeSector) {
+        switch (activeSector) {
             case 'Layer': return 'e.g., Large Eggs';
             case 'Broiler': return 'e.g., Live Birds';
             case 'Fish': return 'e.g., Live Tilapia';
@@ -208,7 +208,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
                     <div className="flex-grow overflow-y-auto p-6 pt-2 space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-text-secondary mb-1">Date of Sale</label>
-                            <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary"/>
+                            <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-text-secondary mb-1">Item Sold</label>
@@ -219,7 +219,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Quantity</label>
                                 <input type="number" name="quantity" value={formData.quantity > 0 ? formData.quantity : ''} onChange={handleChange} placeholder="0" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                             </div>
-                             <div>
+                            <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
                                 <input type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder={`e.g., ${getDefaultUnit()}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                             </div>

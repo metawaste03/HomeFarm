@@ -38,10 +38,17 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     // Get user's first name for greeting
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'Farmer';
 
-    // Reset scope when sector changes
+    // Smart scope selection when sector changes
+    // If user has 1 farm in sector → default to that farm
+    // If user has multiple farms → default to "All [Sector] Farms"
     useEffect(() => {
-        onScopeChange(`All ${activeSector} Farms`);
-    }, [activeSector]);
+        const sectorFarmNames = [...new Set<string>(batches.filter(b => b.sector === activeSector).map(b => b.farm))];
+        if (sectorFarmNames.length === 1) {
+            onScopeChange(sectorFarmNames[0]);
+        } else {
+            onScopeChange(`All ${activeSector} Farms`);
+        }
+    }, [activeSector, batches]);
 
     const sectorBatches = useMemo(() => batches.filter(b => b.sector === activeSector), [batches, activeSector]);
     const activeBatches = useMemo(() => sectorBatches.filter(b => b.status === 'Active'), [sectorBatches]);
@@ -110,7 +117,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                     >
                         <PlusIcon className="w-6 h-6" />
-                        + A Farm
+                        Add a Farm
                     </button>
                 </div>
             </div>

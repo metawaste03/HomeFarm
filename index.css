@@ -259,3 +259,52 @@ select:focus {
 .btn-press:active {
   transform: scale(0.95);
 }
+
+/* Progress bar animations */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(132, 204, 22, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(132, 204, 22, 0.8), 0 0 30px rgba(132, 204, 22, 0.4);
+  }
+}
+
+@keyframes bar-grow {
+  0% {
+    transform: scaleX(0.95) scaleY(0.9);
+  }
+
+  50% {
+    transform: scaleX(1.02) scaleY(1.1);
+  }
+
+  100% {
+    transform: scaleX(1) scaleY(1);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-bar-grow {
+  animation: bar-grow 0.3s ease-out;
+}

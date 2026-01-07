@@ -19,13 +19,13 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
     const { tasks, addTask, toggleTaskStatus } = useTasks();
     const [activeFilter, setActiveFilter] = useState<'My Tasks' | 'All Tasks' | 'Overdue'>('My Tasks');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    
+
     // User role context (Mocked as 'Femi' for now)
     const currentUserName = "Femi (Owner)";
 
     const filteredTasks = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
-        
+
         switch (activeFilter) {
             case 'My Tasks':
                 return tasks.filter(t => t.assignedTo === currentUserName);
@@ -53,18 +53,18 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
                     <p className="text-text-secondary text-lg mb-8 leading-relaxed">
                         Create and assign tasks to your team to keep everyone organized and on track.
                     </p>
-                    <button 
+                    <button
                         onClick={() => setIsFormOpen(true)}
                         className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                     >
                         <PlusIcon className="w-6 h-6" />
-                        Create Your First Task
+                        Create Task
                     </button>
                     {isFormOpen && (
-                        <TaskFormModal 
+                        <TaskFormModal
                             team={MOCK_TEAM}
-                            onSave={handleSaveTask} 
-                            onClose={() => setIsFormOpen(false)} 
+                            onSave={handleSaveTask}
+                            onClose={() => setIsFormOpen(false)}
                         />
                     )}
                 </div>
@@ -76,7 +76,7 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
         <div className="bg-background min-h-screen relative flex flex-col">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10">
                 <h1 className="text-2xl font-bold text-center text-text-primary">Tasks</h1>
-                
+
                 <div className="flex justify-center p-1 bg-muted rounded-full mt-4">
                     {(['My Tasks', 'All Tasks', 'Overdue'] as const).map((filter) => (
                         <button
@@ -98,10 +98,10 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
                     </div>
                 ) : (
                     filteredTasks.map(task => (
-                        <TaskCard 
-                            key={task.id} 
-                            task={task} 
-                            onToggle={() => toggleTaskStatus(task.id)} 
+                        <TaskCard
+                            key={task.id}
+                            task={task}
+                            onToggle={() => toggleTaskStatus(task.id)}
                         />
                     ))
                 )}
@@ -117,10 +117,10 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
             </button>
 
             {isFormOpen && (
-                <TaskFormModal 
+                <TaskFormModal
                     team={MOCK_TEAM}
-                    onSave={handleSaveTask} 
-                    onClose={() => setIsFormOpen(false)} 
+                    onSave={handleSaveTask}
+                    onClose={() => setIsFormOpen(false)}
                 />
             )}
         </div>
@@ -134,7 +134,7 @@ const TaskCard: React.FC<{ task: Task, onToggle: () => void }> = ({ task, onTogg
     return (
         <div className={`bg-card p-4 rounded-xl shadow-sm border-l-4 transition-all ${isCompleted ? 'border-gray-300 opacity-60' : (isOverdue ? 'border-danger' : 'border-primary')}`}>
             <div className="flex items-start gap-4">
-                <button 
+                <button
                     onClick={onToggle}
                     className={`flex-shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-colors ${isCompleted ? 'bg-primary border-primary text-white' : 'border-border bg-background'}`}
                 >
@@ -185,7 +185,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!title.trim() || !dueDate) return alert('Task name and due date are required');
-        
+
         onSave({
             title,
             assignedTo,
@@ -202,17 +202,17 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
                     <h3 className="text-xl font-bold text-text-primary">Create New Task</h3>
                     <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary"><CloseIcon className="w-6 h-6" /></button>
                 </div>
-                
+
                 <form onSubmit={handleSubmit} className="p-5 space-y-5">
                     <div>
                         <label className="block text-sm font-semibold text-text-secondary mb-1">Task Name *</label>
-                        <input 
-                            type="text" 
-                            value={title} 
-                            onChange={e => setTitle(e.target.value)} 
-                            placeholder="e.g., Clean drinker lines" 
-                            className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" 
-                            required 
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={e => setTitle(e.target.value)}
+                            placeholder="e.g., Clean drinker lines"
+                            className="w-full p-3 border border-border rounded-lg bg-card text-text-primary"
+                            required
                             autoFocus
                         />
                     </div>
@@ -220,9 +220,9 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
                     <div>
                         <label className="block text-sm font-semibold text-text-secondary mb-1">Assign To *</label>
                         <div className="relative">
-                            <select 
-                                value={assignedTo} 
-                                onChange={e => setAssignedTo(e.target.value)} 
+                            <select
+                                value={assignedTo}
+                                onChange={e => setAssignedTo(e.target.value)}
                                 className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none"
                             >
                                 {team.map(member => (
@@ -236,20 +236,20 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold text-text-secondary mb-1">Due Date *</label>
-                            <input 
-                                type="date" 
-                                value={dueDate} 
-                                onChange={e => setDueDate(e.target.value)} 
-                                className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" 
-                                required 
+                            <input
+                                type="date"
+                                value={dueDate}
+                                onChange={e => setDueDate(e.target.value)}
+                                className="w-full p-3 border border-border rounded-lg bg-card text-text-primary"
+                                required
                             />
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-text-secondary mb-1">Repeat?</label>
                             <div className="relative">
-                                <select 
-                                    value={recurring} 
-                                    onChange={e => setRecurring(e.target.value as RecurringType)} 
+                                <select
+                                    value={recurring}
+                                    onChange={e => setRecurring(e.target.value as RecurringType)}
                                     className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none"
                                 >
                                     <option value="No">No</option>
@@ -264,17 +264,17 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
 
                     <div>
                         <label className="block text-sm font-semibold text-text-secondary mb-1">Notes / Instructions</label>
-                        <textarea 
-                            value={notes} 
-                            onChange={e => setNotes(e.target.value)} 
-                            placeholder="Optional instructions for the team..." 
+                        <textarea
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Optional instructions for the team..."
                             className="w-full h-24 p-3 border border-border rounded-lg bg-card text-text-primary"
                         />
                     </div>
 
                     <div className="pt-4 sticky bottom-0 bg-popover">
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="w-full bg-primary text-white font-bold py-4 rounded-xl text-lg hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                         >
                             SAVE TASK
