@@ -264,124 +264,126 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
     );
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-end sm:items-center justify-center" onClick={onClose}>
-            <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-                {/* Fixed Header */}
-                <div className="p-4 border-b border-border flex-shrink-0">
-                    <h3 className="text-xl font-bold text-center text-text-primary">{isEditing ? 'Edit Batch' : 'Start a New Batch'}</h3>
-                </div>
+        <div className="fixed inset-0 bg-black/50 z-30 overflow-y-auto" onClick={onClose}>
+            <div className="min-h-screen flex items-end sm:items-center justify-center p-0 sm:p-4">
+                <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg w-full sm:max-w-md max-h-[75vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                    {/* Fixed Header */}
+                    <div className="p-4 border-b border-border flex-shrink-0">
+                        <h3 className="text-xl font-bold text-center text-text-primary">{isEditing ? 'Edit Batch' : 'Start a New Batch'}</h3>
+                    </div>
 
-                {/* Scrollable Form Content */}
-                <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
-                    <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4">
-                        {/* Sector selection - no header, just the cards */}
-                        <div className="grid grid-cols-3 gap-3">
-                            <SectorCard value="Layer" label="Layer" icon={<ChickenIcon className="w-8 h-8" />} />
-                            <SectorCard value="Broiler" label="Broiler" icon={<ChickenIcon className="w-8 h-8" />} />
-                            <SectorCard value="Fish" label="Fish" icon={<FishIcon className="w-8 h-8" />} />
-                        </div>
-
-                        {/* Section 2: Batch Details - Toggle switch style */}
-                        <div>
-                            <div className="flex justify-between items-center">
-                                <label className="block text-sm font-semibold text-text-secondary">Batch Details *</label>
-                                <label htmlFor="details-toggle" className="flex items-center cursor-pointer">
-                                    <div className="relative">
-                                        <input type="checkbox" id="details-toggle" className="sr-only" checked={showDetails} onChange={() => setShowDetails(!showDetails)} />
-                                        <div className="block bg-muted w-12 h-7 rounded-full"></div>
-                                        <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showDetails ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
-                                    </div>
-                                </label>
+                    {/* Scrollable Form Content */}
+                    <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
+                        <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4">
+                            {/* Sector selection - no header, just the cards */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <SectorCard value="Layer" label="Layer" icon={<ChickenIcon className="w-8 h-8" />} />
+                                <SectorCard value="Broiler" label="Broiler" icon={<ChickenIcon className="w-8 h-8" />} />
+                                <SectorCard value="Fish" label="Fish" icon={<FishIcon className="w-8 h-8" />} />
                             </div>
-                            {showDetails && (
-                                <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
-                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
-                                    {!isEditing && (
-                                        <div>
-                                            <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label>
-                                            <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+
+                            {/* Section 2: Batch Details - Toggle switch style */}
+                            <div>
+                                <div className="flex justify-between items-center">
+                                    <label className="block text-sm font-semibold text-text-secondary">Batch Details *</label>
+                                    <label htmlFor="details-toggle" className="flex items-center cursor-pointer">
+                                        <div className="relative">
+                                            <input type="checkbox" id="details-toggle" className="sr-only" checked={showDetails} onChange={() => setShowDetails(!showDetails)} />
+                                            <div className="block bg-muted w-12 h-7 rounded-full"></div>
+                                            <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showDetails ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
+                                        </div>
+                                    </label>
+                                </div>
+                                {showDetails && (
+                                    <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
+                                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                        {!isEditing && (
+                                            <div>
+                                                <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label>
+                                                <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                                            </div>
+                                        )}
+                                        <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'} *`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Section 3: Cost & Age - Toggle switch style (only for new batches) */}
+                            {!isEditing && (
+                                <div>
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-sm font-semibold text-text-secondary">Stock Cost & Age *</label>
+                                        <label htmlFor="cost-toggle" className="flex items-center cursor-pointer">
+                                            <div className="relative">
+                                                <input type="checkbox" id="cost-toggle" className="sr-only" checked={showCostAge} onChange={() => setShowCostAge(!showCostAge)} />
+                                                <div className="block bg-muted w-12 h-7 rounded-full"></div>
+                                                <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showCostAge ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    {showCostAge && (
+                                        <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
+                                            <div className="relative">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span>
+                                                <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock *" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required />
+                                            </div>
+                                            <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age (e.g., ${sector === 'Fish' ? 'Fingerlings' : 'Day-Old'})`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
                                         </div>
                                     )}
-                                    <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'} *`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
                                 </div>
                             )}
-                        </div>
-
-                        {/* Section 3: Cost & Age - Toggle switch style (only for new batches) */}
-                        {!isEditing && (
-                            <div>
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-sm font-semibold text-text-secondary">Stock Cost & Age *</label>
-                                    <label htmlFor="cost-toggle" className="flex items-center cursor-pointer">
-                                        <div className="relative">
-                                            <input type="checkbox" id="cost-toggle" className="sr-only" checked={showCostAge} onChange={() => setShowCostAge(!showCostAge)} />
-                                            <div className="block bg-muted w-12 h-7 rounded-full"></div>
-                                            <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showCostAge ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
+                            {!isEditing && (
+                                <div>
+                                    <div className="flex justify-between items-center">
+                                        <label className="block text-sm font-semibold text-text-secondary">4. Add Starting Feed Inventory? (Optional)</label>
+                                        <label htmlFor="feed-toggle" className="flex items-center cursor-pointer">
+                                            <div className="relative">
+                                                <input type="checkbox" id="feed-toggle" className="sr-only" checked={addFeed} onChange={() => setAddFeed(!addFeed)} />
+                                                <div className="block bg-muted w-12 h-7 rounded-full"></div>
+                                                <div className={`dot absolute left-1 top-1 bg-white dark:bg-slate-400 w-5 h-5 rounded-full transition-transform ${addFeed ? 'translate-x-full bg-primary' : ''}`}></div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                    {addFeed && (
+                                        <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
+                                            <input type="text" value={feedBrand} onChange={(e) => setFeedBrand(e.target.value)} placeholder="Feed Brand / Type" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                                            <input type="number" value={feedQuantity > 0 ? feedQuantity : ''} onChange={handleNumericChange(setFeedQuantity)} placeholder="Quantity on Hand (Bags/kg)" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
                                         </div>
-                                    </label>
+                                    )}
                                 </div>
-                                {showCostAge && (
-                                    <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span>
-                                            <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock *" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required />
-                                        </div>
-                                        <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age (e.g., ${sector === 'Fish' ? 'Fingerlings' : 'Day-Old'})`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-semibold text-text-secondary mb-2">5. Health Schedule (Optional)</label>
+                                <div className="relative">
+                                    <select
+                                        value={scheduleId}
+                                        onChange={(e) => setScheduleId(e.target.value)}
+                                        className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                                    >
+                                        <option value="">No Schedule (None)</option>
+                                        {availableSchedules.map(schedule => (
+                                            <option key={schedule.id} value={schedule.id}>{schedule.name}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary" />
+                                </div>
+                                {scheduleId && (
+                                    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-text-secondary animate-fade-in">
+                                        <span className="font-bold text-primary block mb-1">Schedule Details:</span>
+                                        {availableSchedules.find(s => s.id === scheduleId)?.description}
                                     </div>
                                 )}
                             </div>
-                        )}
-                        {!isEditing && (
-                            <div>
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-sm font-semibold text-text-secondary">4. Add Starting Feed Inventory? (Optional)</label>
-                                    <label htmlFor="feed-toggle" className="flex items-center cursor-pointer">
-                                        <div className="relative">
-                                            <input type="checkbox" id="feed-toggle" className="sr-only" checked={addFeed} onChange={() => setAddFeed(!addFeed)} />
-                                            <div className="block bg-muted w-12 h-7 rounded-full"></div>
-                                            <div className={`dot absolute left-1 top-1 bg-white dark:bg-slate-400 w-5 h-5 rounded-full transition-transform ${addFeed ? 'translate-x-full bg-primary' : ''}`}></div>
-                                        </div>
-                                    </label>
-                                </div>
-                                {addFeed && (
-                                    <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
-                                        <input type="text" value={feedBrand} onChange={(e) => setFeedBrand(e.target.value)} placeholder="Feed Brand / Type" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
-                                        <input type="number" value={feedQuantity > 0 ? feedQuantity : ''} onChange={handleNumericChange(setFeedQuantity)} placeholder="Quantity on Hand (Bags/kg)" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        <div>
-                            <label className="block text-sm font-semibold text-text-secondary mb-2">5. Health Schedule (Optional)</label>
-                            <div className="relative">
-                                <select
-                                    value={scheduleId}
-                                    onChange={(e) => setScheduleId(e.target.value)}
-                                    className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                                >
-                                    <option value="">No Schedule (None)</option>
-                                    {availableSchedules.map(schedule => (
-                                        <option key={schedule.id} value={schedule.id}>{schedule.name}</option>
-                                    ))}
-                                </select>
-                                <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary" />
-                            </div>
-                            {scheduleId && (
-                                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-text-secondary animate-fade-in">
-                                    <span className="font-bold text-primary block mb-1">Schedule Details:</span>
-                                    {availableSchedules.find(s => s.id === scheduleId)?.description}
-                                </div>
-                            )}
                         </div>
-                    </div>
 
-                    {/* Sticky Footer */}
-                    <div className="p-4 border-t border-border flex-shrink-0 bg-popover flex justify-end gap-3">
-                        <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
-                        <button type="submit" className="flex-grow text-white font-bold py-3 px-4 rounded-xl text-lg bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95 transition-all">{isEditing ? 'SAVE CHANGES' : 'CREATE BATCH'}</button>
-                    </div>
-                </form>
+                        {/* Sticky Footer */}
+                        <div className="p-4 border-t border-border flex-shrink-0 bg-popover flex justify-end gap-3">
+                            <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
+                            <button type="submit" className="flex-grow text-white font-bold py-3 px-4 rounded-xl text-lg bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95 transition-all">{isEditing ? 'SAVE CHANGES' : 'CREATE BATCH'}</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
