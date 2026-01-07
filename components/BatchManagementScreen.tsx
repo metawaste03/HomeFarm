@@ -216,6 +216,10 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
     const [feedQuantity, setFeedQuantity] = useState<number>(0);
     const [scheduleId, setScheduleId] = useState<string>(batchToEdit?.scheduleId || '');
 
+    // Collapsible section states - keep form shorter
+    const [showDetails, setShowDetails] = useState(true);
+    const [showCostAge, setShowCostAge] = useState(false);
+
     useEffect(() => {
         if (!isEditing) {
             setSector(activeSector);
@@ -269,29 +273,64 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
 
                 {/* Scrollable Form Content */}
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
-                    <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-text-secondary mb-2">1. Select Sector *</label>
-                            <div className="grid grid-cols-3 gap-3">
-                                <SectorCard value="Layer" label="Layer" icon={<ChickenIcon className="w-8 h-8" />} />
-                                <SectorCard value="Broiler" label="Broiler" icon={<ChickenIcon className="w-8 h-8" />} />
-                                <SectorCard value="Fish" label="Fish" icon={<FishIcon className="w-8 h-8" />} />
-                            </div>
+                    <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4">
+                        {/* Sector selection - no header, just the cards */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <SectorCard value="Layer" label="Layer" icon={<ChickenIcon className="w-8 h-8" />} />
+                            <SectorCard value="Broiler" label="Broiler" icon={<ChickenIcon className="w-8 h-8" />} />
+                            <SectorCard value="Fish" label="Fish" icon={<FishIcon className="w-8 h-8" />} />
                         </div>
+
+                        {/* Section 2: Batch Details - Toggle switch style */}
                         <div>
-                            <label className="block text-sm font-semibold text-text-secondary mb-2">2. Batch Details *</label>
-                            <div className="space-y-3">
-                                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch - Nov 17, 2025)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
-                                {!isEditing && (<div> <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label> <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" /> </div>)}
+                            <div className="flex justify-between items-center">
+                                <label className="block text-sm font-semibold text-text-secondary">Batch Details *</label>
+                                <label htmlFor="details-toggle" className="flex items-center cursor-pointer">
+                                    <div className="relative">
+                                        <input type="checkbox" id="details-toggle" className="sr-only" checked={showDetails} onChange={() => setShowDetails(!showDetails)} />
+                                        <div className="block bg-muted w-12 h-7 rounded-full"></div>
+                                        <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showDetails ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
+                                    </div>
+                                </label>
                             </div>
+                            {showDetails && (
+                                <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
+                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                    {!isEditing && (
+                                        <div>
+                                            <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label>
+                                            <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                                        </div>
+                                    )}
+                                    <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'} *`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                </div>
+                            )}
                         </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-text-secondary mb-2">3. Initial Stock *</label>
-                            <div className="space-y-3">
-                                <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
-                                {!isEditing && (<> <div className="relative"> <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span> <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required /> </div> <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age of ${sector === 'Fish' ? 'Fish (e.g., Fingerlings)' : 'Birds (e.g., Day-Old)'}`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" /> </>)}
+
+                        {/* Section 3: Cost & Age - Toggle switch style (only for new batches) */}
+                        {!isEditing && (
+                            <div>
+                                <div className="flex justify-between items-center">
+                                    <label className="block text-sm font-semibold text-text-secondary">Stock Cost & Age *</label>
+                                    <label htmlFor="cost-toggle" className="flex items-center cursor-pointer">
+                                        <div className="relative">
+                                            <input type="checkbox" id="cost-toggle" className="sr-only" checked={showCostAge} onChange={() => setShowCostAge(!showCostAge)} />
+                                            <div className="block bg-muted w-12 h-7 rounded-full"></div>
+                                            <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showCostAge ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
+                                        </div>
+                                    </label>
+                                </div>
+                                {showCostAge && (
+                                    <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span>
+                                            <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock *" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required />
+                                        </div>
+                                        <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age (e.g., ${sector === 'Fish' ? 'Fingerlings' : 'Day-Old'})`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                                    </div>
+                                )}
                             </div>
-                        </div>
+                        )}
                         {!isEditing && (
                             <div>
                                 <div className="flex justify-between items-center">
