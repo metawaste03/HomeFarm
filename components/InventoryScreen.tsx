@@ -99,7 +99,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                         className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
                     >
                         <PlusIcon className="w-6 h-6" />
-                        Log Your First Purchase
+                        Log Purchase
                     </button>
                     {isPurchaseModalOpen && (
                         <PurchaseModal
