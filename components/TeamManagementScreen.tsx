@@ -147,8 +147,8 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite
     }
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-            <div className="bg-popover rounded-t-2xl sm:rounded-2xl shadow-lg w-full max-w-md max-h-[85vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-30 flex items-start sm:items-center justify-center p-4 sm:p-4 overflow-y-auto" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-lg w-full max-w-md max-h-[85vh] flex flex-col mt-4 sm:mt-0" onClick={e => e.stopPropagation()}>
                 <h3 className="text-lg font-bold p-4 border-b border-border text-text-primary">Invite Team Member</h3>
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-3">
                     <div>
