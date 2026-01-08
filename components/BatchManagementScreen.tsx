@@ -256,10 +256,9 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
 
     const availableSchedules = MOCK_SCHEDULES.filter(s => s.sector === sector);
 
-    const SectorCard: React.FC<{ value: Sector; label: string; icon: React.ReactNode }> = ({ value, label, icon }) => (
-        <button type="button" onClick={() => setSector(value)} className={`flex flex-col items-center justify-center p-4 border-2 rounded-xl w-full transition-all ${sector === value ? 'border-primary bg-green-50 dark:bg-green-900/20 shadow-md' : 'border-border bg-card hover:border-gray-400 dark:hover:border-gray-500'}`}>
-            <div className={`mb-2 ${sector === value ? 'text-primary' : 'text-text-secondary'}`}>{icon}</div>
-            <span className={`font-semibold ${sector === value ? 'text-primary' : 'text-text-primary'}`}>{label}</span>
+    const SectorCard: React.FC<{ value: Sector; label: string }> = ({ value, label }) => (
+        <button type="button" onClick={() => setSector(value)} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl w-full transition-all ${sector === value ? 'border-primary bg-green-50 dark:bg-green-900/20 shadow-md' : 'border-border bg-card hover:border-gray-400 dark:hover:border-gray-500'}`}>
+            <span className={`font-bold text-lg ${sector === value ? 'text-primary' : 'text-text-primary'}`}>{label}</span>
         </button>
     );
 
@@ -276,9 +275,9 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                     <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4">
                         {/* Sector selection - no header, just the cards */}
                         <div className="grid grid-cols-3 gap-3">
-                            <SectorCard value="Layer" label="Layer" icon={<ChickenIcon className="w-8 h-8" />} />
-                            <SectorCard value="Broiler" label="Broiler" icon={<ChickenIcon className="w-8 h-8" />} />
-                            <SectorCard value="Fish" label="Fish" icon={<FishIcon className="w-8 h-8" />} />
+                            <SectorCard value="Layer" label="Layer" />
+                            <SectorCard value="Broiler" label="Broiler" />
+                            <SectorCard value="Fish" label="Fish" />
                         </div>
 
                         {/* Section 2: Batch Details - Toggle switch style */}
