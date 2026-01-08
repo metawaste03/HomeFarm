@@ -116,7 +116,7 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
                     className="w-full bg-primary text-white font-bold py-3 px-4 rounded-xl text-lg flex items-center justify-center gap-2 hover:bg-primary-600 active:bg-primary-700 transition-colors"
                 >
                     <PlusIcon className="w-5 h-5" />
-                    + NEW TEMPLATE
+                    NEW TEMPLATE
                 </button>
 
                 <div>

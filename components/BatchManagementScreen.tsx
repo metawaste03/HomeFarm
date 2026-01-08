@@ -376,13 +376,13 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                                 )}
                             </div>
                         </div>
-
-                        {/* Sticky Footer */}
-                        <div className="p-4 border-t border-border flex-shrink-0 bg-popover flex justify-end gap-3">
-                            <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
-                            <button type="submit" className="flex-grow text-white font-bold py-3 px-4 rounded-xl text-lg bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95 transition-all">{isEditing ? 'SAVE CHANGES' : 'CREATE BATCH'}</button>
-                        </div>
                     </form>
+
+                    {/* Sticky Footer - Always Visible */}
+                    <div className="p-4 border-t border-border bg-popover sticky bottom-0 z-10 flex gap-3">
+                        <button type="button" onClick={onClose} className="px-5 py-3 rounded-xl text-text-primary bg-danger hover:bg-red-600 font-bold">Cancel</button>
+                        <button onClick={handleSubmit} className="flex-grow text-white font-bold py-3 px-4 rounded-xl bg-primary hover:bg-primary-600 active:scale-95 transition-all">Submit</button>
+                    </div>
                 </div>
             </div>
         </div>
