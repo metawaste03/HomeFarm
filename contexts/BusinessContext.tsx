@@ -55,6 +55,8 @@ interface BusinessContextType {
     updateThreshold: (itemId: string, newThreshold: number) => Promise<void>;
     addSupplier: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
     refreshData: () => Promise<void>;
+    deleteInventoryItem: (itemId: string) => Promise<void>;
+    updateInventoryItem: (itemId: string, updates: Partial<InventoryItem>) => Promise<void>;
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
@@ -235,6 +237,36 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     };
 
+    const updateInventoryItem = async (itemId: string, updates: Partial<InventoryItem>) => {
+        try {
+            // Convert app updates to database format
+            const dbUpdates: any = {};
+            if (updates.name) dbUpdates.name = updates.name;
+            if (updates.category) dbUpdates.category = updates.category;
+            if (updates.unit) dbUpdates.unit = updates.unit;
+            if (updates.minThreshold !== undefined) dbUpdates.min_threshold = updates.minThreshold;
+
+            await inventoryService.update(itemId, dbUpdates);
+
+            setInventoryItems(prev => prev.map(item =>
+                item.id === itemId ? { ...item, ...updates } : item
+            ));
+        } catch (err: any) {
+            console.error('Error updating inventory item:', err);
+            throw err;
+        }
+    };
+
+    const deleteInventoryItem = async (itemId: string) => {
+        try {
+            await inventoryService.delete(itemId);
+            setInventoryItems(prev => prev.filter(item => item.id !== itemId));
+        } catch (err: any) {
+            console.error('Error deleting inventory item:', err);
+            throw err;
+        }
+    };
+
     const addSupplier = async (supplierData: Omit<Supplier, 'id'>) => {
         if (!user) return;
 
@@ -265,6 +297,8 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
             error,
             addPurchase,
             updateThreshold,
+            updateInventoryItem,
+            deleteInventoryItem,
             addSupplier,
             refreshData,
         }}>

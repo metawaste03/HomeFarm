@@ -7,6 +7,7 @@ import { ChevronDownIcon, NairaIcon, ArrowTrendingUpIcon, FeedBagIcon, WarningIc
 import ExportDataModal from './ExportDataModal';
 import AnalyticsProgressTracker from './AnalyticsProgressTracker';
 import { useSales } from '../contexts/SalesContext';
+import { useBusiness } from '../contexts/BusinessContext';
 
 interface AnalyticsScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -92,6 +93,7 @@ const iconMap: { [key: string]: React.FC<any> } = {
 
 const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, batches, activeSector, onSectorChange, theme }) => {
     const { sales } = useSales();
+    const { inventoryItems } = useBusiness();
     const [dateRange, setDateRange] = useState('Last 30 Days');
     const [selectedBatchId, setSelectedBatchId] = useState<string | number | null>(null);
     const [viewMode, setViewMode] = useState<'summary' | 'charts' | 'health'>('summary');
@@ -103,10 +105,12 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
     const milestones = useMemo(() => {
         const batchCount = batches.filter(b => b.sector === activeSector).length;
         const salesCount = sales.filter(s => s.sector === activeSector).length;
-        // For now, we'll estimate daily logs and expenses from available data
-        // In a real implementation, these would come from dedicated tables
+        // For now, we'll estimate daily logs from available data
         const dailyLogCount = Math.min(batches.length * 2, 7); // Estimate
-        const expenseCount = Math.min(salesCount, 2); // Estimate from transactions
+
+        // Count real expenses (purchases)
+        const expenseCount = inventoryItems.reduce((count, item) =>
+            count + item.transactions.filter(t => t.type === 'purchase').length, 0);
 
         return {
             batches: batchCount,
@@ -114,7 +118,24 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
             expenses: expenseCount,
             sales: salesCount
         };
-    }, [batches, sales, activeSector]);
+    }, [batches, sales, activeSector, inventoryItems]);
+
+    // Calculate Real Financials
+    const realFinancials = useMemo(() => {
+        const revenue = sales
+            .filter(s => s.sector === activeSector)
+            .reduce((sum, s) => sum + s.amount, 0);
+
+        // Calculate total expenses from inventory purchases (Global for now as items aren't sector-specific)
+        const expenses = inventoryItems.reduce((total, item) => {
+            const itemExpenses = item.transactions
+                .filter(t => t.type === 'purchase')
+                .reduce((sum, t) => sum + (t.cost || 0), 0);
+            return total + itemExpenses;
+        }, 0);
+
+        return { revenue, expenses };
+    }, [sales, inventoryItems, activeSector]);
 
     // Check if all milestones are complete
     const hasEnoughData = milestones.batches >= 1 &&
@@ -357,9 +378,9 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                 {selectedBatchId && data ? (
                     <>
                         <div className="grid grid-cols-3 gap-2">
-                            <FinancialCard label="Total Revenue" value={data.financials.revenue} />
-                            <FinancialCard label="Total Expenses" value={data.financials.expenses} />
-                            <FinancialCard label="Net Profit" value={data.financials.revenue - data.financials.expenses} isProfit />
+                            <FinancialCard label="Total Revenue" value={realFinancials.revenue} />
+                            <FinancialCard label="Total Expenses" value={realFinancials.expenses} />
+                            <FinancialCard label="Net Profit" value={realFinancials.revenue - realFinancials.expenses} isProfit />
                         </div>
 
                         <ViewToggle />
@@ -472,6 +493,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                                 <label className="block text-sm font-semibold text-text-secondary mb-1">Select Batch</label>
                                 <div className="relative">
                                     <select
+                                        aria-label="Select Batch"
                                         value={selectedBatchId || ''}
                                         onChange={(e) => setSelectedBatchId(e.target.value)}
                                         className="w-full text-left bg-muted p-3 rounded-lg font-semibold text-primary appearance-none"

@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Screen } from '../App';
-import { BoxIcon, PlusIcon, ChevronRightIcon, TrendingDownIcon, BellIcon, ChevronLeftIcon, MinusIcon } from './icons';
+import { BoxIcon, PlusIcon, ChevronRightIcon, TrendingDownIcon, BellIcon, ChevronLeftIcon, MinusIcon, PencilIcon, TrashIcon } from './icons';
 import { useBusiness, InventoryItem, InventoryCategory, Transaction } from '../contexts/BusinessContext';
 
 interface InventoryScreenProps {
@@ -9,10 +9,14 @@ interface InventoryScreenProps {
 }
 
 const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
-    const { inventoryItems: items, addPurchase, updateThreshold } = useBusiness();
+    const { inventoryItems: items, addPurchase, updateThreshold, updateInventoryItem, deleteInventoryItem } = useBusiness();
     const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
     const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editName, setEditName] = useState('');
+    const [editCategory, setEditCategory] = useState<InventoryCategory>('Feed');
+    const [editUnit, setEditUnit] = useState('');
 
     // Purchase Form State
     const [isNewItem, setIsNewItem] = useState(false);
@@ -27,6 +31,9 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
 
     const handleItemClick = (item: InventoryItem) => {
         setSelectedItem(item);
+        setEditName(item.name);
+        setEditCategory(item.category);
+        setEditUnit(item.unit);
         setViewMode('detail');
     };
 
@@ -65,6 +72,27 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
         if (selectedItem && selectedItem.id === itemId) {
             setSelectedItem(prev => prev ? { ...prev, minThreshold: newThreshold } : null);
         }
+    };
+
+    const handleDeleteItem = async () => {
+        if (!selectedItem) return;
+        if (confirm(`Are you sure you want to delete ${selectedItem.name}? This cannot be undone.`)) {
+            await deleteInventoryItem(selectedItem.id);
+            setSelectedItem(null);
+            setViewMode('list');
+        }
+    };
+
+    const handleUpdateItem = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedItem) return;
+        await updateInventoryItem(selectedItem.id, {
+            name: editName,
+            category: editCategory,
+            unit: editUnit
+        });
+        setSelectedItem(prev => prev ? { ...prev, name: editName, category: editCategory, unit: editUnit } : null);
+        setIsEditModalOpen(false);
     };
 
     // Group items by category
@@ -132,9 +160,17 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                     <button onClick={handleBackToList} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full" aria-label="Go back to inventory list">
                         <ChevronLeftIcon className="w-6 h-6" />
                     </button>
-                    <div>
+                    <div className="flex-grow">
                         <h1 className="text-xl font-bold text-text-primary">{selectedItem.name}</h1>
                         <span className="text-xs font-semibold bg-muted px-2 py-1 rounded-full text-text-secondary">{selectedItem.category}</span>
+                    </div>
+                    <div className="flex gap-2">
+                        <button onClick={() => setIsEditModalOpen(true)} className="p-2 text-text-secondary hover:bg-muted rounded-full">
+                            <PencilIcon className="w-5 h-5" />
+                        </button>
+                        <button onClick={handleDeleteItem} className="p-2 text-danger hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full">
+                            <TrashIcon className="w-5 h-5" />
+                        </button>
                     </div>
                 </header>
 
@@ -187,6 +223,40 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                         </div>
                     </div>
                 </div>
+
+
+                {
+                    isEditModalOpen && (
+                        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setIsEditModalOpen(false)}>
+                            <div className="bg-popover rounded-2xl shadow-lg w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-lg font-bold text-text-primary mb-4">Edit Item Details</h3>
+                                <form onSubmit={handleUpdateItem} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-text-secondary mb-1">Item Name</label>
+                                        <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
+                                        <select value={editCategory} onChange={e => setEditCategory(e.target.value as InventoryCategory)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary">
+                                            <option value="Feed">Feed</option>
+                                            <option value="Medication">Medication</option>
+                                            <option value="Equipment">Equipment</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
+                                        <input type="text" value={editUnit} onChange={e => setEditUnit(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                    </div>
+                                    <div className="flex justify-end gap-3 pt-4">
+                                        <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
+                                        <button type="submit" className="px-4 py-2 rounded-lg text-white bg-primary hover:bg-primary-600 font-semibold">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )
+                }
             </div>
         );
     }

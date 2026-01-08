@@ -196,8 +196,8 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-center justify-center p-4" onClick={onClose}>
-            <div className="bg-popover rounded-2xl shadow-lg w-full max-w-sm flex flex-col max-h-[85vh] animate-fade-in" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 z-30 flex items-start sm:items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+            <div className="bg-popover rounded-2xl shadow-lg w-full max-w-sm flex flex-col max-h-[85vh] mt-10 sm:mt-0 animate-fade-in" onClick={e => e.stopPropagation()}>
                 {/* Fixed Header */}
                 <div className="p-6 pb-2 flex-shrink-0">
                     <h3 className="text-lg font-bold text-text-primary">{sale ? 'Edit Sale' : 'Record a New Sale'}</h3>
