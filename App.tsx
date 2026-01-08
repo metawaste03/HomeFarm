@@ -205,7 +205,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
               </button>
             )}
 
-            <footer className="fixed bottom-0 left-0 right-0 bg-card shadow-t border-t border-border z-20 lg:hidden">
+            <footer className="fixed bottom-0 left-0 right-0 bg-card shadow-t border-t border-border z-20 lg:hidden pb-6">
               <div className="flex justify-around">
                 <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
                 <BottomNavItem icon={ClipboardListIcon} label="Logs" screen="log" currentScreen={currentScreen} onNavigate={navigateTo} />
