@@ -70,7 +70,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
             if (farmId) {
                 try {
-                    const fetchedLogs = await dailyLogsService.list(farmId);
+                    const fetchedLogs = await dailyLogsService.list(String(farmId));
                     setLogs(fetchedLogs);
                 } catch (error) {
                     console.error("Error fetching dashboard logs:", error);
