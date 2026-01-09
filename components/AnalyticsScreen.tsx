@@ -8,6 +8,8 @@ import ExportDataModal from './ExportDataModal';
 import AnalyticsProgressTracker from './AnalyticsProgressTracker';
 import { useSales } from '../contexts/SalesContext';
 import { useBusiness } from '../contexts/BusinessContext';
+import { dailyLogsService } from '../services/database';
+import type { Tables } from '../types/database';
 
 interface AnalyticsScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -95,6 +97,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
     const { sales } = useSales();
     const { inventoryItems } = useBusiness();
     const [dateRange, setDateRange] = useState('Last 30 Days');
+    const [logs, setLogs] = useState<Tables<'daily_logs'>[]>([]);
     const [selectedBatchId, setSelectedBatchId] = useState<string | number | null>(null);
     const [viewMode, setViewMode] = useState<'summary' | 'charts' | 'health'>('summary');
     const [isExportModalOpen, setExportModalOpen] = useState(false);
@@ -158,15 +161,66 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
         return batches.find(b => b.id === selectedBatchId) || null;
     }, [selectedBatchId, batches]);
 
-    useEffect(() => {
-        if (sectorBatches.length > 0 && (!selectedBatchId || !sectorBatches.find(b => b.id === selectedBatchId))) {
-            setSelectedBatchId(sectorBatches[0].id);
-        } else if (sectorBatches.length === 0) {
-            setSelectedBatchId(null);
-        }
-    }, [activeSector, sectorBatches, selectedBatchId]);
+    // Filter logs by active sector (since we are fetching all logs if selectedBatchId is null)
+    const sectorLogs = useMemo(() => {
+        return logs.filter(log => {
+            const acts = log.activities as any;
+            return acts?.sector === activeSector;
+        });
+    }, [logs, activeSector]);
 
-    const data = MOCK_ANALYTICS_DATA[activeSector];
+    const realChartData = useMemo(() => {
+        const mock = MOCK_ANALYTICS_DATA[activeSector];
+
+        // 1. Expense Breakdown
+        const expensesByCategory: Record<string, number> = {};
+        inventoryItems.forEach(item => {
+            const itemCost = item.transactions
+                .filter(t => t.type === 'purchase')
+                .reduce((sum, t) => sum + (t.cost || 0), 0);
+            if (itemCost > 0) {
+                expensesByCategory[item.category] = (expensesByCategory[item.category] || 0) + itemCost;
+            }
+        });
+        const expLabels = Object.keys(expensesByCategory);
+        const expData = Object.values(expensesByCategory);
+
+        // 2. Log Data (KPIs)
+        const sortedLogs = [...sectorLogs].reverse(); // Ascending date
+        const kpiLabels = sortedLogs.map(l => new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+
+        const productionData = sortedLogs.map(l => {
+            const acts = l.activities as any;
+            return acts?.eggCollection?.total || 0;
+        });
+
+        const mortalityData = sortedLogs.map(l => {
+            const acts = l.activities as any;
+            return acts?.mortality || 0;
+        });
+
+        return {
+            ...mock,
+            expenseBreakdown: {
+                labels: expLabels.length > 0 ? expLabels : mock.expenseBreakdown.labels,
+                data: expData.length > 0 ? expData : mock.expenseBreakdown.data
+            },
+            kpi1: {
+                ...mock.kpi1,
+                title: 'Production (Eggs)',
+                labels: kpiLabels.length > 0 ? kpiLabels : mock.kpi1.labels,
+                data: kpiLabels.length > 0 ? productionData : mock.kpi1.data
+            },
+            kpi2: {
+                ...mock.kpi2,
+                title: 'Mortality',
+                labels: kpiLabels.length > 0 ? kpiLabels : mock.kpi2.labels,
+                data: kpiLabels.length > 0 ? mortalityData : mock.kpi2.data
+            }
+        };
+    }, [activeSector, logs, inventoryItems]);
+
+    const data = realChartData;
 
     useEffect(() => {
         if (viewMode !== 'charts') return;
@@ -509,6 +563,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                                 <label className="block text-sm font-semibold text-text-secondary mb-1">Select Date Range</label>
                                 <div className="relative">
                                     <select
+                                        aria-label="Select Date Range"
                                         value={dateRange}
                                         onChange={(e) => setDateRange(e.target.value)}
                                         className="w-full text-left bg-muted p-3 rounded-lg font-semibold text-primary appearance-none"

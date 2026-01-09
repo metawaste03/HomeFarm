@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import type { Screen } from '../App';
-import { PencilIcon, TrashIcon, SalesIcon, PlusIcon } from './icons';
+import { PencilIcon, TrashIcon, SalesIcon, PlusIcon, ChevronLeftIcon } from './icons';
 import type { Sector } from './BatchManagementScreen';
 import { useSales, Sale } from '../contexts/SalesContext';
 
@@ -50,7 +50,10 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
 
     if (sales.length === 0) {
         return (
-            <div className="bg-background min-h-screen flex items-center justify-center p-6">
+            <div className="bg-background min-h-screen flex items-center justify-center p-6 relative">
+                <button onClick={() => onNavigate('business')} className="absolute top-6 left-4 p-2 text-text-secondary hover:text-primary rounded-full z-10" aria-label="Go back">
+                    <ChevronLeftIcon className="w-8 h-8" />
+                </button>
                 <div className="bg-card rounded-3xl shadow-xl p-10 w-full max-w-md text-center border border-border">
                     <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                         <SalesIcon className="w-12 h-12 text-primary" />
@@ -82,7 +85,12 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
     return (
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10">
-                <h1 className="text-2xl font-bold text-center text-text-primary">Income & Sales ({activeSector})</h1>
+                <div className="flex items-center">
+                    <button onClick={() => onNavigate('business')} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full" aria-label="Go back to business hub">
+                        <ChevronLeftIcon className="w-6 h-6" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-center flex-grow text-text-primary pr-8 leading-tight">Income & Sales ({activeSector})</h1>
+                </div>
                 <p className="text-center text-sm text-text-secondary mt-1">
                     Showing all sales data for your {activeSector} operations.
                 </p>

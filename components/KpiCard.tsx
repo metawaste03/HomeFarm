@@ -8,6 +8,7 @@ interface KpiCardProps {
     trend?: string;
     accentColor?: 'blue' | 'green' | 'purple' | 'orange';
     staggerIndex?: number;
+    className?: string;
 }
 
 const colorClasses = {
@@ -23,7 +24,8 @@ const KpiCard: React.FC<KpiCardProps> = ({
     value,
     trend,
     accentColor = 'green',
-    staggerIndex = 0
+    staggerIndex = 0,
+    className = ''
 }) => {
     const trendColor = trend?.startsWith('+')
         ? 'text-green-500'
@@ -38,7 +40,7 @@ const KpiCard: React.FC<KpiCardProps> = ({
 
     return (
         <div
-            className={`bg-card rounded-2xl shadow-sm border border-border overflow-hidden card-hover animate-slide-up opacity-0 stagger-${staggerIndex + 1}`}
+            className={`bg-card rounded-2xl shadow-sm border border-border overflow-hidden card-hover animate-slide-up opacity-0 stagger-${staggerIndex + 1} ${className}`}
             style={{ animationFillMode: 'forwards' }}
         >
             {/* Accent bar */}

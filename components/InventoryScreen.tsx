@@ -1,6 +1,8 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Screen } from '../App';
+import { useUI } from '../contexts/UIContext';
+import { supabase } from '../lib/supabase';
 import { BoxIcon, PlusIcon, ChevronRightIcon, TrendingDownIcon, BellIcon, ChevronLeftIcon, MinusIcon, PencilIcon, TrashIcon } from './icons';
 import { useBusiness, InventoryItem, InventoryCategory, Transaction } from '../contexts/BusinessContext';
 
@@ -11,9 +13,20 @@ interface InventoryScreenProps {
 const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
     const { inventoryItems: items, addPurchase, updateThreshold, updateInventoryItem, deleteInventoryItem } = useBusiness();
     const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
-    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+    const [activeTab, setActiveTab] = useState<'inventory' | 'suppliers'>('inventory');
     const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+    const { setBottomNavVisible } = useUI();
+
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+    // Toggle Bottom Nav
+    useEffect(() => {
+        const isAnyModalOpen = isPurchaseModalOpen || isEditModalOpen;
+        setBottomNavVisible(!isAnyModalOpen);
+        // Ensure nav is restored when unmounting or modals close
+        return () => setBottomNavVisible(true);
+    }, [isPurchaseModalOpen, isEditModalOpen, setBottomNavVisible]);
     const [editName, setEditName] = useState('');
     const [editCategory, setEditCategory] = useState<InventoryCategory>('Feed');
     const [editUnit, setEditUnit] = useState('');
@@ -113,7 +126,10 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
 
     if (items.length === 0) {
         return (
-            <div className="bg-background min-h-screen flex items-center justify-center p-6">
+            <div className="bg-background min-h-screen flex items-center justify-center p-6 relative">
+                <button onClick={() => onNavigate('business')} className="absolute top-6 left-4 p-2 text-text-secondary hover:text-primary rounded-full z-10" aria-label="Go back">
+                    <ChevronLeftIcon className="w-8 h-8" />
+                </button>
                 <div className="bg-card rounded-3xl shadow-xl p-10 w-full max-w-md text-center border border-border">
                     <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
                         <BoxIcon className="w-12 h-12 text-primary" />
@@ -176,7 +192,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
 
                 <div className="p-4 flex-grow space-y-6">
                     <div className="bg-card rounded-xl shadow-sm p-6 text-center relative overflow-hidden">
-                        <div className={`absolute top-0 left-0 w-full h-2 ${getStatusColor(selectedItem)}`}></div>
+                        <div className={`absolute top-0 left-0 w-full h-2 ${getStatusColor(selectedItem)} `}></div>
                         <p className="text-sm text-text-secondary font-bold uppercase mb-2">Current Stock</p>
                         <p className="text-5xl font-bold text-text-primary">{selectedItem.quantity.toLocaleString()}</p>
                         <p className="text-xl text-text-secondary font-medium mt-1">{selectedItem.unit}</p>
@@ -204,7 +220,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                 <div key={tx.id} className="bg-card p-3 rounded-lg shadow-sm flex justify-between items-center">
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${tx.type === 'purchase' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'}`}>
+                                            <span className={`text-xs font-bold px-2 py-0.5 rounded ${tx.type === 'purchase' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'} `}>
                                                 {tx.type === 'purchase' ? 'Purchase' : 'Used'}
                                             </span>
                                             <span className="text-xs text-text-secondary">{new Date(tx.date).toLocaleDateString()}</span>
@@ -213,7 +229,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                         {tx.supplier && <p className="text-sm text-text-secondary mt-1">Supplier: {tx.supplier}</p>}
                                     </div>
                                     <div className="text-right">
-                                        <p className={`font-bold text-lg ${tx.type === 'purchase' ? 'text-green-600' : 'text-text-primary'}`}>
+                                        <p className={`font-bold text-lg ${tx.type === 'purchase' ? 'text-green-600' : 'text-text-primary'} `}>
                                             {tx.type === 'purchase' ? '+' : '-'}{tx.quantity.toLocaleString()} <span className="text-sm font-normal text-text-secondary">{tx.unit}</span>
                                         </p>
                                         {tx.cost && <p className="text-xs text-text-secondary">{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(tx.cost)}</p>}
@@ -265,7 +281,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
         <div className="bg-background min-h-screen flex flex-col">
             <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                    <button onClick={() => onNavigate('sales')} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full" aria-label="Go back to sales">
+                    <button onClick={() => onNavigate('business')} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full" aria-label="Go back to business hub">
                         <ChevronLeftIcon className="w-6 h-6" />
                     </button>
                     <h1 className="text-2xl font-bold text-text-primary">Inventory</h1>
@@ -290,7 +306,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                     className="bg-card p-4 rounded-xl shadow-sm flex justify-between items-center cursor-pointer hover:bg-muted transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className={`w-3 h-3 rounded-full ${getStatusColor(item)}`}></div>
+                                        <div className={`w-3 h-3 rounded-full ${getStatusColor(item)} `}></div>
                                         <div>
                                             <p className="font-bold text-text-primary">{item.name}</p>
                                             {item.quantity <= item.minThreshold && (
@@ -349,8 +365,8 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, o
                     <h3 className="text-xl font-bold mb-4 text-center text-text-primary">Log a Purchase</h3>
                     <form onSubmit={onSubmit} className="space-y-4">
                         <div className="flex bg-muted p-1 rounded-lg mb-4">
-                            <button type="button" onClick={() => formData.setIsNewItem(false)} className={`flex-1 py-2 text-sm font-bold rounded-md transition ${!formData.isNewItem ? 'bg-card shadow text-primary' : 'text-text-secondary'}`}>Existing Item</button>
-                            <button type="button" onClick={() => formData.setIsNewItem(true)} className={`flex-1 py-2 text-sm font-bold rounded-md transition ${formData.isNewItem ? 'bg-card shadow text-primary' : 'text-text-secondary'}`}>+ Create New</button>
+                            <button type="button" onClick={() => formData.setIsNewItem(false)} className={`flex-1 py-2 text-sm font-bold rounded-md transition ${!formData.isNewItem ? 'bg-card shadow text-primary' : 'text-text-secondary'} `}>Existing Item</button>
+                            <button type="button" onClick={() => formData.setIsNewItem(true)} className={`flex-1 py-2 text-sm font-bold rounded-md transition ${formData.isNewItem ? 'bg-card shadow text-primary' : 'text-text-secondary'} `}>+ Create New</button>
                         </div>
 
                         <div>

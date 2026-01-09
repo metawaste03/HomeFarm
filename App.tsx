@@ -24,6 +24,7 @@ import { BusinessProvider } from './contexts/BusinessContext';
 import { SalesProvider } from './contexts/SalesContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ActivityProvider } from './contexts/ActivityContext';
+import { UIProvider, useUI } from './contexts/UIContext';
 
 export type Screen = 'dashboard' | 'log' | 'tasks' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules';
 export type Theme = 'light' | 'dark' | 'system';
@@ -31,6 +32,7 @@ export type Theme = 'light' | 'dark' | 'system';
 const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => {
   const { farms, batches, updateBatch, addBatch, deleteBatch, updateFarm, addFarm, deleteFarm } = useFarm();
   const { signOut } = useAuth();
+  const { isBottomNavVisible } = useUI();
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [isNewBatchModalOpen, setIsNewBatchModalOpen] = useState(false);
@@ -105,7 +107,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
             return <FishLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} />;
           case 'Layer':
           default:
-            return <DailyLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} />;
+            return <DailyLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} activeSector={activeSector} />;
         }
       case 'tasks':
         return <TaskManagementScreen onNavigate={navigateTo} />;
@@ -205,16 +207,18 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
               </button>
             )}
 
-            <footer className="fixed bottom-0 left-0 right-0 bg-card shadow-t border-t border-border z-20 lg:hidden pb-6">
-              <div className="flex justify-around">
-                <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
-                <BottomNavItem icon={ClipboardListIcon} label="Logs" screen="log" currentScreen={currentScreen} onNavigate={navigateTo} />
-                <BottomNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
-                <BottomNavItem icon={AnalyticsIcon} label="Stats" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
-                <BottomNavItem icon={WalletIcon} label="Biz" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
-                <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
-              </div>
-            </footer>
+            {isBottomNavVisible && !isSalesModalOpen && !isNewBatchModalOpen && (
+              <footer className="fixed bottom-0 left-0 right-0 bg-card shadow-t border-t border-border z-20 lg:hidden pb-4">
+                <div className="flex justify-around">
+                  <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
+                  <BottomNavItem icon={ClipboardListIcon} label="Logs" screen="log" currentScreen={currentScreen} onNavigate={navigateTo} />
+                  <BottomNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
+                  <BottomNavItem icon={AnalyticsIcon} label="Stats" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
+                  <BottomNavItem icon={WalletIcon} label="Biz" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
+                  <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
+                </div>
+              </footer>
+            )}
           </div>
         </div>
       </div>
@@ -294,7 +298,9 @@ const AuthenticatedApp: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }>
         <BusinessProvider>
           <SalesProvider>
             <ActivityProvider>
-              <AppContent theme={theme} setTheme={setTheme} />
+              <UIProvider>
+                <AppContent theme={theme} setTheme={setTheme} />
+              </UIProvider>
             </ActivityProvider>
           </SalesProvider>
         </BusinessProvider>

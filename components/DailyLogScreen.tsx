@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 // Fix: Use `import type` for type-only imports to prevent circular dependency issues.
 import type { Screen } from '../App';
 import type { Farm } from './FarmManagementScreen';
-import type { Batch } from './BatchManagementScreen';
+import type { Batch, Sector } from './BatchManagementScreen';
 import HealthLogModal, { HealthLogData } from './HealthLogModal';
 
 const DEFAULT_CATEGORIES = ['Jumbo', 'Large', 'Medium', 'Pullet'];
@@ -23,9 +23,10 @@ interface DailyLogScreenProps {
     onNavigate: (screen: Screen) => void;
     farm: Farm | null;
     batch: Batch | null;
+    activeSector: Sector;
 }
 
-const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch }) => {
+const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch, activeSector }) => {
     const { user } = useAuth();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isSaving, setIsSaving] = useState(false);
@@ -153,7 +154,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
         );
 
         const activities = {
-            sector: 'Layer',
+            sector: batch?.sector || activeSector || 'Layer',
             eggCollection: { total: grandTotalEggs, breakdown: eggData },
             feed: { kg: feedKg, brand: feedBrand },
             mortality,

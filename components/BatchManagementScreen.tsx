@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Screen } from '../App';
-import { ChevronDownIcon, ChickenIcon, CalendarIcon, FishIcon, EllipsisIcon, PencilIcon, TrashIcon, PlusIcon, StethoscopeIcon } from './icons';
+import { ChevronDownIcon, ChickenIcon, CalendarIcon, FishIcon, EllipsisIcon, PencilIcon, TrashIcon, PlusIcon, StethoscopeIcon, ChevronLeftIcon } from './icons';
 import type { Farm } from './FarmManagementScreen';
 
 export type Sector = 'Layer' | 'Broiler' | 'Fish';
@@ -85,7 +85,12 @@ const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigat
     return (
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10">
-                <h1 className="text-2xl font-bold text-center text-text-primary">Manage Batches</h1>
+                <div className="flex items-center">
+                    <button onClick={() => onNavigate('settings')} className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full" aria-label="Go back to settings">
+                        <ChevronLeftIcon className="w-6 h-6" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-center flex-grow text-text-primary pr-8">Manage Batches</h1>
+                </div>
                 <div className="relative mt-2">
                     <button onClick={() => setIsSelectorOpen(!isSelectorOpen)} className="w-full text-left bg-muted p-3 rounded-lg flex justify-between items-center">
                         <span className="font-semibold text-primary">{selectedFarm}</span>

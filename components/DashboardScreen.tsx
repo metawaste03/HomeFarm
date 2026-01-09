@@ -7,6 +7,8 @@ import { useSales } from '../contexts/SalesContext';
 import { useAuth } from '../contexts/AuthContext';
 import KpiCard from './KpiCard';
 import TimeFilter from './TimeFilter';
+import { dailyLogsService } from '../services/database';
+import type { Tables } from '../types/database';
 import ProfitabilityCalculator from './ProfitabilityCalculator';
 import SmartAdvisor from './SmartAdvisor';
 import ActivityFeed from './ActivityFeed';
@@ -34,6 +36,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const { user } = useAuth();
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
     const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+    const [logs, setLogs] = useState<Tables<'daily_logs'>[]>([]);
 
     // Get user's first name for greeting
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'Farmer';
@@ -48,11 +51,63 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         } else {
             onScopeChange(`All ${activeSector} Farms`);
         }
-    }, [activeSector, batches]);
+    }, [activeSector, batches, onScopeChange]);
+
+    // Fetch Daily Logs
+    useEffect(() => {
+        const fetchLogs = async () => {
+            if (farms.length === 0) return;
+            // Fetch logs for the first farm for now, or refine scope later.
+            // Ideally fetching for the 'selectedScope' farm.
+            // For simplicity, we fetch all for the active farm scope if possible, or just the first one.
+            // Let's use the farm from "selectedScope" if possible.
+            let farmId = farms[0]?.id;
+            if (selectedScope && !selectedScope.startsWith('All')) {
+                const farmName = selectedScope.split(' - ')[0];
+                const f = farms.find(f => f.name === farmName);
+                if (f) farmId = f.id;
+            }
+
+            if (farmId) {
+                try {
+                    const fetchedLogs = await dailyLogsService.list(farmId);
+                    setLogs(fetchedLogs);
+                } catch (error) {
+                    console.error("Error fetching dashboard logs:", error);
+                }
+            }
+        };
+        fetchLogs();
+    }, [farms, selectedScope]);
 
     const sectorBatches = useMemo(() => batches.filter(b => b.sector === activeSector), [batches, activeSector]);
     const activeBatches = useMemo(() => sectorBatches.filter(b => b.status === 'Active'), [sectorBatches]);
+
+    // Calculate Real Data from Logs
+    const sectorLogs = useMemo(() => {
+        return logs.filter(log => {
+            const acts = log.activities as any;
+            return acts?.sector === activeSector;
+        });
+    }, [logs, activeSector]);
+
+    const totalMortality = useMemo(() => {
+        return sectorLogs.reduce((sum, log) => {
+            const acts = log.activities as any;
+            return sum + (acts?.mortality || 0);
+        }, 0);
+    }, [sectorLogs]);
+
+    const totalEggs = useMemo(() => {
+        return sectorLogs.reduce((sum, log) => {
+            const acts = log.activities as any;
+            return sum + (acts?.eggCollection?.total || 0);
+        }, 0);
+    }, [sectorLogs]);
+
     const totalStock = useMemo(() => activeBatches.reduce((sum, b) => sum + (b.stockCount || 0), 0), [activeBatches]);
+    const currentActiveBirds = totalStock - totalMortality;
+
     const pendingTasks = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
 
     // Calculate today's sales
@@ -189,30 +244,34 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                             icon={<ChickenIcon className="w-5 h-5 text-blue-500" />}
                             label="Total Stock"
                             value={totalStock.toLocaleString()}
-                            trend={totalStock > 0 ? '+5%' : undefined}
+                            trend={totalStock > 0 ? '+0%' : undefined}
                             accentColor="blue"
                             staggerIndex={0}
+                            className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                         />
                         <KpiCard
                             icon={<BatchIcon className="w-5 h-5 text-lime-500" />}
-                            label="Active Batches"
-                            value={activeBatches.length}
+                            label="Active Birds"
+                            value={currentActiveBirds.toLocaleString()}
                             accentColor="green"
                             staggerIndex={1}
+                            className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                         />
                         <KpiCard
-                            icon={<WalletIcon className="w-5 h-5 text-purple-500" />}
-                            label="Today's Sales"
-                            value={`₦${todaySales.toLocaleString()}`}
+                            icon={<LayerIcon className="w-5 h-5 text-purple-500" />}
+                            label="Total Output"
+                            value={totalEggs.toLocaleString()}
                             accentColor="purple"
                             staggerIndex={2}
+                            className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                         />
                         <KpiCard
-                            icon={<TaskIcon className="w-5 h-5 text-orange-500" />}
-                            label="Pending Tasks"
-                            value={pendingTasks}
+                            icon={<FishIcon className="w-5 h-5 text-orange-500" />}
+                            label="Mortality"
+                            value={totalMortality.toLocaleString()}
                             accentColor="orange"
                             staggerIndex={3}
+                            className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                         />
                     </div>
 
