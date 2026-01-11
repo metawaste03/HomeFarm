@@ -149,7 +149,7 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                             <p className="text-xs text-text-secondary">{batch?.name || 'Unknown Batch'}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 text-text-secondary hover:bg-muted rounded-full">
+                    <button onClick={onClose} className="p-2 text-text-secondary hover:bg-muted rounded-full" aria-label="Close health log modal">
                         <CloseIcon className="w-6 h-6" />
                     </button>
                 </div>
@@ -160,11 +160,11 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-semibold text-text-secondary mb-1">Date</label>
-                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-border rounded-lg bg-background text-text-primary" />
+                            <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full p-2 border border-border rounded-lg bg-background text-text-primary" aria-label="Log date" />
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-text-secondary mb-1">Time</label>
-                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full p-2 border border-border rounded-lg bg-background text-text-primary" />
+                            <input type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full p-2 border border-border rounded-lg bg-background text-text-primary" aria-label="Log time" />
                         </div>
                     </div>
 
@@ -177,8 +177,8 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                                     key={symptom}
                                     onClick={() => toggleSymptom(symptom)}
                                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${selectedSymptoms.has(symptom)
-                                            ? 'bg-red-100 border-danger text-danger dark:bg-red-900/30'
-                                            : 'bg-background border-border text-text-secondary hover:border-primary'
+                                        ? 'bg-red-100 border-danger text-danger dark:bg-red-900/30'
+                                        : 'bg-background border-border text-text-secondary hover:border-primary'
                                         }`}
                                 >
                                     {symptom}
@@ -250,6 +250,7 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                                                 setMedError(null);
                                             }}
                                             className="w-full p-2 border border-border rounded-lg bg-card text-text-primary"
+                                            aria-label="Select medication from inventory"
                                         >
                                             <option value="">-- Select Medication --</option>
                                             {availableMedication.map(item => (
@@ -313,6 +314,7 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                             className="hidden"
                             ref={fileInputRef}
                             onChange={handlePhotoUpload}
+                            aria-label="Upload photo evidence"
                         />
 
                         {photoPreview ? (
@@ -321,6 +323,7 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                                 <button
                                     onClick={() => setPhotoPreview(null)}
                                     className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70 transition"
+                                    aria-label="Remove photo"
                                 >
                                     <CloseIcon className="w-5 h-5" />
                                 </button>
