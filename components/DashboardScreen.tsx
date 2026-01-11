@@ -146,29 +146,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         );
     };
 
-    // Empty state for new users
-    if (farms.length === 0) {
-        return (
-            <div className="bg-background min-h-screen flex items-center justify-center p-6">
-                <div className="bg-card rounded-3xl shadow-xl p-10 w-full max-w-md text-center border border-border">
-                    <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <HomeIcon className="w-12 h-12 text-primary" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-text-primary mb-3">Welcome to HomeFarm!</h1>
-                    <p className="text-text-secondary text-lg mb-8 leading-relaxed">
-                        Let's get your operation set up. The first step is to create your first farm.
-                    </p>
-                    <button
-                        onClick={() => onNavigate('farms')}
-                        className="w-full bg-primary text-white font-bold py-4 px-6 rounded-2xl text-xl flex items-center justify-center gap-3 hover:bg-primary-600 active:scale-95 transition-all shadow-lg"
-                    >
-                        <PlusIcon className="w-6 h-6" />
-                        Add a Farm
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    // Removed: Empty state for new users - users now go directly to Dashboard
 
     return (
         <div className="bg-background min-h-screen">

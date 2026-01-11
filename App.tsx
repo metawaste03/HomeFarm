@@ -11,7 +11,7 @@ import BroilerLogScreen from './components/BroilerLogScreen';
 import FishLogScreen from './components/FishLogScreen';
 import AnalyticsScreen from './components/AnalyticsScreen';
 import LoginScreen from './components/LoginScreen';
-import WelcomeGuide from './components/WelcomeGuide';
+// WelcomeGuide removed - users now go directly to Dashboard
 import BusinessScreen from './components/BusinessScreen';
 import InventoryScreen from './components/InventoryScreen';
 import HealthScheduleScreen from './components/HealthScheduleScreen';
@@ -42,7 +42,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
   const [isNewBatchModalOpen, setIsNewBatchModalOpen] = useState(false);
   const [activeSector, setActiveSector] = useState<Sector>('Layer');
   const [selectedScope, setSelectedScope] = useState("");
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+
 
   // Initialize selectedScope if not set and farms exist
   useEffect(() => {
@@ -204,7 +204,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
           </aside>
 
           <div className="flex-grow relative">
-            {isFirstTimeUser && <WelcomeGuide onClose={() => setIsFirstTimeUser(false)} />}
+
             <main className="pb-24 lg:pb-4">
               <div key={currentScreen} className="animate-fade-in">
                 {renderScreen()}
