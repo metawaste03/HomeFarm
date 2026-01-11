@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Screen } from '../App';
-import { SalesIcon, BoxIcon, ChevronRightIcon } from './icons';
+import { SalesIcon, BoxIcon, ChevronRightIcon, WalletIcon } from './icons';
 
 interface BusinessScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -32,7 +32,24 @@ const BusinessScreen: React.FC<BusinessScreenProps> = ({ onNavigate }) => {
                     <ChevronRightIcon className="w-6 h-6 text-text-secondary group-hover:text-primary transition-colors" />
                 </button>
 
-                {/* Inventory - Now Second */}
+                {/* Expenses */}
+                <button
+                    onClick={() => onNavigate('expenses')}
+                    className="w-full bg-card rounded-xl shadow-sm p-6 flex items-center justify-between hover:bg-muted transition-colors group"
+                >
+                    <div className="flex items-center gap-4">
+                        <div className="bg-red-100 dark:bg-red-900/50 p-3 rounded-full text-red-600 dark:text-red-400">
+                            <WalletIcon className="w-8 h-8" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="text-lg font-bold text-text-primary">Expenses</h3>
+                            <p className="text-sm text-text-secondary">Track farm expenditures.</p>
+                        </div>
+                    </div>
+                    <ChevronRightIcon className="w-6 h-6 text-text-secondary group-hover:text-primary transition-colors" />
+                </button>
+
+                {/* Inventory - Now Third */}
                 <button
                     onClick={() => onNavigate('inventory')}
                     className="w-full bg-card rounded-xl shadow-sm p-6 flex items-center justify-between hover:bg-muted transition-colors group"

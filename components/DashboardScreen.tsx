@@ -12,7 +12,7 @@ import { dailyLogsService } from '../services/database';
 import type { Tables } from '../types/database';
 import ProfitabilityCalculator from './ProfitabilityCalculator';
 import CommunityTips from './CommunityTips';
-import ActivityFeed from './ActivityFeed';
+import LogHistory from './LogHistory';
 
 interface DashboardScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -310,23 +310,15 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
                     {/* Community Tips */}
                     <CommunityTips sector={activeSector} />
+
+                    {/* Right Panel - Desktop Only */}
+                    {/* Log History */}
+                    <div className="mt-8">
+                        <LogHistory onNavigate={onNavigate} />
+                    </div>
                 </main>
 
-                {/* Right Panel - Desktop Only */}
-                <aside className="hidden lg:block w-80 p-6 pl-3 space-y-6">
-                    <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
-                        <h3 className="font-bold text-lg mb-4 text-text-primary">Log History</h3>
-                        <ActivityFeed onNavigate={onNavigate} />
-                    </div>
-                </aside>
-            </div>
-
-            {/* Mobile Activity Section */}
-            <div className="lg:hidden p-4 space-y-6">
-                <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
-                    <h3 className="font-bold text-lg mb-4 text-text-primary">Log History</h3>
-                    <ActivityFeed onNavigate={onNavigate} />
-                </div>
+                {/* Right Panel - Desktop Only (Empty now, removing to allow main content to center/expand effectively) */}
             </div>
         </div>
     );

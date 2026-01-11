@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Screen } from '../App';
-import { PlusIcon, ChevronDownIcon, CloseIcon, CalendarIcon, UsersIcon, TaskIcon } from './icons';
+import { PlusIcon, ChevronDownIcon, CloseIcon, CalendarIcon, UsersIcon, TaskIcon, PencilIcon, TrashIcon } from './icons';
 import { useTasks, Task, RecurringType } from '../contexts/TaskContext';
 import { useTeam } from '../contexts/TeamContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,11 +11,12 @@ interface TaskManagementScreenProps {
 }
 
 const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate }) => {
-    const { tasks, addTask, toggleTaskStatus } = useTasks();
+    const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus } = useTasks();
     const { teamMembers } = useTeam();
     const { user } = useAuth();
     const [activeFilter, setActiveFilter] = useState<'My Tasks' | 'All Tasks' | 'Overdue'>('My Tasks');
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
 
     // Filter out Owner or just use all names
     const teamNames = teamMembers.map(m => m.name);
@@ -37,9 +38,25 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
         }
     }, [tasks, activeFilter, currentUserName]);
 
-    const handleSaveTask = (newTask: Omit<Task, 'id' | 'status'>) => {
-        addTask(newTask);
+    const handleSaveTask = async (taskData: Omit<Task, 'id' | 'status'>) => {
+        if (editingTask) {
+            await updateTask({ ...editingTask, ...taskData });
+        } else {
+            await addTask(taskData);
+        }
         setIsFormOpen(false);
+        setEditingTask(null);
+    };
+
+    const handleEdit = (task: Task) => {
+        setEditingTask(task);
+        setIsFormOpen(true);
+    };
+
+    const handleDelete = async (taskId: string) => {
+        if (confirm('Are you sure you want to delete this task?')) {
+            await deleteTask(taskId);
+        }
     };
 
     if (tasks.length === 0) {
@@ -60,13 +77,12 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
                         <PlusIcon className="w-6 h-6" />
                         Create Task
                     </button>
-                    {isFormOpen && (
-                        <TaskFormModal
-                            team={teamNames.length > 0 ? teamNames : [currentUserName]}
-                            onSave={handleSaveTask}
-                            onClose={() => setIsFormOpen(false)}
-                        />
-                    )}
+                    <TaskFormModal
+                        team={teamNames.length > 0 ? teamNames : [currentUserName]}
+                        onSave={handleSaveTask}
+                        onClose={() => { setIsFormOpen(false); setEditingTask(null); }}
+                        initialData={editingTask}
+                    />
                 </div>
             </div>
         );
@@ -102,6 +118,8 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
                             key={task.id}
                             task={task}
                             onToggle={() => toggleTaskStatus(task.id)}
+                            onEdit={() => handleEdit(task)}
+                            onDelete={() => handleDelete(task.id)}
                         />
                     ))
                 )}
@@ -120,23 +138,24 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
                 <TaskFormModal
                     team={teamNames.length > 0 ? teamNames : [currentUserName]}
                     onSave={handleSaveTask}
-                    onClose={() => setIsFormOpen(false)}
+                    onClose={() => { setIsFormOpen(false); setEditingTask(null); }}
+                    initialData={editingTask}
                 />
             )}
         </div>
     );
 };
 
-const TaskCard: React.FC<{ task: Task, onToggle: () => void }> = ({ task, onToggle }) => {
+const TaskCard: React.FC<{ task: Task, onToggle: () => void, onEdit: () => void, onDelete: () => void }> = ({ task, onToggle, onEdit, onDelete }) => {
     const isOverdue = task.status === 'pending' && task.dueDate < new Date().toISOString().split('T')[0];
     const isCompleted = task.status === 'completed';
 
     return (
-        <div className={`bg-card p-4 rounded-xl shadow-sm border-l-4 transition-all ${isCompleted ? 'border-gray-300 opacity-60' : (isOverdue ? 'border-danger' : 'border-primary')}`}>
+        <div className={`bg-card p-4 rounded-xl shadow-sm border-l-4 transition-all group ${isCompleted ? 'border-gray-300 opacity-60' : (isOverdue ? 'border-danger' : 'border-primary')}`}>
             <div className="flex items-start gap-4">
                 <button
                     onClick={onToggle}
-                    className={`flex-shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-colors ${isCompleted ? 'bg-primary border-primary text-white' : 'border-border bg-background'}`}
+                    className={`flex-shrink-0 w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-colors ${isCompleted ? 'bg-primary border-primary text-white' : 'border-border bg-background hover:border-primary'}`}
                 >
                     {isCompleted && <CheckIcon className="w-5 h-5" />}
                 </button>
@@ -158,6 +177,14 @@ const TaskCard: React.FC<{ task: Task, onToggle: () => void }> = ({ task, onTogg
                         </p>
                     )}
                 </div>
+                <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={onEdit} className="p-2 text-text-secondary hover:text-primary rounded-full hover:bg-muted" aria-label="Edit task">
+                        <PencilIcon className="w-4 h-4" />
+                    </button>
+                    <button onClick={onDelete} className="p-2 text-text-secondary hover:text-danger rounded-full hover:bg-muted" aria-label="Delete task">
+                        <TrashIcon className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
         </div>
     );
@@ -173,14 +200,15 @@ interface TaskFormModalProps {
     team: string[];
     onSave: (task: Omit<Task, 'id' | 'status'>) => void;
     onClose: () => void;
+    initialData?: Task | null;
 }
 
-const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) => {
-    const [title, setTitle] = useState('');
-    const [assignedTo, setAssignedTo] = useState(team[0]);
-    const [dueDate, setDueDate] = useState(new Date().toISOString().split('T')[0]);
-    const [recurring, setRecurring] = useState<RecurringType>('No');
-    const [notes, setNotes] = useState('');
+const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose, initialData }) => {
+    const [title, setTitle] = useState(initialData?.title || '');
+    const [assignedTo, setAssignedTo] = useState(initialData?.assignedTo || team[0]);
+    const [dueDate, setDueDate] = useState(initialData?.dueDate || new Date().toISOString().split('T')[0]);
+    const [recurring, setRecurring] = useState<RecurringType>(initialData?.recurring || 'No');
+    const [notes, setNotes] = useState(initialData?.notes || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -199,7 +227,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
         <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-4 animate-fade-in" onClick={onClose}>
             <div className="bg-popover rounded-t-2xl md:rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-border flex justify-between items-center sticky top-0 bg-popover z-10">
-                    <h3 className="text-xl font-bold text-text-primary">Create New Task</h3>
+                    <h3 className="text-xl font-bold text-text-primary">{initialData ? 'Edit Task' : 'Create New Task'}</h3>
                     <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary" aria-label="Close modal"><CloseIcon className="w-6 h-6" /></button>
                 </div>
 

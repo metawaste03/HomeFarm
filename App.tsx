@@ -17,6 +17,8 @@ import InventoryScreen from './components/InventoryScreen';
 import HealthScheduleScreen from './components/HealthScheduleScreen';
 import TaskManagementScreen from './components/TaskManagementScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
+import ExpensesScreen from './components/ExpensesScreen';
+import LogHistoryScreen from './components/LogHistoryScreen';
 import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon } from './components/icons';
 import { AnalyticsIcon, SettingsIcon } from './components/CustomIcons';
 import { FarmProvider, useFarm, Sector, Batch, Farm } from './contexts/FarmContext';
@@ -28,7 +30,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ActivityProvider } from './contexts/ActivityContext';
 import { UIProvider, useUI } from './contexts/UIContext';
 
-export type Screen = 'dashboard' | 'log' | 'tasks' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules';
+export type Screen = 'dashboard' | 'log' | 'tasks' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history';
 export type Theme = 'light' | 'dark' | 'system';
 
 const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => {
@@ -163,6 +165,10 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
         />;
       case 'health_schedules':
         return <HealthScheduleScreen onNavigate={navigateTo} />;
+      case 'expenses':
+        return <ExpensesScreen onNavigate={navigateTo} />;
+      case 'log_history':
+        return <LogHistoryScreen onNavigate={navigateTo} />;
       default:
         return <DashboardScreen
           onNavigate={navigateTo}
