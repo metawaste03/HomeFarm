@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Screen } from '../App';
 import { PlusIcon, ChevronDownIcon, CloseIcon, CalendarIcon, UsersIcon, TaskIcon, PencilIcon, TrashIcon } from './icons';
 import { useTasks, Task, RecurringType } from '../contexts/TaskContext';
@@ -8,15 +8,21 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface TaskManagementScreenProps {
     onNavigate: (screen: Screen) => void;
+    showFormByDefault?: boolean;
 }
 
-const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate }) => {
+const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate, showFormByDefault = false }) => {
     const { tasks, addTask, updateTask, deleteTask, toggleTaskStatus } = useTasks();
     const { teamMembers } = useTeam();
     const { user } = useAuth();
     const [activeFilter, setActiveFilter] = useState<'My Tasks' | 'All Tasks' | 'Overdue'>('My Tasks');
-    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isFormOpen, setIsFormOpen] = useState(showFormByDefault);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+    // Sync form open state with prop when it changes
+    useEffect(() => {
+        setIsFormOpen(showFormByDefault);
+    }, [showFormByDefault]);
 
     // Filter out Owner or just use all names
     const teamNames = teamMembers.map(m => m.name);
@@ -77,12 +83,14 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
                         <PlusIcon className="w-6 h-6" />
                         Create Task
                     </button>
-                    <TaskFormModal
-                        team={teamNames.length > 0 ? teamNames : [currentUserName]}
-                        onSave={handleSaveTask}
-                        onClose={() => { setIsFormOpen(false); setEditingTask(null); }}
-                        initialData={editingTask}
-                    />
+                    {isFormOpen && (
+                        <TaskFormModal
+                            team={teamNames.length > 0 ? teamNames : [currentUserName]}
+                            onSave={handleSaveTask}
+                            onClose={() => { setIsFormOpen(false); setEditingTask(null); }}
+                            initialData={editingTask}
+                        />
+                    )}
                 </div>
             </div>
         );
