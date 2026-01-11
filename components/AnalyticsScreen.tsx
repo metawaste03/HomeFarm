@@ -104,12 +104,36 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [showProgressTracker, setShowProgressTracker] = useState(true);
 
+    // Fetch daily logs from database
+    useEffect(() => {
+        const fetchLogs = async () => {
+            if (farms.length === 0) return;
+
+            try {
+                const allLogs: Tables<'daily_logs'>[] = [];
+                for (const farm of farms) {
+                    const farmLogs = await dailyLogsService.list(String(farm.id));
+                    allLogs.push(...farmLogs);
+                }
+                setLogs(allLogs);
+            } catch (error) {
+                console.error('Error fetching logs for analytics:', error);
+            }
+        };
+
+        fetchLogs();
+    }, [farms]);
+
     // Calculate real data milestones
     const milestones = useMemo(() => {
         const batchCount = batches.filter(b => b.sector === activeSector).length;
         const salesCount = sales.filter(s => s.sector === activeSector).length;
-        // For now, we'll estimate daily logs from available data
-        const dailyLogCount = Math.min(batches.length * 2, 7); // Estimate
+
+        // Count actual logs for the active sector
+        const sectorLogsCount = logs.filter(log => {
+            const acts = log.activities as any;
+            return acts?.sector === activeSector;
+        }).length;
 
         // Count real expenses (purchases)
         const expenseCount = inventoryItems.reduce((count, item) =>
@@ -117,11 +141,11 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
 
         return {
             batches: batchCount,
-            dailyLogs: dailyLogCount,
+            dailyLogs: sectorLogsCount,
             expenses: expenseCount,
             sales: salesCount
         };
-    }, [batches, sales, activeSector, inventoryItems]);
+    }, [batches, sales, activeSector, inventoryItems, logs]);
 
     // Calculate Real Financials
     const realFinancials = useMemo(() => {
