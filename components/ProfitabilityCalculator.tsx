@@ -80,6 +80,7 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
                         value={stockCount}
                         onChange={(e) => setStockCount(Number(e.target.value))}
                         className="w-full px-3 py-2 bg-muted rounded-lg text-text-primary border border-border focus:border-primary focus:outline-none"
+                        aria-label="Stock Count"
                     />
                 </div>
                 <div>
@@ -91,6 +92,7 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
                         value={feedCostPerBag}
                         onChange={(e) => setFeedCostPerBag(Number(e.target.value))}
                         className="w-full px-3 py-2 bg-muted rounded-lg text-text-primary border border-border focus:border-primary focus:outline-none"
+                        aria-label="Feed Cost per bag"
                     />
                 </div>
                 <div>
@@ -102,6 +104,7 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
                         value={bagsUsed}
                         onChange={(e) => setBagsUsed(Number(e.target.value))}
                         className="w-full px-3 py-2 bg-muted rounded-lg text-text-primary border border-border focus:border-primary focus:outline-none"
+                        aria-label="Bags Used"
                     />
                 </div>
                 <div>
@@ -113,6 +116,7 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
                         value={otherExpenses}
                         onChange={(e) => setOtherExpenses(Number(e.target.value))}
                         className="w-full px-3 py-2 bg-muted rounded-lg text-text-primary border border-border focus:border-primary focus:outline-none"
+                        aria-label="Other Expenses"
                     />
                 </div>
                 <div>
@@ -124,6 +128,7 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
                         value={outputPerUnit}
                         onChange={(e) => setOutputPerUnit(Number(e.target.value))}
                         className="w-full px-3 py-2 bg-muted rounded-lg text-text-primary border border-border focus:border-primary focus:outline-none"
+                        aria-label={getOutputLabel()}
                     />
                 </div>
                 <div>
@@ -135,6 +140,7 @@ const ProfitabilityCalculator: React.FC<ProfitabilityCalculatorProps> = ({ secto
                         value={sellingPrice}
                         onChange={(e) => setSellingPrice(Number(e.target.value))}
                         className="w-full px-3 py-2 bg-muted rounded-lg text-text-primary border border-border focus:border-primary focus:outline-none"
+                        aria-label={getPriceLabel()}
                     />
                 </div>
             </div>

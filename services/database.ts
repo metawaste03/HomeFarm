@@ -126,7 +126,7 @@ export const tasksService = {
     async list(farmId?: string) {
         let query = supabase
             .from('tasks')
-            .select('*')
+            .select('id, title, status, assigned_to, due_date, recurring, notes, farm_id, created_at, created_by')
             .order('created_at', { ascending: false });
 
         if (farmId) {
@@ -465,4 +465,127 @@ export const healthSchedulesService = {
     async toggleComplete(id: string, completed: boolean) {
         return this.update(id, { completed: !completed });
     },
+};
+
+// ============================================
+// FARM MEMBERS
+// ============================================
+
+export const farmMembersService = {
+    async list(farmId: string) {
+        const { data, error } = await supabase
+            .from('farm_members')
+            .select(`
+                id,
+                farm_id,
+                user_id,
+                role,
+                joined_at,
+                user:users (
+                    id,
+                    email,
+                    full_name
+                )
+            `)
+            .eq('farm_id', farmId);
+
+        if (error) throw error;
+        return data;
+    },
+
+    async invite(email: string, farmId: string, role: string) {
+        // This functionality normally requires an Edge Function to handle invites securely
+        // For this demo, we'll assume the user exists and just add them if found, 
+        // or throw error if not found. Real app would send email.
+
+        // 1. Find user by email
+        const { data: users, error: userError } = await supabase
+            .from('users')
+            .select('id')
+            .eq('email', email)
+            .single();
+
+        if (userError || !users) throw new Error("User not found (Invite only works for existing users in this demo)");
+
+        // 2. Add to farm_members
+        const { data, error } = await supabase
+            .from('farm_members')
+            .insert({
+                farm_id: farmId,
+                user_id: users.id,
+                role
+            } as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async updateRole(memberId: string, role: string) {
+        const { data, error } = await supabase
+            .from('farm_members')
+            .update({ role } as any)
+            .eq('id', memberId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    async remove(memberId: string) {
+        const { error } = await supabase
+            .from('farm_members')
+            .delete()
+            .eq('id', memberId);
+
+        if (error) throw error;
+    },
+};
+
+// ============================================
+// COMMUNITY TIPS
+// ============================================
+
+export const tipsService = {
+    async list(sector: string) {
+        const { data, error } = await supabase
+            .from('tips')
+            .select('*')
+            .eq('sector', sector)
+            .order('votes', { ascending: false });
+
+        if (error) throw error;
+        return (data || []) as Tables<'tips'>[];
+    },
+
+    async create(tip: Insertable<'tips'>) {
+        const { data, error } = await supabase
+            .from('tips')
+            .insert(tip as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'tips'>;
+    },
+
+    async vote(tipId: string, userId: string, voteType: number) {
+        const { error } = await supabase
+            .from('tip_votes')
+            .upsert({ tip_id: tipId, user_id: userId, vote_type: voteType });
+
+        if (error) throw error;
+    },
+
+    async getUserVotes(userId: string) {
+        const { data, error } = await supabase
+            .from('tip_votes')
+            .select('*')
+            .eq('user_id', userId);
+
+        if (error) throw error;
+        return (data || []) as Tables<'tip_votes'>[];
+    }
 };

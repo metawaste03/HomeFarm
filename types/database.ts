@@ -398,6 +398,55 @@ export interface Database {
                     created_at?: string;
                 };
             };
+            tips: {
+                Row: {
+                    id: string;
+                    user_id: string | null;
+                    sector: Sector;
+                    type: 'Do' | 'Don\'t';
+                    content: string;
+                    votes: number;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    user_id?: string | null;
+                    sector: Sector;
+                    type: 'Do' | 'Don\'t';
+                    content: string;
+                    votes?: number;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    user_id?: string | null;
+                    sector?: Sector;
+                    type?: 'Do' | 'Don\'t';
+                    content?: string;
+                    votes?: number;
+                    created_at?: string;
+                };
+            };
+            tip_votes: {
+                Row: {
+                    id: string;
+                    tip_id: string;
+                    user_id: string;
+                    vote_type: number;
+                };
+                Insert: {
+                    id?: string;
+                    tip_id: string;
+                    user_id: string;
+                    vote_type: number;
+                };
+                Update: {
+                    id?: string;
+                    tip_id?: string;
+                    user_id?: string;
+                    vote_type?: number;
+                };
+            };
         };
         Views: {};
         Functions: {};

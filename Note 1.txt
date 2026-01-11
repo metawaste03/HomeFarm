@@ -1,0 +1,12 @@
+There are major adjustments we will need to carry out. I will provide you with the list, we will discuss the implications of these changes, and you as the tech expect with years of experience.
+
+These includes:
+1. * We will merge the [Log] and [Task] Nav into a single Navpage titled [Task] similar to how we did with [Biz]. Within the Task, you will have Log and Assign(previously the Task form) This should reduce the Bottom Nav titles while maintaining the functions. 
+2. * We can completely remove the Stats Nav. We can instead add it to the Home Nav as a button, when users click it, it takes them the see the Stats, with a top back button to lead them back the Home. I don't think it's that important to have it as a separate Nav.
+3. * With the Broiler sector, remove the Total output KPI. Reason is Broilers don't lay eggs so don't have outputs.
+4. * With the Fish sector, replace all KPIs eith actual Fish related KPIs.
+5. * How challenging would it be to convert the Smart Advisor into a comment section. Where a use can share a tip and it gets voted by other users this pushes it to the top based on the farm sector. To add a tip a user fills input {Farm sector}, {Do's}/{don'ts}, and then the comment. The Smart Advisor only shows 5 advice from each Farm sector.
+6. * Rename the (Recent activity) with (Log History). It has fake dummy data, please delete and pull real farmers logged data. We will also need to develop this page properly. When we click on the current link it leads nowhere. And push it to the top, directly below Production Overview.
+7. * When a Task is create, make it possible so I can edit/delete.
+8. * The Task has dummy team member data. Please remove it. Thanks
+9. Remove the Notification model on the Dashboard.

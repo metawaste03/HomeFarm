@@ -216,7 +216,7 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
                     <div className="flex-grow overflow-y-auto p-6 pt-2 space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-text-secondary mb-1">Date of Sale</label>
-                            <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                            <input type="date" name="date" value={formData.date} onChange={handleChange} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Date of Sale" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-text-secondary mb-1">Item Sold</label>

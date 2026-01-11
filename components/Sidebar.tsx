@@ -18,11 +18,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     { screen: 'dashboard', label: 'Dashboard', icon: GridIcon },
-    { screen: 'log', label: 'Daily Log', icon: ClipboardListIcon },
+    { screen: 'tasks', label: 'Tasks', icon: TaskIcon }, // Merged Log & Task
     { screen: 'batches', label: 'Batches', icon: BatchIcon },
-    { screen: 'tasks', label: 'Tasks', icon: TaskIcon },
     { screen: 'sales', label: 'Sales', icon: WalletIcon },
-    { screen: 'analytics', label: 'Analytics', icon: AnalyticsIcon },
     { screen: 'settings', label: 'Settings', icon: SettingsIcon },
 ];
 
@@ -44,8 +42,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentScreen, onNavigate, onLogout, 
                             key={item.screen}
                             onClick={() => onNavigate(item.screen)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                    ? 'bg-lime-500 text-slate-900 font-semibold'
-                                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                ? 'bg-lime-500 text-slate-900 font-semibold'
+                                : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                                 }`}
                         >
                             <Icon className="w-5 h-5" />

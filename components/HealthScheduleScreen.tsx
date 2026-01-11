@@ -162,10 +162,10 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
                                             </div>
                                         </div>
                                         <div className="flex gap-2">
-                                            <button onClick={() => handleEdit(template)} className="p-2 text-text-secondary hover:text-primary bg-muted rounded-full">
+                                            <button onClick={() => handleEdit(template)} className="p-2 text-text-secondary hover:text-primary bg-muted rounded-full" aria-label="Edit template">
                                                 <PencilIcon className="w-4 h-4" />
                                             </button>
-                                            <button onClick={() => handleDeleteClick(template)} className="p-2 text-text-secondary hover:text-danger bg-muted rounded-full">
+                                            <button onClick={() => handleDeleteClick(template)} className="p-2 text-text-secondary hover:text-danger bg-muted rounded-full" aria-label="Delete template">
                                                 <TrashIcon className="w-4 h-4" />
                                             </button>
                                         </div>
@@ -239,7 +239,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
             <div className="bg-popover rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-border flex justify-between items-center sticky top-0 bg-popover z-10">
                     <h3 className="text-xl font-bold text-text-primary">{template ? 'Edit Template' : 'Create New Template'}</h3>
-                    <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary"><CloseIcon className="w-6 h-6" /></button>
+                    <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary" aria-label="Close template editor"><CloseIcon className="w-6 h-6" /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-6 flex-grow overflow-y-auto">
@@ -250,7 +250,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-text-secondary mb-1">Sector *</label>
-                            <select value={sector} onChange={e => setSector(e.target.value as Sector)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary">
+                            <select value={sector} onChange={e => setSector(e.target.value as Sector)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Sector">
                                 <option value="Layer">Layer</option>
                                 <option value="Broiler">Broiler</option>
                                 <option value="Fish">Fish</option>
@@ -277,11 +277,13 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                                     value={task.timeValue}
                                                     onChange={e => updateTask(task.id, 'timeValue', parseInt(e.target.value))}
                                                     className="w-full p-2 border border-border rounded-l-lg bg-background text-text-primary text-center font-bold"
+                                                    aria-label="Time value"
                                                 />
                                                 <select
                                                     value={task.timeUnit}
                                                     onChange={e => updateTask(task.id, 'timeUnit', e.target.value)}
                                                     className="bg-muted border-y border-r border-border rounded-r-lg text-xs font-medium px-1 text-text-primary"
+                                                    aria-label="Time unit"
                                                 >
                                                     <option value="Day">Day</option>
                                                     <option value="Week">Wk</option>
@@ -297,6 +299,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                                 placeholder="e.g. Gumboro Vaccine"
                                                 className="w-full p-2 border border-border rounded-lg bg-background text-text-primary"
                                                 required
+                                                aria-label="Task name"
                                             />
                                         </div>
                                         <div className="col-span-6 md:col-span-3">
@@ -307,6 +310,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                                 onChange={e => updateTask(task.id, 'dosage', e.target.value)}
                                                 placeholder="e.g. 10g/L"
                                                 className="w-full p-2 border border-border rounded-lg bg-background text-text-primary"
+                                                aria-label="Dosage"
                                             />
                                         </div>
                                         <div className="col-span-6 md:col-span-3">
@@ -318,6 +322,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                                 placeholder="e.g. Water"
                                                 list="methods"
                                                 className="w-full p-2 border border-border rounded-lg bg-background text-text-primary"
+                                                aria-label="Administration method"
                                             />
                                             <datalist id="methods">
                                                 <option value="Drinking Water" />
@@ -334,6 +339,7 @@ const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({ template, onS
                                         onClick={() => handleRemoveTask(task.id)}
                                         className="absolute -top-2 -right-2 bg-red-100 text-danger p-1 rounded-full opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-200"
                                         title="Remove task"
+                                        aria-label="Remove task"
                                     >
                                         <CloseIcon className="w-4 h-4" />
                                     </button>

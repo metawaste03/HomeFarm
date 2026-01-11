@@ -1,46 +1,52 @@
 
 
 import React, { useState } from 'react';
-// Fix: Use `import type` for type-only imports to prevent circular dependency issues.
 import type { Screen } from '../App';
 import { UserPlusIcon, EllipsisIcon, TrashIcon, PencilIcon, ChevronLeftIcon } from './icons';
+import { useTeam, TeamMember } from '../contexts/TeamContext';
 
 type Role = 'Owner' | 'Manager' | 'Worker';
-type Status = 'Active' | 'Pending';
-
-type User = {
-    id: number;
-    name: string;
-    contact: string;
-    role: Role;
-    status: Status;
-};
 
 interface TeamManagementScreenProps {
     onNavigate: (screen: Screen) => void;
 }
 
 const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate }) => {
-    const [team, setTeam] = useState<User[]>([]);
+    const { teamMembers, inviteMember, updateMemberRole, removeMember, isLoading } = useTeam();
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
-    const [userToRemove, setUserToRemove] = useState<User | null>(null);
-    const [userToEditRole, setUserToEditRole] = useState<User | null>(null);
+    const [userToRemove, setUserToRemove] = useState<TeamMember | null>(null);
+    const [userToEditRole, setUserToEditRole] = useState<TeamMember | null>(null);
 
-    const handleRemoveUser = (userId: number) => {
-        setTeam(prev => prev.filter(user => user.id !== userId));
-        setUserToRemove(null);
+    const handleRemoveUser = async (memberId: string) => {
+        try {
+            await removeMember(memberId);
+            setUserToRemove(null);
+        } catch (error) {
+            alert("Failed to remove member.");
+        }
     }
 
-    const handleInviteUser = (name: string, contact: string, role: Role) => {
-        const newUser: User = { id: Date.now(), name, contact, role, status: 'Pending' };
-        setTeam(prev => [...prev, newUser]);
-        setInviteModalOpen(false);
+    const handleInviteUser = async (name: string, contact: string, role: Role) => {
+        if (role === 'Owner') return; // Cannot invite owner
+        try {
+            await inviteMember(contact, role); // Assuming contact is email
+            setInviteModalOpen(false);
+        } catch (error) {
+            alert("Failed to invite member. Ensure user exists (demo limitation).");
+        }
     }
 
-    const handleSaveRoleChange = (userId: number, newRole: Role) => {
-        setTeam(prevTeam => prevTeam.map(user => user.id === userId ? { ...user, role: newRole } : user));
-        setUserToEditRole(null);
+    const handleSaveRoleChange = async (memberId: string, newRole: Role) => {
+        if (newRole === 'Owner') return;
+        try {
+            await updateMemberRole(memberId, newRole);
+            setUserToEditRole(null);
+        } catch (error) {
+            alert("Failed to update role.");
+        }
     };
+
+    if (isLoading) return <div className="p-8 text-center">Loading team...</div>;
 
     return (
         <div className="bg-background min-h-screen">
@@ -65,12 +71,12 @@ const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate 
                 </button>
 
                 <div className="space-y-3">
-                    {team.map(user => (
+                    {teamMembers.map(member => (
                         <UserCard
-                            key={user.id}
-                            user={user}
-                            onRemove={() => setUserToRemove(user)}
-                            onChangeRole={() => setUserToEditRole(user)}
+                            key={member.id}
+                            user={member}
+                            onRemove={() => setUserToRemove(member)}
+                            onChangeRole={() => setUserToEditRole(member)}
                         />
                     ))}
                 </div>
@@ -83,8 +89,11 @@ const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate 
     );
 };
 
-const UserCard: React.FC<{ user: User, onRemove: () => void, onChangeRole: () => void }> = ({ user, onRemove, onChangeRole }) => {
+const UserCard: React.FC<{ user: TeamMember, onRemove: () => void, onChangeRole: () => void }> = ({ user, onRemove, onChangeRole }) => {
     const [isMenuOpen, setMenuOpen] = useState(false);
+
+    // Assume active for now
+    const status = 'Active';
 
     const statusRoleStyles = {
         Active: {
@@ -95,16 +104,16 @@ const UserCard: React.FC<{ user: User, onRemove: () => void, onChangeRole: () =>
         Pending: "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300"
     };
 
-    const roleStyle = user.status === 'Pending' ? statusRoleStyles.Pending : statusRoleStyles.Active[user.role];
+    const roleStyle = statusRoleStyles[status][user.role];
 
     return (
         <div className="bg-card rounded-2xl shadow-md p-4 flex justify-between items-center">
             <div>
                 <p className="font-bold text-lg text-text-primary">{user.name}</p>
                 <div className={`text-xs font-semibold px-2 py-1 rounded-full inline-block mt-1 ${roleStyle}`}>
-                    {user.status} - {user.role}
+                    {status} - {user.role}
                 </div>
-                <p className="text-sm text-text-secondary mt-2">{user.contact}</p>
+                <p className="text-sm text-text-secondary mt-2">{user.email}</p>
             </div>
             {user.role !== 'Owner' && (
                 <div className="relative">
@@ -142,7 +151,8 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const contact = inviteMethod === 'email' ? email : phone;
-        if (!fullName || !contact || !role) return alert('Please fill out all required fields.');
+        if (!contact || !role) return alert('Please fill out all required fields.');
+        // Note: Full name is not used in backend invite logic currently (assumes existing user), but kept for UI
         onInvite(fullName, contact, role);
     }
 
@@ -152,20 +162,18 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite
                 <h3 className="text-lg font-bold p-4 border-b border-border text-text-primary">Invite Team Member</h3>
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-3">
                     <div>
-                        <label className="block text-xs font-medium text-text-secondary mb-1">Full Name *</label>
-                        <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Enter name" className="w-full p-2.5 border border-border rounded-lg bg-card text-text-primary text-sm" required />
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Full Name (Optional for existing users)</label>
+                        <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Enter name" className="w-full p-2.5 border border-border rounded-lg bg-card text-text-primary text-sm" />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-text-secondary mb-1">Invite via *</label>
                         <div className="flex bg-muted p-1 rounded-lg">
                             <button type="button" onClick={() => setInviteMethod('email')} className={`flex-1 py-2 text-xs font-bold rounded-md transition ${inviteMethod === 'email' ? 'bg-card shadow text-primary' : 'text-text-secondary'}`}>Email</button>
-                            <button type="button" onClick={() => setInviteMethod('phone')} className={`flex-1 py-2 text-xs font-bold rounded-md transition ${inviteMethod === 'phone' ? 'bg-card shadow text-primary' : 'text-text-secondary'}`}>Phone</button>
+                            <button type="button" onClick={() => setInviteMethod('phone')} className={`flex-1 py-2 text-xs font-bold rounded-md transition ${inviteMethod === 'phone' ? 'bg-card shadow text-primary' : 'text-text-secondary'}`} disabled>Phone (Coming soon)</button>
                         </div>
                     </div>
-                    {inviteMethod === 'email' ? (
+                    {inviteMethod === 'email' && (
                         <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" className="w-full p-2.5 border border-border rounded-lg bg-card text-text-primary text-sm" required />
-                    ) : (
-                        <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+234 801 234 5678" className="w-full p-2.5 border border-border rounded-lg bg-card text-text-primary text-sm" required />
                     )}
                     <div>
                         <label className="block text-xs font-medium text-text-secondary mb-2">Role *</label>
@@ -185,7 +193,7 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite
     );
 };
 
-interface RemoveConfirmationModalProps { user: User; onClose: () => void; onConfirm: () => void; }
+interface RemoveConfirmationModalProps { user: TeamMember; onClose: () => void; onConfirm: () => void; }
 const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({ user, onClose, onConfirm }) => (
     <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
         <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
@@ -199,7 +207,7 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({ user,
     </div>
 );
 
-interface ChangeRoleModalProps { user: User; onClose: () => void; onSave: (userId: number, newRole: Role) => void; }
+interface ChangeRoleModalProps { user: TeamMember; onClose: () => void; onSave: (memberId: string, newRole: Role) => void; }
 const ChangeRoleModal: React.FC<ChangeRoleModalProps> = ({ user, onClose, onSave }) => {
     const [selectedRole, setSelectedRole] = useState<Role>(user.role);
 

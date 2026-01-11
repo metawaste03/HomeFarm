@@ -160,7 +160,7 @@ const BatchCard: React.FC<{ batch: Batch; currentUserRole: Role; onEdit: (b: Bat
                     </div>
                     {currentUserRole === 'Owner' && (
                         <div className="relative">
-                            <button onClick={() => setMenuOpen(true)} className="p-1 text-text-secondary hover:bg-muted rounded-full">
+                            <button onClick={() => setMenuOpen(true)} className="p-1 text-text-secondary hover:bg-muted rounded-full" aria-label="Open menu">
                                 <EllipsisIcon className="w-5 h-5" />
                             </button>
                             {isMenuOpen && (
@@ -291,7 +291,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                                 <label className="block text-sm font-semibold text-text-secondary">Batch Details *</label>
                                 <label htmlFor="details-toggle" className="flex items-center cursor-pointer">
                                     <div className="relative">
-                                        <input type="checkbox" id="details-toggle" className="sr-only" checked={showDetails} onChange={() => setShowDetails(!showDetails)} />
+                                        <input type="checkbox" id="details-toggle" className="sr-only" checked={showDetails} onChange={() => setShowDetails(!showDetails)} aria-label="Toggle Batch Details" />
                                         <div className="block bg-muted w-12 h-7 rounded-full"></div>
                                         <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showDetails ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
                                     </div>
@@ -299,14 +299,14 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                             </div>
                             {showDetails && (
                                 <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
-                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Batch Name" />
                                     {!isEditing && (
                                         <div>
                                             <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label>
-                                            <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                                            <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Date of Arrival" />
                                         </div>
                                     )}
-                                    <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'} *`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                    <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'} *`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Stock Count" />
                                 </div>
                             )}
                         </div>
@@ -318,7 +318,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                                     <label className="block text-sm font-semibold text-text-secondary">Stock Cost & Age *</label>
                                     <label htmlFor="cost-toggle" className="flex items-center cursor-pointer">
                                         <div className="relative">
-                                            <input type="checkbox" id="cost-toggle" className="sr-only" checked={showCostAge} onChange={() => setShowCostAge(!showCostAge)} />
+                                            <input type="checkbox" id="cost-toggle" className="sr-only" checked={showCostAge} onChange={() => setShowCostAge(!showCostAge)} aria-label="Toggle Stock Cost & Age details" />
                                             <div className="block bg-muted w-12 h-7 rounded-full"></div>
                                             <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showCostAge ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
                                         </div>
@@ -328,9 +328,9 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                                     <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
                                         <div className="relative">
                                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span>
-                                            <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock *" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required />
+                                            <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock *" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required aria-label="Total Cost of Stock" />
                                         </div>
-                                        <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age (e.g., ${sector === 'Fish' ? 'Fingerlings' : 'Day-Old'})`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
+                                        <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age (e.g., ${sector === 'Fish' ? 'Fingerlings' : 'Day-Old'})`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Stock Age" />
                                     </div>
                                 )}
                             </div>
@@ -363,6 +363,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                                     value={scheduleId}
                                     onChange={(e) => setScheduleId(e.target.value)}
                                     className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
+                                    aria-label="Health Schedule"
                                 >
                                     <option value="">No Schedule (None)</option>
                                     {availableSchedules.map(schedule => (

@@ -3,7 +3,7 @@ import { Chart, ChartOptions } from 'chart.js/auto';
 import { Screen, Theme } from '../App';
 import { Farm } from './FarmManagementScreen';
 import { Batch, Sector } from './BatchManagementScreen';
-import { ChevronDownIcon, NairaIcon, ArrowTrendingUpIcon, FeedBagIcon, WarningIcon, DownloadIcon, StethoscopeIcon, PillIcon, FilterIcon } from './icons';
+import { ChevronDownIcon, NairaIcon, ArrowTrendingUpIcon, FeedBagIcon, WarningIcon, DownloadIcon, StethoscopeIcon, PillIcon, FilterIcon, ChevronLeftIcon } from './icons';
 import ExportDataModal from './ExportDataModal';
 import AnalyticsProgressTracker from './AnalyticsProgressTracker';
 import { useSales } from '../contexts/SalesContext';
@@ -409,7 +409,12 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10 space-y-4">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-2xl font-bold text-text-primary">Detailed Analytics</h1>
+                    <div className="flex items-center gap-2">
+                        <button onClick={() => onNavigate('dashboard')} aria-label="Go back" className="p-2 -ml-2 text-text-secondary hover:text-primary rounded-full">
+                            <ChevronLeftIcon className="w-6 h-6" />
+                        </button>
+                        <h1 className="text-2xl font-bold text-text-primary">Detailed Analytics</h1>
+                    </div>
                     <div className="flex items-center gap-2">
                         <button onClick={() => setIsFilterModalOpen(true)} className="p-2 text-text-secondary hover:text-primary rounded-full flex items-center gap-1 font-semibold text-sm bg-muted">
                             <FilterIcon className="w-5 h-5" />

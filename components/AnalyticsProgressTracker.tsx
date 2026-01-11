@@ -114,8 +114,8 @@ const AnalyticsProgressTracker: React.FC<AnalyticsProgressTrackerProps> = ({
                 <div className="relative h-6 bg-muted rounded-full overflow-hidden">
                     <div
                         className={`absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out ${isCompleted
-                                ? 'bg-gradient-to-r from-primary to-lime-400 animate-pulse-glow'
-                                : 'bg-gradient-to-r from-primary/80 to-primary'
+                            ? 'bg-gradient-to-r from-primary to-lime-400 animate-pulse-glow'
+                            : 'bg-gradient-to-r from-primary/80 to-primary'
                             }`}
                         style={{ width: `${animatedPercentage}%` }}
                     >
@@ -176,8 +176,8 @@ const AnalyticsProgressTracker: React.FC<AnalyticsProgressTrackerProps> = ({
                 {/* Overall progress bar */}
                 <div className="h-4 bg-muted rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-gradient-to-r from-primary via-lime-400 to-green-400 rounded-full transition-all duration-1000 ease-out"
-                        style={{ width: `${overallProgress}%` }}
+                        className="h-full bg-gradient-to-r from-primary via-lime-400 to-green-400 rounded-full transition-all duration-1000 ease-out w-[var(--overall-width)]"
+                        style={{ '--overall-width': `${overallProgress}%` } as React.CSSProperties}
                     />
                 </div>
 

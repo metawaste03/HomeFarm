@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, PlusIcon, HomeIcon, ChickenIcon, BatchIcon, WalletIcon, TaskIcon } from './icons';
+import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, PlusIcon, HomeIcon, ChickenIcon, BatchIcon, WalletIcon, TaskIcon, FeedBagIcon } from './icons';
+import { AnalyticsIcon } from './CustomIcons';
 import type { Screen } from '../App';
 import { useFarm, Sector } from '../contexts/FarmContext';
 import { useTasks } from '../contexts/TaskContext';
@@ -10,9 +11,8 @@ import TimeFilter from './TimeFilter';
 import { dailyLogsService } from '../services/database';
 import type { Tables } from '../types/database';
 import ProfitabilityCalculator from './ProfitabilityCalculator';
-import SmartAdvisor from './SmartAdvisor';
+import CommunityTips from './CommunityTips';
 import ActivityFeed from './ActivityFeed';
-import NotificationsPanel from './NotificationsPanel';
 
 interface DashboardScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -42,8 +42,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const userName = user?.user_metadata?.full_name?.split(' ')[0] || 'Farmer';
 
     // Smart scope selection when sector changes
-    // If user has 1 farm in sector → default to that farm
-    // If user has multiple farms → default to "All [Sector] Farms"
     useEffect(() => {
         const sectorFarmNames = [...new Set<string>(batches.filter(b => b.sector === activeSector).map(b => b.farm))];
         if (sectorFarmNames.length === 1) {
@@ -57,10 +55,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     useEffect(() => {
         const fetchLogs = async () => {
             if (farms.length === 0) return;
-            // Fetch logs for the first farm for now, or refine scope later.
-            // Ideally fetching for the 'selectedScope' farm.
-            // For simplicity, we fetch all for the active farm scope if possible, or just the first one.
-            // Let's use the farm from "selectedScope" if possible.
             let farmId = farms[0]?.id;
             if (selectedScope && !selectedScope.startsWith('All')) {
                 const farmName = selectedScope.split(' - ')[0];
@@ -105,18 +99,15 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         }, 0);
     }, [sectorLogs]);
 
+    const totalFeed = useMemo(() => {
+        return sectorLogs.reduce((sum, log) => {
+            const acts = log.activities as any;
+            return sum + (acts?.feed?.kg || 0);
+        }, 0);
+    }, [sectorLogs]);
+
     const totalStock = useMemo(() => activeBatches.reduce((sum, b) => sum + (b.stockCount || 0), 0), [activeBatches]);
     const currentActiveBirds = totalStock - totalMortality;
-
-    const pendingTasks = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
-
-    // Calculate today's sales
-    const todaySales = useMemo(() => {
-        const today = new Date().toISOString().split('T')[0];
-        return sales
-            .filter(s => s.date === today)
-            .reduce((sum, s) => sum + s.amount, 0);
-    }, [sales]);
 
     const farmOptions = useMemo(() => {
         const sectorFarms = [...new Set<string>(sectorBatches.map(b => b.farm))];
@@ -194,6 +185,14 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                             <p className="text-text-secondary">Here's your farm's pulse for today.</p>
                         </div>
 
+                        <button
+                            onClick={() => onNavigate('analytics')}
+                            className="bg-card hover:bg-muted text-primary border border-border px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm transition-all"
+                        >
+                            <AnalyticsIcon className="w-5 h-5" />
+                            View Stats
+                        </button>
+
                         {/* Scope Selector */}
                         <div className="relative">
                             <button
@@ -251,20 +250,31 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         />
                         <KpiCard
                             icon={<BatchIcon className="w-5 h-5 text-lime-500" />}
-                            label="Active Birds"
+                            label={activeSector === 'Fish' ? 'Active Fish' : 'Active Birds'}
                             value={currentActiveBirds.toLocaleString()}
                             accentColor="green"
                             staggerIndex={1}
                             className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
                         />
-                        <KpiCard
-                            icon={<LayerIcon className="w-5 h-5 text-purple-500" />}
-                            label="Total Output"
-                            value={totalEggs.toLocaleString()}
-                            accentColor="purple"
-                            staggerIndex={2}
-                            className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
-                        />
+                        {activeSector === 'Layer' ? (
+                            <KpiCard
+                                icon={<LayerIcon className="w-5 h-5 text-purple-500" />}
+                                label="Total Output"
+                                value={totalEggs.toLocaleString()}
+                                accentColor="purple"
+                                staggerIndex={2}
+                                className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                            />
+                        ) : (
+                            <KpiCard
+                                icon={<FeedBagIcon className="w-5 h-5 text-yellow-500" />}
+                                label="Feed Consumed"
+                                value={`${totalFeed.toLocaleString()} kg`}
+                                accentColor="yellow"
+                                staggerIndex={2}
+                                className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
+                            />
+                        )}
                         <KpiCard
                             icon={<FishIcon className="w-5 h-5 text-orange-500" />}
                             label="Mortality"
@@ -287,7 +297,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                             <p className="font-medium">Production chart will appear here</p>
                             <p className="text-sm mt-1">Start logging daily activities to see trends</p>
                             <button
-                                onClick={() => onNavigate('log')}
+                                onClick={() => onNavigate('tasks')}
                                 className="mt-4 text-primary font-medium hover:underline"
                             >
                                 Log today's activity →
@@ -298,21 +308,25 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                     {/* Profitability Calculator */}
                     <ProfitabilityCalculator sector={activeSector} />
 
-                    {/* Smart Advisor */}
-                    <SmartAdvisor sector={activeSector} />
+                    {/* Community Tips */}
+                    <CommunityTips sector={activeSector} />
                 </main>
 
                 {/* Right Panel - Desktop Only */}
                 <aside className="hidden lg:block w-80 p-6 pl-3 space-y-6">
-                    <NotificationsPanel />
-                    <ActivityFeed onNavigate={onNavigate} />
+                    <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
+                        <h3 className="font-bold text-lg mb-4 text-text-primary">Log History</h3>
+                        <ActivityFeed onNavigate={onNavigate} />
+                    </div>
                 </aside>
             </div>
 
             {/* Mobile Activity Section */}
             <div className="lg:hidden p-4 space-y-6">
-                <NotificationsPanel />
-                <ActivityFeed onNavigate={onNavigate} />
+                <div className="bg-card p-4 rounded-xl shadow-sm border border-border">
+                    <h3 className="font-bold text-lg mb-4 text-text-primary">Log History</h3>
+                    <ActivityFeed onNavigate={onNavigate} />
+                </div>
             </div>
         </div>
     );

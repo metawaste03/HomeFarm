@@ -181,10 +181,10 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                         <span className="text-xs font-semibold bg-muted px-2 py-1 rounded-full text-text-secondary">{selectedItem.category}</span>
                     </div>
                     <div className="flex gap-2">
-                        <button onClick={() => setIsEditModalOpen(true)} className="p-2 text-text-secondary hover:bg-muted rounded-full">
+                        <button onClick={() => setIsEditModalOpen(true)} className="p-2 text-text-secondary hover:bg-muted rounded-full" aria-label="Edit item">
                             <PencilIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={handleDeleteItem} className="p-2 text-danger hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full">
+                        <button onClick={handleDeleteItem} className="p-2 text-danger hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full" aria-label="Delete item">
                             <TrashIcon className="w-5 h-5" />
                         </button>
                     </div>
@@ -204,12 +204,12 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                             <h3 className="text-lg font-semibold text-text-primary">Low Stock Alert</h3>
                         </div>
                         <div className="flex items-center justify-between gap-4">
-                            <button onClick={() => handleUpdateThreshold(selectedItem.id, Math.max(0, selectedItem.minThreshold - 1))} className="bg-muted rounded-lg p-2 hover:bg-border"><MinusIcon className="w-5 h-5" /></button>
+                            <button onClick={() => handleUpdateThreshold(selectedItem.id, Math.max(0, selectedItem.minThreshold - 1))} className="bg-muted rounded-lg p-2 hover:bg-border" aria-label="Decrease threshold"><MinusIcon className="w-5 h-5" /></button>
                             <div className="text-center">
                                 <p className="text-2xl font-bold text-text-primary">{selectedItem.minThreshold}</p>
                                 <p className="text-xs text-text-secondary">Alert below this level</p>
                             </div>
-                            <button onClick={() => handleUpdateThreshold(selectedItem.id, selectedItem.minThreshold + 1)} className="bg-muted rounded-lg p-2 hover:bg-border"><PlusIcon className="w-5 h-5" /></button>
+                            <button onClick={() => handleUpdateThreshold(selectedItem.id, selectedItem.minThreshold + 1)} className="bg-muted rounded-lg p-2 hover:bg-border" aria-label="Increase threshold"><PlusIcon className="w-5 h-5" /></button>
                         </div>
                     </div>
 
@@ -249,11 +249,11 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                 <form onSubmit={handleUpdateItem} className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Item Name</label>
-                                        <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                        <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Item Name" />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-                                        <select value={editCategory} onChange={e => setEditCategory(e.target.value as InventoryCategory)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary">
+                                        <select value={editCategory} onChange={e => setEditCategory(e.target.value as InventoryCategory)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Category">
                                             <option value="Feed">Feed</option>
                                             <option value="Medication">Medication</option>
                                             <option value="Equipment">Equipment</option>
@@ -262,7 +262,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
-                                        <input type="text" value={editUnit} onChange={e => setEditUnit(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                                        <input type="text" value={editUnit} onChange={e => setEditUnit(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Unit" />
                                     </div>
                                     <div className="flex justify-end gap-3 pt-4">
                                         <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
@@ -378,12 +378,12 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, o
                             <>
                                 <div>
                                     <label className="block text-sm font-medium text-text-secondary mb-1">Item Name</label>
-                                    <input type="text" value={formData.newItemName} onChange={e => formData.setNewItemName(e.target.value)} placeholder="e.g., Broiler Starter Feed" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required />
+                                    <input type="text" value={formData.newItemName} onChange={e => formData.setNewItemName(e.target.value)} placeholder="e.g., Broiler Starter Feed" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="New Item Name" />
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-                                        <select value={formData.newItemCategory} onChange={e => formData.setNewItemCategory(e.target.value as InventoryCategory)} className="w-full p-2 border border-border rounded-lg bg-card text-text-primary">
+                                        <select value={formData.newItemCategory} onChange={e => formData.setNewItemCategory(e.target.value as InventoryCategory)} className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" aria-label="Category">
                                             <option value="Feed">Feed</option>
                                             <option value="Medication">Medication</option>
                                             <option value="Equipment">Equipment</option>
@@ -392,14 +392,14 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, o
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
-                                        <input type="text" value={formData.newItemUnit} onChange={e => formData.setNewItemUnit(e.target.value)} placeholder="e.g., Bags, kg" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required />
+                                        <input type="text" value={formData.newItemUnit} onChange={e => formData.setNewItemUnit(e.target.value)} placeholder="e.g., Bags, kg" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Unit" />
                                     </div>
                                 </div>
                             </>
                         ) : (
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Select Item</label>
-                                <select value={formData.purchaseItemId} onChange={e => formData.setPurchaseItemId(e.target.value)} className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required>
+                                <select value={formData.purchaseItemId} onChange={e => formData.setPurchaseItemId(e.target.value)} className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Select Item">
                                     <option value="">-- Choose Item --</option>
                                     {items.map(item => <option key={item.id} value={item.id}>{item.name} ({item.unit})</option>)}
                                 </select>
@@ -409,11 +409,11 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, o
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Quantity Purchased</label>
-                                <input type="number" value={formData.purchaseQuantity > 0 ? formData.purchaseQuantity : ''} onChange={e => formData.setPurchaseQuantity(parseFloat(e.target.value))} placeholder="0" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required />
+                                <input type="number" value={formData.purchaseQuantity > 0 ? formData.purchaseQuantity : ''} onChange={e => formData.setPurchaseQuantity(parseFloat(e.target.value))} placeholder="0" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Quantity Purchased" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Total Cost (₦)</label>
-                                <input type="number" value={formData.purchaseCost > 0 ? formData.purchaseCost : ''} onChange={e => formData.setPurchaseCost(parseFloat(e.target.value))} placeholder="0" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required />
+                                <input type="number" value={formData.purchaseCost > 0 ? formData.purchaseCost : ''} onChange={e => formData.setPurchaseCost(parseFloat(e.target.value))} placeholder="0" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Total Cost" />
                             </div>
                         </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import DailyLogScreen from './components/DailyLogScreen';
+import DailyLogScreen from './components/DailyLogScreen'; // Kept for types or direct use if needed? No, used in Container.
+import TaskContainerScreen from './components/TaskContainerScreen';
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
 import BatchManagementScreen from './components/BatchManagementScreen';
@@ -16,12 +17,13 @@ import InventoryScreen from './components/InventoryScreen';
 import HealthScheduleScreen from './components/HealthScheduleScreen';
 import TaskManagementScreen from './components/TaskManagementScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
-import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, BatchIcon, TaskIcon } from './components/icons';
+import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon } from './components/icons';
 import { AnalyticsIcon, SettingsIcon } from './components/CustomIcons';
 import { FarmProvider, useFarm, Sector, Batch, Farm } from './contexts/FarmContext';
 import { TaskProvider } from './contexts/TaskContext';
 import { BusinessProvider } from './contexts/BusinessContext';
 import { SalesProvider } from './contexts/SalesContext';
+import { TeamProvider } from './contexts/TeamContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ActivityProvider } from './contexts/ActivityContext';
 import { UIProvider, useUI } from './contexts/UIContext';
@@ -99,19 +101,24 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
           onSectorChange={setActiveSector}
           theme={theme}
         />;
-      case 'log':
-        switch (activeSector) {
-          case 'Broiler':
-            return <BroilerLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} />;
-          case 'Fish':
-            return <FishLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} />;
-          case 'Layer':
-          default:
-            return <DailyLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} activeSector={activeSector} />;
-        }
       case 'tasks':
-        return <TaskManagementScreen onNavigate={navigateTo} />;
-      case 'analytics':
+        return <TaskContainerScreen
+          onNavigate={navigateTo}
+          farm={selectedFarm}
+          batch={selectedBatch}
+          activeSector={activeSector}
+        />;
+      // case 'log': // Merged into 'tasks'
+      //   switch (activeSector) {
+      //     case 'Broiler':
+      //       return <BroilerLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} />;
+      //     case 'Fish':
+      //       return <FishLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} />;
+      //     case 'Layer':
+      //     default:
+      //       return <DailyLogScreen onNavigate={navigateTo} farm={selectedFarm} batch={selectedBatch} activeSector={activeSector} />;
+      //   }
+      case 'analytics': // Still accessible from Home
         return <AnalyticsScreen
           onNavigate={navigateTo}
           farms={farms}
@@ -202,23 +209,18 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
               <button
                 onClick={handleFabClick}
                 className="fixed bottom-24 right-6 bg-primary text-white w-16 h-16 rounded-2xl shadow-lg flex items-center justify-center transform hover:scale-105 transition-transform z-20 lg:hidden"
+                aria-label="Quick Add"
               >
                 <PlusIcon className="w-8 h-8" />
               </button>
             )}
 
-            {isBottomNavVisible && !isSalesModalOpen && !isNewBatchModalOpen && (
-              <footer className="fixed bottom-0 left-0 right-0 bg-card shadow-t border-t border-border z-20 lg:hidden pb-4">
-                <div className="flex justify-around">
-                  <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
-                  <BottomNavItem icon={ClipboardListIcon} label="Logs" screen="log" currentScreen={currentScreen} onNavigate={navigateTo} />
-                  <BottomNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
-                  <BottomNavItem icon={AnalyticsIcon} label="Stats" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
-                  <BottomNavItem icon={WalletIcon} label="Biz" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
-                  <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
-                </div>
-              </footer>
-            )}
+            <div className="flex justify-around">
+              <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <BottomNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <BottomNavItem icon={WalletIcon} label="Biz" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
+            </div>
           </div>
         </div>
       </div>
@@ -297,11 +299,13 @@ const AuthenticatedApp: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }>
       <TaskProvider>
         <BusinessProvider>
           <SalesProvider>
-            <ActivityProvider>
-              <UIProvider>
-                <AppContent theme={theme} setTheme={setTheme} />
-              </UIProvider>
-            </ActivityProvider>
+            <TeamProvider>
+              <ActivityProvider>
+                <UIProvider>
+                  <AppContent theme={theme} setTheme={setTheme} />
+                </UIProvider>
+              </ActivityProvider>
+            </TeamProvider>
           </SalesProvider>
         </BusinessProvider>
       </TaskProvider>

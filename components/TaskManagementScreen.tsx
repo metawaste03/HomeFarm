@@ -3,25 +3,25 @@ import React, { useState, useMemo } from 'react';
 import { Screen } from '../App';
 import { PlusIcon, ChevronDownIcon, CloseIcon, CalendarIcon, UsersIcon, TaskIcon } from './icons';
 import { useTasks, Task, RecurringType } from '../contexts/TaskContext';
+import { useTeam } from '../contexts/TeamContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TaskManagementScreenProps {
     onNavigate: (screen: Screen) => void;
 }
 
-const MOCK_TEAM = [
-    "Femi (Owner)",
-    "Aisha (Manager)",
-    "Ben (Worker)",
-    "Tunde (Worker)"
-];
-
 const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate }) => {
     const { tasks, addTask, toggleTaskStatus } = useTasks();
+    const { teamMembers } = useTeam();
+    const { user } = useAuth();
     const [activeFilter, setActiveFilter] = useState<'My Tasks' | 'All Tasks' | 'Overdue'>('My Tasks');
     const [isFormOpen, setIsFormOpen] = useState(false);
 
-    // User role context (Mocked as 'Femi' for now)
-    const currentUserName = "Femi (Owner)";
+    // Filter out Owner or just use all names
+    const teamNames = teamMembers.map(m => m.name);
+
+    // Current user name lookup
+    const currentUserName = teamMembers.find(m => m.userId === user?.id)?.name || user?.email || 'Me';
 
     const filteredTasks = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
@@ -62,7 +62,7 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
                     </button>
                     {isFormOpen && (
                         <TaskFormModal
-                            team={MOCK_TEAM}
+                            team={teamNames.length > 0 ? teamNames : [currentUserName]}
                             onSave={handleSaveTask}
                             onClose={() => setIsFormOpen(false)}
                         />
@@ -118,7 +118,7 @@ const TaskManagementScreen: React.FC<TaskManagementScreenProps> = ({ onNavigate 
 
             {isFormOpen && (
                 <TaskFormModal
-                    team={MOCK_TEAM}
+                    team={teamNames.length > 0 ? teamNames : [currentUserName]}
                     onSave={handleSaveTask}
                     onClose={() => setIsFormOpen(false)}
                 />
@@ -200,7 +200,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
             <div className="bg-popover rounded-t-2xl md:rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto flex flex-col" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-border flex justify-between items-center sticky top-0 bg-popover z-10">
                     <h3 className="text-xl font-bold text-text-primary">Create New Task</h3>
-                    <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary"><CloseIcon className="w-6 h-6" /></button>
+                    <button onClick={onClose} className="p-1 hover:bg-muted rounded-full text-text-secondary" aria-label="Close modal"><CloseIcon className="w-6 h-6" /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-5 space-y-5">
@@ -214,6 +214,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
                             className="w-full p-3 border border-border rounded-lg bg-card text-text-primary"
                             required
                             autoFocus
+                            aria-label="Task Name"
                         />
                     </div>
 
@@ -224,6 +225,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
                                 value={assignedTo}
                                 onChange={e => setAssignedTo(e.target.value)}
                                 className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none"
+                                aria-label="Assign To"
                             >
                                 {team.map(member => (
                                     <option key={member} value={member}>{member}</option>
@@ -242,6 +244,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
                                 onChange={e => setDueDate(e.target.value)}
                                 className="w-full p-3 border border-border rounded-lg bg-card text-text-primary"
                                 required
+                                aria-label="Due Date"
                             />
                         </div>
                         <div>
@@ -251,6 +254,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ team, onSave, onClose }) 
                                     value={recurring}
                                     onChange={e => setRecurring(e.target.value as RecurringType)}
                                     className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none"
+                                    aria-label="Repeat frequency"
                                 >
                                     <option value="No">No</option>
                                     <option value="Daily">Daily</option>
