@@ -181,7 +181,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   }
 
-  const screensWithoutFab: Screen[] = ['team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches'];
+  const screensWithoutFab: Screen[] = ['team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics'];
   const showFab = !screensWithoutFab.includes(currentScreen) && farms.length > 0;
 
   return (
