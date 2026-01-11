@@ -1,10 +1,11 @@
 
 
 import React, { useState, useMemo, useCallback } from 'react';
-import { EggIcon, FeedBagIcon, MortalityIcon, CalendarIcon, CheckCircleIcon, PlusIcon, MinusIcon, StethoscopeIcon, NotepadIcon } from './icons';
+import { EggIcon, FeedBagIcon, MortalityIcon, CalendarIcon, CheckCircleIcon, PlusIcon, MinusIcon, StethoscopeIcon, NotepadIcon, WarningIcon } from './icons';
 import InputCard from './InputCard';
 import { dailyLogsService } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
+import { useBusiness } from '../contexts/BusinessContext';
 // Fix: Use `import type` for type-only imports to prevent circular dependency issues.
 import type { Screen } from '../App';
 import type { Farm } from './FarmManagementScreen';
@@ -28,6 +29,7 @@ interface DailyLogScreenProps {
 
 const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch, activeSector }) => {
     const { user } = useAuth();
+    const { getAvailableFeed, checkAvailability, recordUsage } = useBusiness();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -40,9 +42,11 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
 
-    // Feed Consumption State
+    // Feed Consumption State - now with inventory integration
     const [feedKg, setFeedKg] = useState(0);
-    const [feedBrand, setFeedBrand] = useState('');
+    const [selectedFeedId, setSelectedFeedId] = useState<string>('');
+    const [feedError, setFeedError] = useState<string | null>(null);
+    const availableFeed = getAvailableFeed();
 
     // Mortality State
     const [mortality, setMortality] = useState(0);
@@ -57,8 +61,14 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
 
     // Track if user has started filling the form
     const hasInteracted = useMemo(() => {
-        return activeCategories.size > 0 || feedKg > 0 || mortality > 0 || notes.trim().length > 0 || feedBrand.trim().length > 0;
-    }, [activeCategories.size, feedKg, mortality, notes, feedBrand]);
+        return activeCategories.size > 0 || feedKg > 0 || mortality > 0 || notes.trim().length > 0 || selectedFeedId !== '';
+    }, [activeCategories.size, feedKg, mortality, notes, selectedFeedId]);
+
+    // Check feed availability when amount or item changes
+    const feedAvailability = useMemo(() => {
+        if (!selectedFeedId || feedKg <= 0) return null;
+        return checkAvailability(selectedFeedId, feedKg);
+    }, [selectedFeedId, feedKg, checkAvailability]);
 
     const grandTotalEggs = useMemo(() => {
         // FIX: Add type assertion as Object.values can be inferred as `unknown[]`.
@@ -130,7 +140,8 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
         setActiveCategories(new Set());
         setEggCounts({});
         setFeedKg(0);
-        setFeedBrand('');
+        setSelectedFeedId('');
+        setFeedError(null);
         setMortality(0);
         setNotes('');
     }, []);
@@ -141,7 +152,17 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
             return;
         }
 
+        // Validate feed availability if feed is being logged
+        if (feedKg > 0 && selectedFeedId) {
+            const availability = checkAvailability(selectedFeedId, feedKg);
+            if (!availability.available) {
+                setFeedError(`Insufficient stock! Only ${availability.currentQty} ${availableFeed.find(f => f.id === selectedFeedId)?.unit || 'units'} of ${availability.itemName} available.`);
+                return;
+            }
+        }
+
         setIsSaving(true);
+        setFeedError(null);
 
         const eggData = Object.fromEntries(
             Array.from(activeCategories).map(category => [
@@ -153,14 +174,20 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
             ]).filter(entry => (entry[1] as { subTotal: number }).subTotal > 0)
         );
 
+        const selectedFeed = availableFeed.find(f => f.id === selectedFeedId);
         const activities = {
             sector: batch?.sector || activeSector || 'Layer',
             eggCollection: { total: grandTotalEggs, breakdown: eggData },
-            feed: { kg: feedKg, brand: feedBrand },
+            feed: { kg: feedKg, brand: selectedFeed?.name || '', itemId: selectedFeedId },
             mortality,
         };
 
         try {
+            // First, deduct from inventory if feed was logged
+            if (feedKg > 0 && selectedFeedId) {
+                await recordUsage(selectedFeedId, feedKg, `Daily log - ${date}`);
+            }
+
             await dailyLogsService.create({
                 farm_id: String(farm.id),
                 batch_id: batch ? String(batch.id) : null,
@@ -177,9 +204,13 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                 resetForm();
                 onNavigate('dashboard');
             }, 2000);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving log:', error);
-            alert('Failed to save log. Please try again.');
+            if (error.message?.includes('Insufficient stock')) {
+                setFeedError(error.message);
+            } else {
+                alert('Failed to save log. Please try again.');
+            }
         } finally {
             setIsSaving(false);
         }
@@ -342,15 +373,44 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                             </button>
                         </div>
                         <div className="mt-4 pt-4 border-t border-border">
-                            <label htmlFor="feed-brand" className="block text-sm font-medium text-text-secondary mb-1">Feed Brand / Type</label>
-                            <input
-                                id="feed-brand"
-                                type="text"
-                                value={feedBrand}
-                                onChange={(e) => setFeedBrand(e.target.value)}
-                                placeholder="e.g., TopFeed Layer Mash"
-                                className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition bg-card text-text-primary"
-                            />
+                            <label htmlFor="feed-select" className="block text-sm font-medium text-text-secondary mb-1">Select Feed from Inventory</label>
+                            {availableFeed.length === 0 ? (
+                                <p className="text-sm text-text-secondary italic">No feed in inventory. Add feed in the Inventory section first.</p>
+                            ) : (
+                                <select
+                                    id="feed-select"
+                                    value={selectedFeedId}
+                                    onChange={(e) => {
+                                        setSelectedFeedId(e.target.value);
+                                        setFeedError(null);
+                                    }}
+                                    className="w-full p-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition bg-card text-text-primary"
+                                >
+                                    <option value="">-- Select Feed --</option>
+                                    {availableFeed.map(item => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name} ({item.quantity} {item.unit} available)
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            {feedAvailability && !feedAvailability.available && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-danger text-sm font-medium">
+                                    <span>⚠️</span>
+                                    <span>Insufficient stock! Only {feedAvailability.currentQty} available.</span>
+                                </div>
+                            )}
+                            {feedAvailability && feedAvailability.available && selectedFeedId && feedKg > 0 && (
+                                <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+                                    ✓ Stock available ({feedAvailability.currentQty} in inventory)
+                                </p>
+                            )}
+                            {feedError && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-danger text-sm font-medium">
+                                    <span>🚫</span>
+                                    <span>{feedError}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 

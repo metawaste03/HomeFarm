@@ -57,6 +57,11 @@ interface BusinessContextType {
     refreshData: () => Promise<void>;
     deleteInventoryItem: (itemId: string) => Promise<void>;
     updateInventoryItem: (itemId: string, updates: Partial<InventoryItem>) => Promise<void>;
+    // New inventory usage functions
+    recordUsage: (itemId: string, quantity: number, notes?: string) => Promise<void>;
+    getAvailableFeed: () => InventoryItem[];
+    getAvailableMedication: () => InventoryItem[];
+    checkAvailability: (itemId: string, requestedQty: number) => { available: boolean; currentQty: number; itemName: string };
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
@@ -289,6 +294,75 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     };
 
+    // Record usage of inventory item (deduct from stock)
+    const recordUsage = async (itemId: string, quantity: number, notes?: string) => {
+        const item = inventoryItems.find(i => i.id === itemId);
+        if (!item) throw new Error('Inventory item not found');
+
+        if (item.quantity < quantity) {
+            throw new Error(`Insufficient stock. Only ${item.quantity} ${item.unit} available.`);
+        }
+
+        const newQuantity = item.quantity - quantity;
+
+        try {
+            // Update inventory quantity
+            await inventoryService.update(itemId, { quantity: newQuantity });
+
+            // Create usage transaction
+            const dbTransaction = await transactionsService.create({
+                item_id: itemId,
+                transaction_date: new Date().toISOString().split('T')[0],
+                type: 'usage',
+                quantity: quantity,
+                unit: item.unit,
+                cost: null,
+                supplier: null,
+                notes: notes || 'Daily log consumption',
+            });
+
+            const appTransaction = dbTransactionToAppTransaction(dbTransaction);
+
+            // Update local state
+            setInventoryItems(prev => prev.map(i => {
+                if (i.id === itemId) {
+                    return {
+                        ...i,
+                        quantity: newQuantity,
+                        transactions: [appTransaction, ...i.transactions],
+                    };
+                }
+                return i;
+            }));
+        } catch (err) {
+            console.error('Error recording usage:', err);
+            throw err;
+        }
+    };
+
+    // Get available feed items (quantity > 0)
+    const getAvailableFeed = useCallback(() => {
+        return inventoryItems.filter(item => item.category === 'Feed' && item.quantity > 0);
+    }, [inventoryItems]);
+
+    // Get available medication items (quantity > 0)
+    const getAvailableMedication = useCallback(() => {
+        return inventoryItems.filter(item => item.category === 'Medication' && item.quantity > 0);
+    }, [inventoryItems]);
+
+    // Check if requested quantity is available
+    const checkAvailability = useCallback((itemId: string, requestedQty: number) => {
+        const item = inventoryItems.find(i => i.id === itemId);
+        if (!item) {
+            return { available: false, currentQty: 0, itemName: 'Unknown' };
+        }
+        return {
+            available: item.quantity >= requestedQty,
+            currentQty: item.quantity,
+            itemName: item.name
+        };
+    }, [inventoryItems]);
+
     return (
         <BusinessContext.Provider value={{
             inventoryItems,
@@ -301,6 +375,10 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
             deleteInventoryItem,
             addSupplier,
             refreshData,
+            recordUsage,
+            getAvailableFeed,
+            getAvailableMedication,
+            checkAvailability,
         }}>
             {children}
         </BusinessContext.Provider>

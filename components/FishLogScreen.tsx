@@ -4,6 +4,7 @@ import { FeedBagIcon, MortalityIcon, NotepadIcon, CalendarIcon, CheckCircleIcon,
 import InputCard from './InputCard';
 import { dailyLogsService } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
+import { useBusiness } from '../contexts/BusinessContext';
 import { Screen } from '../App';
 import { Farm } from './FarmManagementScreen';
 import { Batch } from './BatchManagementScreen';
@@ -31,12 +32,15 @@ const OPTIMAL_RANGES = {
 
 const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }) => {
     const { user } = useAuth();
+    const { getAvailableFeed, checkAvailability, recordUsage } = useBusiness();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isWeightModalOpen, setWeightModalOpen] = useState(false);
     const [sampledfish, setSampledFish] = useState<number>(0);
     const [totalWeight, setTotalWeight] = useState<number>(0);
     const [feedKg, setFeedKg] = useState(0);
-    const [feedBrand, setFeedBrand] = useState('');
+    const [selectedFeedId, setSelectedFeedId] = useState<string>('');
+    const [feedError, setFeedError] = useState<string | null>(null);
+    const availableFeed = getAvailableFeed();
     const [mortality, setMortality] = useState(0);
     const [waterQuality, setWaterQuality] = useState<WaterQuality>({ ph: 0, temperature: 0, ammonia: 0, dissolvedOxygen: 0 });
     const [notes, setNotes] = useState('');
@@ -70,9 +74,16 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
         return 'text-danger';
     };
 
+    // Check feed availability when amount or item changes
+    const feedAvailability = useMemo(() => {
+        if (!selectedFeedId || feedKg <= 0) return null;
+        return checkAvailability(selectedFeedId, feedKg);
+    }, [selectedFeedId, feedKg, checkAvailability]);
+
     const resetForm = useCallback(() => {
         setFeedKg(0);
-        setFeedBrand('');
+        setSelectedFeedId('');
+        setFeedError(null);
         setMortality(0);
         setWaterQuality({ ph: 0, temperature: 0, ammonia: 0, dissolvedOxygen: 0 });
         setNotes('');
@@ -89,17 +100,33 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
             return;
         }
 
-        setIsSaving(true);
+        // Validate feed availability if feed is being logged
+        if (feedKg > 0 && selectedFeedId) {
+            const availability = checkAvailability(selectedFeedId, feedKg);
+            if (!availability.available) {
+                setFeedError(`Insufficient stock! Only ${availability.currentQty} ${availableFeed.find(f => f.id === selectedFeedId)?.unit || 'units'} of ${availability.itemName} available.`);
+                return;
+            }
+        }
 
+        setIsSaving(true);
+        setFeedError(null);
+
+        const selectedFeed = availableFeed.find(f => f.id === selectedFeedId);
         const activities = {
             sector: 'Fish',
-            feed: { kg: feedKg, brand: feedBrand },
+            feed: { kg: feedKg, brand: selectedFeed?.name || '', itemId: selectedFeedId },
             mortality,
             waterQuality,
             weightSample: sampledfish > 0 ? { sampledfish, totalWeight, averageWeightGrams: averageWeightInGrams } : null,
         };
 
         try {
+            // First, deduct from inventory if feed was logged
+            if (feedKg > 0 && selectedFeedId) {
+                await recordUsage(selectedFeedId, feedKg, `Daily log (Fish) - ${date}`);
+            }
+
             await dailyLogsService.create({
                 farm_id: String(farm.id),
                 batch_id: batch ? String(batch.id) : null,
@@ -115,9 +142,13 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
                 resetForm();
                 onNavigate('dashboard');
             }, 2000);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error saving log:', error);
-            alert('Failed to save log. Please try again.');
+            if (error.message?.includes('Insufficient stock')) {
+                setFeedError(error.message);
+            } else {
+                alert('Failed to save log. Please try again.');
+            }
         } finally {
             setIsSaving(false);
         }
@@ -131,8 +162,8 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
     // Track if user has started filling the form
     const hasInteracted = useMemo(() => {
         const hasWaterQuality = waterQuality.ph > 0 || waterQuality.temperature > 0 || waterQuality.ammonia > 0 || waterQuality.dissolvedOxygen > 0;
-        return feedKg > 0 || mortality > 0 || notes.trim().length > 0 || feedBrand.trim().length > 0 || sampledfish > 0 || totalWeight > 0 || hasWaterQuality;
-    }, [feedKg, mortality, notes, feedBrand, sampledfish, totalWeight, waterQuality]);
+        return feedKg > 0 || mortality > 0 || notes.trim().length > 0 || selectedFeedId !== '' || sampledfish > 0 || totalWeight > 0 || hasWaterQuality;
+    }, [feedKg, mortality, notes, selectedFeedId, sampledfish, totalWeight, waterQuality]);
 
     const WaterQualityInput: React.FC<{ param: keyof WaterQuality, label: string, unit: string, optimal: string }> = ({ param, label, unit, optimal }) => (
         <div>
@@ -213,8 +244,44 @@ const FishLogScreen: React.FC<FishLogScreenProps> = ({ onNavigate, farm, batch }
                             <button onClick={() => setFeedKg(f => f + 0.1)} className="bg-primary rounded-full p-3 text-white hover:bg-primary-600 active:bg-primary-700 transition-colors transform active:scale-90" aria-label="Increase feed consumed"> <PlusIcon className="w-8 h-8" /> </button>
                         </div>
                         <div className="mt-4 pt-4 border-t border-border">
-                            <label htmlFor="feed-brand" className="block text-sm font-medium text-text-secondary mb-1">Feed Brand / Type</label>
-                            <input id="feed-brand" type="text" value={feedBrand} onChange={(e) => setFeedBrand(e.target.value)} placeholder="e.g., Aller Aqua Tilapia" className="w-full p-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition bg-card text-text-primary" />
+                            <label htmlFor="feed-select" className="block text-sm font-medium text-text-secondary mb-1">Select Feed from Inventory</label>
+                            {availableFeed.length === 0 ? (
+                                <p className="text-sm text-text-secondary italic">No feed in inventory. Add feed in the Inventory section first.</p>
+                            ) : (
+                                <select
+                                    id="feed-select"
+                                    value={selectedFeedId}
+                                    onChange={(e) => {
+                                        setSelectedFeedId(e.target.value);
+                                        setFeedError(null);
+                                    }}
+                                    className="w-full p-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition bg-card text-text-primary"
+                                >
+                                    <option value="">-- Select Feed --</option>
+                                    {availableFeed.map(item => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name} ({item.quantity} {item.unit} available)
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            {feedAvailability && !feedAvailability.available && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-danger text-sm font-medium">
+                                    <span>⚠️</span>
+                                    <span>Insufficient stock! Only {feedAvailability.currentQty} available.</span>
+                                </div>
+                            )}
+                            {feedAvailability && feedAvailability.available && selectedFeedId && feedKg > 0 && (
+                                <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+                                    ✓ Stock available ({feedAvailability.currentQty} in inventory)
+                                </p>
+                            )}
+                            {feedError && (
+                                <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-danger text-sm font-medium">
+                                    <span>🚫</span>
+                                    <span>{feedError}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 

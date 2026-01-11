@@ -1,6 +1,7 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { CameraIcon, CloseIcon, StethoscopeIcon, PillIcon, PlusIcon } from './icons';
+import { useBusiness } from '../contexts/BusinessContext';
 import { Batch } from './BatchManagementScreen';
 
 interface HealthLogModalProps {
@@ -15,28 +16,46 @@ export interface HealthLogData {
     time: string;
     symptoms: string[];
     medication: string;
+    medicationItemId?: string;
+    medicationQuantity?: number;
     dosage: string;
     photo: string | null;
     notes: string;
 }
 
 const COMMON_SYMPTOMS = [
-    "Lethargy", "Coughing", "Sneezing", "Watery Droppings", 
+    "Lethargy", "Coughing", "Sneezing", "Watery Droppings",
     "Reduced Appetite", "Isolating", "Weight Loss", "Pale Combs", "Bloating"
 ];
 
 const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave, batch }) => {
+    const { getAvailableMedication, checkAvailability, recordUsage } = useBusiness();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [time, setTime] = useState(new Date().toTimeString().split(' ')[0].substring(0, 5));
     const [selectedSymptoms, setSelectedSymptoms] = useState<Set<string>>(new Set());
     const [customSymptom, setCustomSymptom] = useState('');
     const [isAddingCustom, setIsAddingCustom] = useState(false);
+
+    // Medication states - now with inventory integration
+    const [useInventoryMed, setUseInventoryMed] = useState(true);
+    const [selectedMedId, setSelectedMedId] = useState<string>('');
+    const [medQuantity, setMedQuantity] = useState<number>(1);
     const [medication, setMedication] = useState('');
+    const [medError, setMedError] = useState<string | null>(null);
+    const availableMedication = getAvailableMedication();
+
     const [dosage, setDosage] = useState('');
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [notes, setNotes] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Check medication availability
+    const medAvailability = useMemo(() => {
+        if (!selectedMedId || medQuantity <= 0) return null;
+        return checkAvailability(selectedMedId, medQuantity);
+    }, [selectedMedId, medQuantity, checkAvailability]);
 
     if (!isOpen) return null;
 
@@ -71,18 +90,49 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
         }
     };
 
-    const handleSave = () => {
-        const data: HealthLogData = {
-            date,
-            time,
-            symptoms: Array.from(selectedSymptoms),
-            medication,
-            dosage,
-            photo: photoPreview,
-            notes
-        };
-        onSave(data);
-        onClose();
+    const handleSave = async () => {
+        // Validate medication availability if using inventory
+        if (useInventoryMed && selectedMedId && medQuantity > 0) {
+            const availability = checkAvailability(selectedMedId, medQuantity);
+            if (!availability.available) {
+                setMedError(`Insufficient stock! Only ${availability.currentQty} ${availableMedication.find(m => m.id === selectedMedId)?.unit || 'units'} available.`);
+                return;
+            }
+        }
+
+        setIsSaving(true);
+        setMedError(null);
+
+        try {
+            // Deduct medication from inventory if using inventory medication
+            if (useInventoryMed && selectedMedId && medQuantity > 0) {
+                await recordUsage(selectedMedId, medQuantity, `Health log treatment - ${date}`);
+            }
+
+            const selectedMed = availableMedication.find(m => m.id === selectedMedId);
+            const data: HealthLogData = {
+                date,
+                time,
+                symptoms: Array.from(selectedSymptoms),
+                medication: useInventoryMed ? (selectedMed?.name || '') : medication,
+                medicationItemId: useInventoryMed ? selectedMedId : undefined,
+                medicationQuantity: useInventoryMed ? medQuantity : undefined,
+                dosage,
+                photo: photoPreview,
+                notes
+            };
+            onSave(data);
+            onClose();
+        } catch (error: any) {
+            console.error('Error saving health log:', error);
+            if (error.message?.includes('Insufficient stock')) {
+                setMedError(error.message);
+            } else {
+                alert('Failed to save health log. Please try again.');
+            }
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -126,11 +176,10 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                                 <button
                                     key={symptom}
                                     onClick={() => toggleSymptom(symptom)}
-                                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                                        selectedSymptoms.has(symptom)
+                                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${selectedSymptoms.has(symptom)
                                             ? 'bg-red-100 border-danger text-danger dark:bg-red-900/30'
                                             : 'bg-background border-border text-text-secondary hover:border-primary'
-                                    }`}
+                                        }`}
                                 >
                                     {symptom}
                                 </button>
@@ -140,13 +189,13 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                                     {s}
                                 </button>
                             ))}
-                            
+
                             {isAddingCustom ? (
                                 <div className="flex items-center gap-2 mt-1 w-full">
-                                    <input 
-                                        type="text" 
-                                        value={customSymptom} 
-                                        onChange={e => setCustomSymptom(e.target.value)} 
+                                    <input
+                                        type="text"
+                                        value={customSymptom}
+                                        onChange={e => setCustomSymptom(e.target.value)}
                                         placeholder="Type symptom..."
                                         className="flex-grow p-2 text-sm border border-border rounded-lg bg-background text-text-primary"
                                         autoFocus
@@ -168,33 +217,108 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                             <PillIcon className="w-5 h-5" />
                             <span className="text-sm font-bold uppercase">Treatment</span>
                         </div>
-                        <div className="grid grid-cols-1 gap-4">
+
+                        {/* Toggle between inventory and free-text */}
+                        <div className="flex bg-background p-1 rounded-lg">
+                            <button
+                                type="button"
+                                onClick={() => { setUseInventoryMed(true); setMedError(null); }}
+                                className={`flex-1 py-2 text-sm font-bold rounded-md transition ${useInventoryMed ? 'bg-card shadow text-primary' : 'text-text-secondary'}`}
+                            >
+                                From Inventory
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => { setUseInventoryMed(false); setMedError(null); }}
+                                className={`flex-1 py-2 text-sm font-bold rounded-md transition ${!useInventoryMed ? 'bg-card shadow text-primary' : 'text-text-secondary'}`}
+                            >
+                                Manual Entry
+                            </button>
+                        </div>
+
+                        {useInventoryMed ? (
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="block text-xs font-semibold text-text-secondary mb-1">Select Medication</label>
+                                    {availableMedication.length === 0 ? (
+                                        <p className="text-sm text-text-secondary italic">No medication in inventory. Add medication in the Inventory section or use Manual Entry.</p>
+                                    ) : (
+                                        <select
+                                            value={selectedMedId}
+                                            onChange={(e) => {
+                                                setSelectedMedId(e.target.value);
+                                                setMedError(null);
+                                            }}
+                                            className="w-full p-2 border border-border rounded-lg bg-card text-text-primary"
+                                        >
+                                            <option value="">-- Select Medication --</option>
+                                            {availableMedication.map(item => (
+                                                <option key={item.id} value={item.id}>
+                                                    {item.name} ({item.quantity} {item.unit} available)
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+                                {selectedMedId && (
+                                    <div>
+                                        <label className="block text-xs font-semibold text-text-secondary mb-1">Quantity Used</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            value={medQuantity > 0 ? medQuantity : ''}
+                                            onChange={e => setMedQuantity(parseInt(e.target.value) || 0)}
+                                            placeholder="1"
+                                            className="w-full p-2 border border-border rounded-lg bg-card text-text-primary"
+                                        />
+                                    </div>
+                                )}
+                                {medAvailability && !medAvailability.available && (
+                                    <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-danger text-sm font-medium">
+                                        <span>⚠️</span>
+                                        <span>Insufficient stock! Only {medAvailability.currentQty} available.</span>
+                                    </div>
+                                )}
+                                {medAvailability && medAvailability.available && selectedMedId && medQuantity > 0 && (
+                                    <p className="text-sm text-green-600 dark:text-green-400">
+                                        ✓ Stock available ({medAvailability.currentQty} in inventory)
+                                    </p>
+                                )}
+                                {medError && (
+                                    <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-danger text-sm font-medium">
+                                        <span>🚫</span>
+                                        <span>{medError}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
                             <div>
                                 <label className="block text-xs font-semibold text-text-secondary mb-1">Medication / Vaccine</label>
                                 <input type="text" value={medication} onChange={e => setMedication(e.target.value)} placeholder="e.g., Tetracycline" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" />
                             </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-text-secondary mb-1">Dosage / Instructions</label>
-                                <input type="text" value={dosage} onChange={e => setDosage(e.target.value)} placeholder="e.g., 5ml per liter" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" />
-                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-xs font-semibold text-text-secondary mb-1">Dosage / Instructions</label>
+                            <input type="text" value={dosage} onChange={e => setDosage(e.target.value)} placeholder="e.g., 5ml per liter" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" />
                         </div>
                     </div>
 
                     {/* Photo Upload */}
                     <div>
                         <label className="block text-sm font-semibold text-text-secondary mb-2">Visual Evidence</label>
-                        <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
                             ref={fileInputRef}
                             onChange={handlePhotoUpload}
                         />
-                        
+
                         {photoPreview ? (
                             <div className="relative rounded-xl overflow-hidden border border-border group">
                                 <img src={photoPreview} alt="Preview" className="w-full h-48 object-cover" />
-                                <button 
+                                <button
                                     onClick={() => setPhotoPreview(null)}
                                     className="absolute top-2 right-2 bg-black/50 text-white p-1 rounded-full hover:bg-black/70 transition"
                                 >
@@ -202,7 +326,7 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                                 </button>
                             </div>
                         ) : (
-                            <button 
+                            <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="w-full border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center text-text-secondary hover:border-primary hover:text-primary transition-colors bg-muted/30"
                             >
@@ -216,10 +340,10 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
                     {/* Notes */}
                     <div>
                         <label className="block text-sm font-semibold text-text-secondary mb-2">Additional Notes</label>
-                        <textarea 
-                            value={notes} 
-                            onChange={e => setNotes(e.target.value)} 
-                            placeholder="Describe the behavior or other observations..." 
+                        <textarea
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Describe the behavior or other observations..."
                             className="w-full p-3 border border-border rounded-lg bg-background text-text-primary min-h-[80px]"
                         />
                     </div>
@@ -227,11 +351,12 @@ const HealthLogModal: React.FC<HealthLogModalProps> = ({ isOpen, onClose, onSave
 
                 {/* Footer Action */}
                 <div className="p-4 border-t border-border bg-card sticky bottom-0 z-10">
-                    <button 
+                    <button
                         onClick={handleSave}
-                        className="w-full bg-danger text-white font-bold py-3 px-4 rounded-xl text-lg shadow-lg hover:bg-red-600 active:scale-95 transition-all"
+                        disabled={isSaving || (useInventoryMed && selectedMedId && medAvailability && !medAvailability.available)}
+                        className="w-full bg-danger text-white font-bold py-3 px-4 rounded-xl text-lg shadow-lg hover:bg-red-600 active:scale-95 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                        SAVE HEALTH LOG
+                        {isSaving ? 'SAVING...' : 'SAVE HEALTH LOG'}
                     </button>
                 </div>
             </div>
