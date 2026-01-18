@@ -19,7 +19,7 @@ import TaskManagementScreen from './components/TaskManagementScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
 import ExpensesScreen from './components/ExpensesScreen';
 import LogHistoryScreen from './components/LogHistoryScreen';
-import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon } from './components/icons';
+import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon, WarningIcon } from './components/icons';
 import { AnalyticsIcon, SettingsIcon } from './components/CustomIcons';
 import { FarmProvider, useFarm, Sector, Batch, Farm } from './contexts/FarmContext';
 import { TaskProvider } from './contexts/TaskContext';
@@ -28,9 +28,11 @@ import { SalesProvider } from './contexts/SalesContext';
 import { TeamProvider } from './contexts/TeamContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ActivityProvider } from './contexts/ActivityContext';
+import { ActionsProvider } from './contexts/ActionsContext';
 import { UIProvider, useUI } from './contexts/UIContext';
+import ActionsScreen from './components/ActionsScreen';
 
-export type Screen = 'dashboard' | 'log' | 'tasks' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history';
+export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history';
 export type Theme = 'light' | 'dark' | 'system';
 
 const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => {
@@ -169,6 +171,8 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
         return <ExpensesScreen onNavigate={navigateTo} />;
       case 'log_history':
         return <LogHistoryScreen onNavigate={navigateTo} />;
+      case 'actions':
+        return <ActionsScreen />;
       default:
         return <DashboardScreen
           onNavigate={navigateTo}
@@ -181,7 +185,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   }
 
-  const screensWithoutFab: Screen[] = ['team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics'];
+  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions'];
   const showFab = !screensWithoutFab.includes(currentScreen) && farms.length > 0;
 
   return (
@@ -224,6 +228,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
             <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around z-50 lg:hidden">
               <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <BottomNavItem icon={WarningIcon} label="Actions" screen="actions" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={WalletIcon} label="Biz" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
             </nav>
@@ -307,9 +312,11 @@ const AuthenticatedApp: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }>
           <SalesProvider>
             <TeamProvider>
               <ActivityProvider>
-                <UIProvider>
-                  <AppContent theme={theme} setTheme={setTheme} />
-                </UIProvider>
+                <ActionsProvider>
+                  <UIProvider>
+                    <AppContent theme={theme} setTheme={setTheme} />
+                  </UIProvider>
+                </ActionsProvider>
               </ActivityProvider>
             </TeamProvider>
           </SalesProvider>

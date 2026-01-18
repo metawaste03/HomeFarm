@@ -589,3 +589,122 @@ export const tipsService = {
         return (data || []) as Tables<'tip_votes'>[];
     }
 };
+
+// ============================================
+// ACTION RULES (Today's Actions)
+// ============================================
+
+export const actionRulesService = {
+    async list() {
+        const { data, error } = await supabase
+            .from('action_rules')
+            .select('*')
+            .eq('is_active', true)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return (data || []) as Tables<'action_rules'>[];
+    },
+
+    async getById(id: string) {
+        const { data, error } = await supabase
+            .from('action_rules')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'action_rules'>;
+    },
+
+    async create(rule: Insertable<'action_rules'>) {
+        const { data, error } = await supabase
+            .from('action_rules')
+            .insert(rule as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'action_rules'>;
+    },
+
+    async update(id: string, rule: Updatable<'action_rules'>) {
+        const { data, error } = await supabase
+            .from('action_rules')
+            .update(rule as any)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'action_rules'>;
+    }
+};
+
+// ============================================
+// TRIGGERED ACTIONS
+// ============================================
+
+export const triggeredActionsService = {
+    async getActiveForFarm(farmId: string) {
+        const { data, error } = await supabase
+            .from('triggered_actions')
+            .select(`
+                *,
+                rule:action_rules (
+                    rule_key,
+                    title,
+                    description,
+                    action_text,
+                    sector,
+                    severity
+                )
+            `)
+            .eq('farm_id', farmId)
+            .eq('status', 'active')
+            .order('triggered_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    async create(action: Insertable<'triggered_actions'>) {
+        const { data, error } = await supabase
+            .from('triggered_actions')
+            .insert(action as any)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'triggered_actions'>;
+    },
+
+    async updateStatus(id: string, status: string, resolvedAt?: string, snoozedUntil?: string) {
+        const update: any = { status };
+        if (resolvedAt) update.resolved_at = resolvedAt;
+        if (snoozedUntil) update.snoozed_until = snoozedUntil;
+
+        const { data, error } = await supabase
+            .from('triggered_actions')
+            .update(update)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Tables<'triggered_actions'>;
+    },
+
+    async dismiss(id: string) {
+        return this.updateStatus(id, 'dismissed', new Date().toISOString());
+    },
+
+    async snooze(id: string, snoozeDurationHours: number) {
+        const snoozeUntil = new Date(Date.now() + snoozeDurationHours * 60 * 60 * 1000).toISOString();
+        return this.updateStatus(id, 'snoozed', undefined, snoozeUntil);
+    },
+
+    async resolve(id: string) {
+        return this.updateStatus(id, 'resolved', new Date().toISOString());
+    }
+};

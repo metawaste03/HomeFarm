@@ -11,6 +11,7 @@ import TimeFilter from './TimeFilter';
 import { dailyLogsService } from '../services/database';
 import type { Tables } from '../types/database';
 import ProfitabilityCalculator from './ProfitabilityCalculator';
+import TodaysActionCard from './TodaysActionCard';
 import CommunityTips from './CommunityTips';
 import LogHistory from './LogHistory';
 
@@ -285,6 +286,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
                     {/* Profitability Calculator */}
                     <ProfitabilityCalculator sector={activeSector} />
+
+                    {/* Today's Action Card */}
+                    <TodaysActionCard onViewAll={() => onNavigate('actions')} />
 
                     {/* Community Tips */}
                     <CommunityTips sector={activeSector} />

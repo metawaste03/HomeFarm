@@ -17,6 +17,20 @@ export type TransactionType = 'purchase' | 'usage';
 export type InventoryCategory = 'Feed' | 'Medication' | 'Equipment' | 'Other';
 export type FarmRole = 'owner' | 'manager' | 'worker';
 
+// Action Rules types
+export type ActionSeverity = 'critical' | 'warning' | 'info';
+export type ActionStatus = 'active' | 'dismissed' | 'snoozed' | 'resolved';
+export type ConditionType =
+    | 'inventory_below_threshold'
+    | 'days_since_last_log'
+    | 'mortality_rate'
+    | 'health_schedule_due'
+    | 'age_in_weeks'
+    | 'egg_production_drop'
+    | 'weight_below_expected'
+    | 'task_overdue'
+    | 'batch_missing_start_date';
+
 export interface Database {
     public: {
         Tables: {
@@ -101,6 +115,7 @@ export interface Database {
                     status: BatchStatus;
                     stock_count: number;
                     age: string | null;
+                    start_date: string | null;
                     schedule_id: string | null;
                     created_at: string;
                 };
@@ -112,6 +127,7 @@ export interface Database {
                     status?: BatchStatus;
                     stock_count?: number;
                     age?: string | null;
+                    start_date?: string | null;
                     schedule_id?: string | null;
                     created_at?: string;
                 };
@@ -123,6 +139,7 @@ export interface Database {
                     status?: BatchStatus;
                     stock_count?: number;
                     age?: string | null;
+                    start_date?: string | null;
                     schedule_id?: string | null;
                     created_at?: string;
                 };
@@ -447,6 +464,112 @@ export interface Database {
                     vote_type?: number;
                 };
             };
+            // Today's Actions - Rule Engine tables
+            action_rules: {
+                Row: {
+                    id: string;
+                    rule_key: string;
+                    title: string;
+                    description: string;
+                    action_text: string;
+                    sector: Sector | null;
+                    severity: ActionSeverity;
+                    condition_type: ConditionType;
+                    condition_params: Json;
+                    is_active: boolean;
+                    votes_up: number;
+                    votes_down: number;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    rule_key: string;
+                    title: string;
+                    description: string;
+                    action_text: string;
+                    sector?: Sector | null;
+                    severity?: ActionSeverity;
+                    condition_type: ConditionType;
+                    condition_params: Json;
+                    is_active?: boolean;
+                    votes_up?: number;
+                    votes_down?: number;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    rule_key?: string;
+                    title?: string;
+                    description?: string;
+                    action_text?: string;
+                    sector?: Sector | null;
+                    severity?: ActionSeverity;
+                    condition_type?: ConditionType;
+                    condition_params?: Json;
+                    is_active?: boolean;
+                    votes_up?: number;
+                    votes_down?: number;
+                    created_at?: string;
+                };
+            };
+            rule_votes: {
+                Row: {
+                    id: string;
+                    rule_id: string;
+                    user_id: string;
+                    vote_type: number;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    rule_id: string;
+                    user_id: string;
+                    vote_type: number;
+                    created_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    rule_id?: string;
+                    user_id?: string;
+                    vote_type?: number;
+                    created_at?: string;
+                };
+            };
+            triggered_actions: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    rule_id: string;
+                    batch_id: string | null;
+                    triggered_at: string;
+                    status: ActionStatus;
+                    snoozed_until: string | null;
+                    resolved_at: string | null;
+                    metadata: Json;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    rule_id: string;
+                    batch_id?: string | null;
+                    triggered_at?: string;
+                    status?: ActionStatus;
+                    snoozed_until?: string | null;
+                    resolved_at?: string | null;
+                    metadata?: Json;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    rule_id?: string;
+                    batch_id?: string | null;
+                    triggered_at?: string;
+                    status?: ActionStatus;
+                    snoozed_until?: string | null;
+                    resolved_at?: string | null;
+                    metadata?: Json;
+                };
+            };
         };
         Views: {};
         Functions: {};
@@ -458,6 +581,9 @@ export interface Database {
             transaction_type: TransactionType;
             inventory_category: InventoryCategory;
             farm_role: FarmRole;
+            action_severity: ActionSeverity;
+            action_status: ActionStatus;
+            condition_type: ConditionType;
         };
     };
 }
