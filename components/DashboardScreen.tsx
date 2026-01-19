@@ -78,34 +78,84 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const sectorBatches = useMemo(() => batches.filter(b => b.sector === activeSector), [batches, activeSector]);
     const activeBatches = useMemo(() => sectorBatches.filter(b => b.status === 'Active'), [sectorBatches]);
 
-    // Calculate Real Data from Logs
-    const sectorLogs = useMemo(() => {
-        return logs.filter(log => {
+    // Calculate Real Data from Logs with Period Comparison for Trends
+    const { currentPeriodLogs, previousPeriodLogs } = useMemo(() => {
+        const now = new Date();
+        const periodDays = timeFilter === 'daily' ? 1 : timeFilter === 'weekly' ? 7 : 30;
+        const currentStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
+        const previousStart = new Date(currentStart.getTime() - periodDays * 24 * 60 * 60 * 1000);
+
+        const sectorFilteredLogs = logs.filter(log => {
             const acts = log.activities as any;
             return acts?.sector === activeSector;
         });
-    }, [logs, activeSector]);
 
+        const current = sectorFilteredLogs.filter(log => new Date(log.log_date) >= currentStart);
+        const previous = sectorFilteredLogs.filter(log => {
+            const logDate = new Date(log.log_date);
+            return logDate >= previousStart && logDate < currentStart;
+        });
+
+        return { currentPeriodLogs: current, previousPeriodLogs: previous };
+    }, [logs, activeSector, timeFilter]);
+
+    // Current period metrics
     const totalMortality = useMemo(() => {
-        return sectorLogs.reduce((sum, log) => {
+        return currentPeriodLogs.reduce((sum, log) => {
             const acts = log.activities as any;
             return sum + (acts?.mortality || 0);
         }, 0);
-    }, [sectorLogs]);
+    }, [currentPeriodLogs]);
 
     const totalEggs = useMemo(() => {
-        return sectorLogs.reduce((sum, log) => {
+        return currentPeriodLogs.reduce((sum, log) => {
             const acts = log.activities as any;
             return sum + (acts?.eggCollection?.total || 0);
         }, 0);
-    }, [sectorLogs]);
+    }, [currentPeriodLogs]);
 
     const totalFeed = useMemo(() => {
-        return sectorLogs.reduce((sum, log) => {
+        return currentPeriodLogs.reduce((sum, log) => {
             const acts = log.activities as any;
             return sum + (acts?.feed?.kg || 0);
         }, 0);
-    }, [sectorLogs]);
+    }, [currentPeriodLogs]);
+
+    // Previous period metrics for comparison
+    const prevMortality = useMemo(() => {
+        return previousPeriodLogs.reduce((sum, log) => {
+            const acts = log.activities as any;
+            return sum + (acts?.mortality || 0);
+        }, 0);
+    }, [previousPeriodLogs]);
+
+    const prevEggs = useMemo(() => {
+        return previousPeriodLogs.reduce((sum, log) => {
+            const acts = log.activities as any;
+            return sum + (acts?.eggCollection?.total || 0);
+        }, 0);
+    }, [previousPeriodLogs]);
+
+    const prevFeed = useMemo(() => {
+        return previousPeriodLogs.reduce((sum, log) => {
+            const acts = log.activities as any;
+            return sum + (acts?.feed?.kg || 0);
+        }, 0);
+    }, [previousPeriodLogs]);
+
+    // Calculate trend percentage helper
+    const calculateTrend = (current: number, previous: number): string | undefined => {
+        if (previous === 0 && current === 0) return undefined;
+        if (previous === 0) return current > 0 ? '+100%' : undefined;
+        const change = ((current - previous) / previous) * 100;
+        if (change === 0) return '0%';
+        return `${change > 0 ? '+' : ''}${change.toFixed(0)}%`;
+    };
+
+    // Generate trend values based on real data
+    const eggsTrend = calculateTrend(totalEggs, prevEggs);
+    const mortalityTrend = calculateTrend(totalMortality, prevMortality);
+    const feedTrend = calculateTrend(totalFeed, prevFeed);
 
     const totalStock = useMemo(() => activeBatches.reduce((sum, b) => sum + (b.stockCount || 0), 0), [activeBatches]);
     const currentActiveBirds = totalStock - totalMortality;
@@ -222,7 +272,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                             icon={<ChickenIcon className="w-5 h-5 text-blue-500" />}
                             label="Total Stock"
                             value={totalStock.toLocaleString()}
-                            trend={totalStock > 0 ? '+0%' : undefined}
                             accentColor="blue"
                             staggerIndex={0}
                             className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
@@ -240,6 +289,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                                 icon={<LayerIcon className="w-5 h-5 text-purple-500" />}
                                 label="Total Output"
                                 value={totalEggs.toLocaleString()}
+                                trend={eggsTrend}
                                 accentColor="purple"
                                 staggerIndex={2}
                                 className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
@@ -249,6 +299,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                                 icon={<FeedBagIcon className="w-5 h-5 text-yellow-500" />}
                                 label="Feed Consumed"
                                 value={`${totalFeed.toLocaleString()} kg`}
+                                trend={feedTrend}
                                 accentColor="yellow"
                                 staggerIndex={2}
                                 className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"
@@ -258,6 +309,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                             icon={<FishIcon className="w-5 h-5 text-orange-500" />}
                             label="Mortality"
                             value={totalMortality.toLocaleString()}
+                            trend={mortalityTrend}
                             accentColor="orange"
                             staggerIndex={3}
                             className="shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1"

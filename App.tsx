@@ -80,6 +80,9 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
       case 'sales':
         setIsSalesModalOpen(true);
         break;
+      case 'log_history':
+        navigateTo('tasks');
+        break;
       default:
         navigateTo('log');
         break;
