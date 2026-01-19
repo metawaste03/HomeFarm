@@ -23,6 +23,7 @@ export interface Batch {
   age: string;
   sector: Sector;
   scheduleId?: string;
+  startDate?: string;
 }
 
 interface FarmContextType {
@@ -65,6 +66,7 @@ const dbBatchToAppBatch = (dbBatch: Tables<'batches'>, farmName: string): Batch 
   age: dbBatch.age || '',
   sector: dbBatch.sector as Sector,
   scheduleId: dbBatch.schedule_id || undefined,
+  startDate: dbBatch.start_date || undefined,
 });
 
 export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -181,6 +183,7 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         stock_count: batch.stockCount,
         age: batch.age || null,
         schedule_id: batch.scheduleId || null,
+        start_date: batch.startDate || null,
       });
       setBatches(prev => [dbBatchToAppBatch(newBatch, batch.farm), ...prev]);
     } catch (err) {
@@ -198,6 +201,7 @@ export const FarmProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         stock_count: updatedBatch.stockCount,
         age: updatedBatch.age || null,
         schedule_id: updatedBatch.scheduleId || null,
+        start_date: updatedBatch.startDate || null,
       });
       setBatches(prev => prev.map(b => b.id === updatedBatch.id ? updatedBatch : b));
     } catch (err) {

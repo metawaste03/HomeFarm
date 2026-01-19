@@ -16,6 +16,7 @@ export type Batch = {
     age: string;
     sector: Sector;
     scheduleId?: string;
+    startDate?: string;
 };
 
 export type HealthScheduleTemplate = {
@@ -212,7 +213,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
     const isEditing = !!batchToEdit;
     const [sector, setSector] = useState<Sector | null>(batchToEdit?.sector || activeSector);
     const [name, setName] = useState(batchToEdit?.name || '');
-    const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+    const [startDate, setStartDate] = useState(batchToEdit?.startDate || new Date().toISOString().split('T')[0]);
     const [stockCount, setStockCount] = useState<number>(batchToEdit?.stockCount || 0);
     const [stockCost, setStockCost] = useState<number>(0);
     const [stockAge, setStockAge] = useState(batchToEdit?.age || '');
@@ -255,7 +256,8 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
             stockCount,
             status: batchToEdit?.status || 'Active',
             age: stockAge || batchToEdit?.age || '1 day',
-            scheduleId: scheduleId || undefined
+            scheduleId: scheduleId || undefined,
+            startDate: startDate || undefined
         }, batchToEdit?.id);
     };
 
@@ -300,12 +302,10 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                             {showDetails && (
                                 <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
                                     <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Batch Name" />
-                                    {!isEditing && (
-                                        <div>
-                                            <label htmlFor="start-date" className="text-xs text-text-secondary">Date of Arrival</label>
-                                            <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Date of Arrival" />
-                                        </div>
-                                    )}
+                                    <div>
+                                        <label htmlFor="start-date" className="text-xs text-text-secondary">{isEditing ? 'Start Date' : 'Date of Arrival'}</label>
+                                        <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Start Date" />
+                                    </div>
                                     <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'} *`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Stock Count" />
                                 </div>
                             )}
