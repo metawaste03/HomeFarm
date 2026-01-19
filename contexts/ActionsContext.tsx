@@ -21,7 +21,7 @@ interface ActionsContextType {
 const ActionsContext = createContext<ActionsContextType | undefined>(undefined);
 
 export function ActionsProvider({ children }: { children: React.ReactNode }) {
-    const { activeFarm } = useFarm();
+    const { activeFarm, farms } = useFarm();
     const { user } = useAuth();
 
     const [actions, setActions] = useState<TriggeredActionWithRule[]>([]);
@@ -30,26 +30,36 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
 
     // Evaluate rules and update triggered actions
     const refreshActions = useCallback(async () => {
-        if (!activeFarm || !user) {
+        // Use activeFarm if set, otherwise use first farm
+        const targetFarm = activeFarm || (farms.length > 0 ? farms[0] : null);
+
+        if (!targetFarm || !user) {
+            console.log('ActionsContext: No farm or user available', { targetFarm, user: !!user, farmsCount: farms.length });
             setActions([]);
             setLoading(false);
             return;
         }
 
-        // Convert activeFarm to Tables<'farms'> format
-        const farmId = String(activeFarm.id);
+        // Convert farm to Tables<'farms'> format
+        const farmId = String(targetFarm.id);
+        console.log('ActionsContext: Starting refresh for farm', farmId, 'Farm name:', targetFarm.name);
 
         try {
             setLoading(true);
             setError(null);
 
             // Fetch active rules
+            console.log('ActionsContext: Fetching active rules...');
             const rules = await actionRulesService.list();
+            console.log('ActionsContext: Fetched rules count:', rules.length);
 
             // Fetch existing triggered actions
+            console.log('ActionsContext: Fetching existing triggered actions...');
             const existingActions = await triggeredActionsService.getActiveForFarm(farmId);
+            console.log('ActionsContext: Existing triggered actions count:', existingActions.length);
 
             // Fetch all data needed for rule evaluation
+            console.log('ActionsContext: Fetching farm data for rule evaluation...');
             const [batches, dailyLogs, inventory, tasks, allHealthSchedules] = await Promise.all([
                 batchesService.list(farmId),
                 dailyLogsService.list(farmId),
@@ -64,10 +74,21 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
                 })
             ]);
 
+            console.log('ActionsContext: Farm data fetched:', {
+                batches: batches.length,
+                dailyLogs: dailyLogs.length,
+                inventory: inventory.length,
+                tasks: tasks.length,
+                healthSchedules: allHealthSchedules.length
+            });
+
             // Build context for rule evaluation (need to fetch full farm data)
             const dbFarms = await farmsService.list();
             const currentFarm = dbFarms.find(f => f.id === farmId);
-            if (!currentFarm) throw new Error('Farm not found');
+            if (!currentFarm) {
+                console.error('ActionsContext: Farm not found in database:', farmId);
+                throw new Error('Farm not found');
+            }
 
             const context: RuleContext = {
                 farm: currentFarm,
@@ -79,33 +100,42 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
             };
 
             // Evaluate rules
+            console.log('ActionsContext: Evaluating rules...');
             const newTriggers = evaluateRules(
                 rules,
                 context,
                 existingActions as unknown as Tables<'triggered_actions'>[]
             );
+            console.log('ActionsContext: New triggers to create:', newTriggers.length);
 
             // Create new triggered actions
             for (const trigger of newTriggers) {
-                await triggeredActionsService.create({
-                    farm_id: farmId,
-                    rule_id: trigger.rule.id,
-                    batch_id: trigger.batchId || null,
-                    metadata: trigger.metadata || {}
-                });
+                console.log('ActionsContext: Creating triggered action for rule:', trigger.rule.rule_key);
+                try {
+                    await triggeredActionsService.create({
+                        farm_id: farmId,
+                        rule_id: trigger.rule.id,
+                        batch_id: trigger.batchId || null,
+                        metadata: trigger.metadata || {}
+                    });
+                } catch (createErr) {
+                    console.error('ActionsContext: Failed to create triggered action:', createErr);
+                }
             }
 
             // Fetch updated actions list
+            console.log('ActionsContext: Fetching updated actions list...');
             const updatedActions = await triggeredActionsService.getActiveForFarm(farmId);
+            console.log('ActionsContext: Final actions count:', updatedActions.length);
             setActions(updatedActions as unknown as TriggeredActionWithRule[]);
 
         } catch (err) {
-            console.error('Error refreshing actions:', err);
+            console.error('ActionsContext: Error refreshing actions:', err);
             setError(err instanceof Error ? err : new Error('Failed to refresh actions'));
         } finally {
             setLoading(false);
         }
-    }, [activeFarm, user]);
+    }, [activeFarm, farms, user]);
 
     // Initial load and refresh when dependencies change
     useEffect(() => {
@@ -147,8 +177,25 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
 
     // Get actions filtered by sector
     const getActionsBySector = useCallback((sector: Sector | null) => {
-        if (!sector) return actions;
-        return actions.filter(a => a.rule.sector === sector || a.rule.sector === null);
+        if (!sector) return actions; // "All" tab shows everything
+
+        // Individual sector tabs show:
+        // 1. Actions where the rule's sector matches
+        // 2. Actions where the rule has no sector BUT the batch (from metadata) is of this sector
+        return actions.filter(a => {
+            // Direct sector match on the rule
+            if (a.rule.sector === sector) {
+                return true;
+            }
+
+            // For rules with no sector, check if the batch belongs to this sector
+            const metadataSector = (a.metadata as any)?.sector;
+            if (a.rule.sector === null && metadataSector === sector) {
+                return true;
+            }
+
+            return false;
+        });
     }, [actions]);
 
     // Get top priority action for today's card
