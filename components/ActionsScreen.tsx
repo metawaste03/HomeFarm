@@ -4,21 +4,24 @@ import { useActions } from '../contexts/ActionsContext';
 import { WarningIcon, InfoIcon, CloseIcon, ClockIcon, CheckCircleIcon } from './icons';
 import type { ActionSeverity, Sector } from '../types/database';
 
-const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: string }>; color: string; bg: string }> = {
+const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: string }>; color: string; bg: string; textColor: string }> = {
     critical: {
         icon: CloseIcon,
         color: 'text-red-500',
-        bg: 'bg-red-50 border-red-200'
+        bg: 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700',
+        textColor: 'text-red-800 dark:text-red-200'
     },
     warning: {
         icon: WarningIcon,
-        color: 'text-yellow-600',
-        bg: 'bg-yellow-50 border-yellow-200'
+        color: 'text-yellow-600 dark:text-yellow-400',
+        bg: 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700',
+        textColor: 'text-yellow-800 dark:text-yellow-200'
     },
     info: {
         icon: InfoIcon,
-        color: 'text-blue-500',
-        bg: 'bg-blue-50 border-blue-200'
+        color: 'text-blue-500 dark:text-blue-400',
+        bg: 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700',
+        textColor: 'text-blue-800 dark:text-blue-200'
     }
 };
 
@@ -105,7 +108,7 @@ export default function ActionsScreen() {
             </div>
 
             {/* Actions List */}
-            <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="max-w-4xl mx-auto px-4 py-4 pb-24">
                 {filteredActions.length === 0 ? (
                     <div className="bg-card rounded-lg p-8 text-center border border-border">
                         <InfoIcon className="w-12 h-12 text-text-secondary mx-auto mb-3" />
@@ -155,7 +158,7 @@ export default function ActionsScreen() {
 
                                             {/* Metadata */}
                                             {action.metadata && Object.keys(action.metadata).length > 0 && (
-                                                <div className="text-xs text-text-secondary mb-3 bg-white/50 rounded px-2 py-1.5">
+                                                <div className="text-xs mb-3 bg-surface dark:bg-black/20 rounded px-2 py-1.5 text-text">
                                                     {Object.entries(action.metadata).map(([key, value]) => (
                                                         <div key={key} className="mb-0.5">
                                                             <span className="font-medium capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>{' '}
@@ -167,18 +170,18 @@ export default function ActionsScreen() {
 
                                             {/* Tags */}
                                             <div className="flex items-center gap-2 mb-3">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${config.color} bg-white/70`}>
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${config.textColor} bg-surface dark:bg-black/30`}>
                                                     {action.rule.severity.toUpperCase()}
                                                 </span>
                                                 {action.rule.sector && (
-                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/50 text-text-secondary">
+                                                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-surface dark:bg-black/20 text-text">
                                                         {action.rule.sector}
                                                     </span>
                                                 )}
                                             </div>
 
                                             {/* Action Text */}
-                                            <div className="bg-white/70 rounded p-3 mb-3 border border-border/20">
+                                            <div className="bg-surface dark:bg-black/20 rounded p-3 mb-3 border border-border">
                                                 <p className="text-sm font-medium text-text">
                                                     ✅ {action.rule.action_text}
                                                 </p>
