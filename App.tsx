@@ -19,7 +19,7 @@ import TaskManagementScreen from './components/TaskManagementScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
 import ExpensesScreen from './components/ExpensesScreen';
 import LogHistoryScreen from './components/LogHistoryScreen';
-import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon, WarningIcon } from './components/icons';
+import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon, WarningIcon, CalculatorIcon } from './components/icons';
 import { AnalyticsIcon, SettingsIcon } from './components/CustomIcons';
 import { FarmProvider, useFarm, Sector, Batch, Farm } from './contexts/FarmContext';
 import { TaskProvider } from './contexts/TaskContext';
@@ -31,8 +31,9 @@ import { ActivityProvider } from './contexts/ActivityContext';
 import { ActionsProvider } from './contexts/ActionsContext';
 import { UIProvider, useUI } from './contexts/UIContext';
 import ActionsScreen from './components/ActionsScreen';
+import CalculatorScreen from './components/CalculatorScreen';
 
-export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history';
+export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'calculator' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history';
 export type Theme = 'light' | 'dark' | 'system';
 
 const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => {
@@ -176,6 +177,8 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
         return <LogHistoryScreen onNavigate={navigateTo} />;
       case 'actions':
         return <ActionsScreen />;
+      case 'calculator':
+        return <CalculatorScreen />;
       default:
         return <DashboardScreen
           onNavigate={navigateTo}
@@ -188,7 +191,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   }
 
-  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions'];
+  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions', 'calculator'];
   const showFab = !screensWithoutFab.includes(currentScreen) && farms.length > 0;
 
   return (
@@ -202,6 +205,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
               <SidebarNavItem icon={ClipboardListIcon} label="Logs" screen="log" currentScreen={currentScreen} onNavigate={navigateTo} />
               <SidebarNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
               <SidebarNavItem icon={AnalyticsIcon} label="Analytics" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <SidebarNavItem icon={CalculatorIcon} label="Calculator" screen="calculator" currentScreen={currentScreen} onNavigate={navigateTo} />
               <SidebarNavItem icon={WalletIcon} label="Business" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
               <SidebarNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
             </nav>
@@ -232,6 +236,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
               <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={WarningIcon} label="Actions" screen="actions" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <BottomNavItem icon={CalculatorIcon} label="Calculator" screen="calculator" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={WalletIcon} label="Biz" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
             </nav>

@@ -8,21 +8,24 @@ interface TodaysActionCardProps {
     onViewAll?: () => void;
 }
 
-const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: string }>; color: string; bg: string }> = {
+const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: string }>; color: string; bg: string; textColor: string }> = {
     critical: {
         icon: CloseIcon,
         color: 'text-red-500',
-        bg: 'bg-red-50 border-red-200'
+        bg: 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700',
+        textColor: 'text-red-800 dark:text-red-200'
     },
     warning: {
         icon: WarningIcon,
-        color: 'text-yellow-600',
-        bg: 'bg-yellow-50 border-yellow-200'
+        color: 'text-yellow-600 dark:text-yellow-400',
+        bg: 'bg-yellow-50 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700',
+        textColor: 'text-yellow-800 dark:text-yellow-200'
     },
     info: {
         icon: InfoIcon,
-        color: 'text-blue-500',
-        bg: 'bg-blue-50 border-blue-200'
+        color: 'text-blue-500 dark:text-blue-400',
+        bg: 'bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700',
+        textColor: 'text-blue-800 dark:text-blue-200'
     }
 };
 
@@ -82,7 +85,7 @@ export default function TodaysActionCard({ onViewAll }: TodaysActionCardProps) {
                     <p className="text-sm text-text-secondary mb-2">{topAction.rule.description}</p>
 
                     {topAction.metadata && Object.keys(topAction.metadata).length > 0 && (
-                        <div className="text-xs text-text-secondary mb-3 bg-white/50 rounded px-2 py-1">
+                        <div className="text-xs mb-3 bg-surface dark:bg-black/20 rounded px-2 py-1 text-text">
                             {Object.entries(topAction.metadata).map(([key, value]) => (
                                 <span key={key} className="mr-3">
                                     <span className="font-medium">{key}:</span> {String(value)}
@@ -92,11 +95,11 @@ export default function TodaysActionCard({ onViewAll }: TodaysActionCardProps) {
                     )}
 
                     <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${config.color} bg-white/70`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${config.textColor} bg-surface dark:bg-black/30`}>
                             {topAction.rule.severity.toUpperCase()}
                         </span>
                         {topAction.rule.sector && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/50 text-text-secondary">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-surface dark:bg-black/20 text-text">
                                 {topAction.rule.sector}
                             </span>
                         )}
