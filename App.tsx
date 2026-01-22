@@ -176,9 +176,9 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
       case 'log_history':
         return <LogHistoryScreen onNavigate={navigateTo} />;
       case 'actions':
-        return <ActionsScreen />;
+        return <ActionsScreen onNavigate={navigateTo} />;
       case 'calculator':
-        return <CalculatorScreen />;
+        return <CalculatorScreen onNavigate={navigateTo} />;
       default:
         return <DashboardScreen
           onNavigate={navigateTo}
@@ -202,11 +202,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
             <div className="text-3xl font-bold text-primary mb-10 px-2">HomeFarm</div>
             <nav className="flex-grow space-y-2">
               <SidebarNavItem icon={GridIcon} label="Dashboard" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <SidebarNavItem icon={ClipboardListIcon} label="Logs" screen="log" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <SidebarNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
               <SidebarNavItem icon={AnalyticsIcon} label="Analytics" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <SidebarNavItem icon={CalculatorIcon} label="Calculator" screen="calculator" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <SidebarNavItem icon={WalletIcon} label="Business" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
               <SidebarNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
             </nav>
             <div className="mt-auto">
@@ -234,10 +230,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
 
             <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around z-50 lg:hidden">
               <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <BottomNavItem icon={TaskIcon} label="Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <BottomNavItem icon={WarningIcon} label="Actions" screen="actions" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <BottomNavItem icon={CalculatorIcon} label="Calculator" screen="calculator" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <BottomNavItem icon={WalletIcon} label="Biz" screen="business" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <BottomNavItem icon={AnalyticsIcon} label="Stats" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
             </nav>
           </div>

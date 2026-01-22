@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Screen, Theme } from '../App';
-import { HomeIcon, UsersIcon, ChevronRightIcon, BatchIcon, StethoscopeIcon } from './icons';
+import { HomeIcon, UsersIcon, ChevronRightIcon, BatchIcon, StethoscopeIcon, ChevronLeftIcon } from './icons';
 import { useAuth } from '../contexts/AuthContext';
 
 // A generic icon for appearance would be good here
@@ -26,7 +26,16 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, onLogout, c
     return (
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-md sticky top-0 z-10">
-                <h1 className="text-2xl font-bold text-center text-text-primary">Settings</h1>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => onNavigate('dashboard')}
+                        className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
+                        aria-label="Back to Dashboard"
+                    >
+                        <ChevronLeftIcon className="w-6 h-6 text-text-secondary" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
+                </div>
             </header>
 
             <div className="p-4 space-y-4">

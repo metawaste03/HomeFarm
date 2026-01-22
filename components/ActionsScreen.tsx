@@ -1,8 +1,9 @@
 // ActionsScreen - Dedicated tab for viewing and managing all actions
 import React, { useState } from 'react';
 import { useActions } from '../contexts/ActionsContext';
-import { WarningIcon, InfoIcon, CloseIcon, ClockIcon, CheckCircleIcon } from './icons';
+import { WarningIcon, InfoIcon, CloseIcon, ClockIcon, CheckCircleIcon, ChevronLeftIcon } from './icons';
 import type { ActionSeverity, Sector } from '../types/database';
+import type { Screen } from '../App';
 
 const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: string }>; color: string; bg: string; textColor: string }> = {
     critical: {
@@ -25,7 +26,11 @@ const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: stri
     }
 };
 
-export default function ActionsScreen() {
+interface ActionsScreenProps {
+    onNavigate?: (screen: Screen) => void;
+}
+
+export default function ActionsScreen({ onNavigate }: ActionsScreenProps) {
     const { actions, loading, dismissAction, snoozeAction, resolveAction, getActionsBySector } = useActions();
     const [sectorFilter, setSectorFilter] = useState<Sector | 'All'>('All');
     const [processingId, setProcessingId] = useState<string | null>(null);
@@ -84,10 +89,21 @@ export default function ActionsScreen() {
 
     return (
         <div className="min-h-screen bg-surface">
-            {/* Header */}
+            {/* Header with Back Button */}
             <div className="bg-card border-b border-border sticky top-0 z-10">
                 <div className="max-w-4xl mx-auto px-4 py-4">
-                    <h1 className="text-2xl font-bold text-text mb-3">Today's Actions</h1>
+                    <div className="flex items-center gap-3 mb-3">
+                        {onNavigate && (
+                            <button
+                                onClick={() => onNavigate('dashboard')}
+                                className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
+                                aria-label="Back to Dashboard"
+                            >
+                                <ChevronLeftIcon className="w-6 h-6 text-text-secondary" />
+                            </button>
+                        )}
+                        <h1 className="text-2xl font-bold text-text">Today's Actions</h1>
+                    </div>
 
                     {/* Sector Filter */}
                     <div className="flex gap-2 overflow-x-auto pb-2">

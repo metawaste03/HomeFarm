@@ -8,7 +8,7 @@ import FishLogScreen from './FishLogScreen';
 import LogHistory from './LogHistory';
 import type { Farm } from './FarmManagementScreen';
 import type { Batch, Sector } from './BatchManagementScreen';
-import { ClipboardListIcon, TaskIcon, PlusIcon, ClockIcon } from './icons';
+import { ClipboardListIcon, TaskIcon, PlusIcon, ClockIcon, ChevronLeftIcon } from './icons';
 
 interface TaskContainerScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -71,8 +71,8 @@ const TaskContainerScreen: React.FC<TaskContainerScreenProps> = ({ onNavigate, f
             <button
                 onClick={() => onViewChange('new')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${activeView === 'new'
-                        ? 'bg-card text-primary shadow-sm'
-                        : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
                     }`}
             >
                 <PlusIcon className="w-4 h-4" />
@@ -81,8 +81,8 @@ const TaskContainerScreen: React.FC<TaskContainerScreenProps> = ({ onNavigate, f
             <button
                 onClick={() => onViewChange('history')}
                 className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold transition-all ${activeView === 'history'
-                        ? 'bg-card text-primary shadow-sm'
-                        : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-card text-primary shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
                     }`}
             >
                 <ClockIcon className="w-4 h-4" />
@@ -93,9 +93,18 @@ const TaskContainerScreen: React.FC<TaskContainerScreenProps> = ({ onNavigate, f
 
     return (
         <div className="bg-background min-h-screen flex flex-col">
-            {/* Header */}
+            {/* Header with Back Button */}
             <header className="bg-card p-4 pt-6 shadow-sm">
-                <h1 className="text-2xl font-bold text-center text-text-primary">Task Hub</h1>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => onNavigate('dashboard')}
+                        className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
+                        aria-label="Back to Dashboard"
+                    >
+                        <ChevronLeftIcon className="w-6 h-6 text-text-secondary" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-text-primary">Task Hub</h1>
+                </div>
             </header>
 
             {/* Main Tab Navigation */}

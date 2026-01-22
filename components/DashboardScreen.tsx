@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, PlusIcon, HomeIcon, ChickenIcon, BatchIcon, WalletIcon, TaskIcon, FeedBagIcon } from './icons';
+import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, ChickenIcon, BatchIcon, FeedBagIcon } from './icons';
 import { AnalyticsIcon } from './CustomIcons';
 import type { Screen } from '../App';
 import { useFarm, Sector } from '../contexts/FarmContext';
@@ -7,13 +7,11 @@ import { useTasks } from '../contexts/TaskContext';
 import { useSales } from '../contexts/SalesContext';
 import { useAuth } from '../contexts/AuthContext';
 import KpiCard from './KpiCard';
-import TimeFilter from './TimeFilter';
 import { dailyLogsService } from '../services/database';
 import type { Tables } from '../types/database';
-import ProfitabilityCalculator from './ProfitabilityCalculator';
 import TodaysActionCard from './TodaysActionCard';
-import CommunityTips from './CommunityTips';
-import LogHistory from './LogHistory';
+import FarmAdvisor from './FarmAdvisor';
+import NavigationCards from './NavigationCards';
 
 interface DashboardScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -36,7 +34,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     const { sales } = useSales();
     const { user } = useAuth();
     const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-    const [timeFilter, setTimeFilter] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
     const [logs, setLogs] = useState<Tables<'daily_logs'>[]>([]);
 
     // Get user's first name for greeting
@@ -81,7 +78,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     // Calculate Real Data from Logs with Period Comparison for Trends
     const { currentPeriodLogs, previousPeriodLogs } = useMemo(() => {
         const now = new Date();
-        const periodDays = timeFilter === 'daily' ? 1 : timeFilter === 'weekly' ? 7 : 30;
+        const periodDays = 7; // Weekly by default
         const currentStart = new Date(now.getTime() - periodDays * 24 * 60 * 60 * 1000);
         const previousStart = new Date(currentStart.getTime() - periodDays * 24 * 60 * 60 * 1000);
 
@@ -97,7 +94,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         });
 
         return { currentPeriodLogs: current, previousPeriodLogs: previous };
-    }, [logs, activeSector, timeFilter]);
+    }, [logs, activeSector]);
 
     // Current period metrics
     const totalMortality = useMemo(() => {
@@ -197,14 +194,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         );
     };
 
-    // Removed: Empty state for new users - users now go directly to Dashboard
-
     return (
         <div className="bg-background min-h-screen">
             {/* Main Content Area */}
             <div className="lg:flex">
-                {/* Left: Main Content */}
-                <main className="flex-1 p-4 lg:p-6 lg:pr-3 space-y-6">
+                {/* Main Content */}
+                <main className="flex-1 p-4 lg:p-6 space-y-6">
                     {/* Header */}
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>
@@ -214,48 +209,50 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                             <p className="text-text-secondary">Here's your farm's pulse for today.</p>
                         </div>
 
-                        <button
-                            onClick={() => onNavigate('analytics')}
-                            className="bg-card hover:bg-muted text-primary border border-border px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm transition-all"
-                        >
-                            <AnalyticsIcon className="w-5 h-5" />
-                            View Stats
-                        </button>
-
-                        {/* Scope Selector */}
-                        <div className="relative">
+                        <div className="flex items-center gap-3">
                             <button
-                                onClick={() => setIsSelectorOpen(!isSelectorOpen)}
-                                className="w-full lg:w-auto min-w-[200px] text-left bg-muted p-3 rounded-xl flex justify-between items-center gap-4 border border-border"
+                                onClick={() => onNavigate('analytics')}
+                                className="bg-card hover:bg-muted text-primary border border-border px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm transition-all"
                             >
-                                <span className="font-medium text-text-primary truncate">
-                                    {selectedScope || `All ${activeSector} Farms`}
-                                </span>
-                                <ChevronDownIcon className={`w-5 h-5 text-text-secondary transition-transform ${isSelectorOpen ? 'rotate-180' : ''}`} />
+                                <AnalyticsIcon className="w-5 h-5" />
+                                View Stats
                             </button>
-                            {isSelectorOpen && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-popover shadow-lg rounded-xl z-20 border border-border max-h-60 overflow-y-auto">
-                                    {farmOptions.map(opt => (
-                                        <React.Fragment key={opt.name}>
-                                            <div
-                                                onClick={() => handleSelectScope(opt.name)}
-                                                className="p-3 hover:bg-muted cursor-pointer font-medium text-text-primary"
-                                            >
-                                                {opt.name}
-                                            </div>
-                                            {opt.children.map(child => (
+
+                            {/* Scope Selector */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsSelectorOpen(!isSelectorOpen)}
+                                    className="min-w-[180px] text-left bg-muted p-3 rounded-xl flex justify-between items-center gap-4 border border-border"
+                                >
+                                    <span className="font-medium text-text-primary truncate text-sm">
+                                        {selectedScope || `All ${activeSector} Farms`}
+                                    </span>
+                                    <ChevronDownIcon className={`w-4 h-4 text-text-secondary transition-transform ${isSelectorOpen ? 'rotate-180' : ''}`} />
+                                </button>
+                                {isSelectorOpen && (
+                                    <div className="absolute top-full right-0 mt-2 bg-popover shadow-lg rounded-xl z-20 border border-border max-h-60 overflow-y-auto min-w-[200px]">
+                                        {farmOptions.map(opt => (
+                                            <React.Fragment key={opt.name}>
                                                 <div
-                                                    key={child}
-                                                    onClick={() => handleSelectScope(`${opt.name} - ${child}`)}
-                                                    className="p-3 pl-8 hover:bg-muted cursor-pointer text-text-secondary"
+                                                    onClick={() => handleSelectScope(opt.name)}
+                                                    className="p-3 hover:bg-muted cursor-pointer font-medium text-text-primary text-sm"
                                                 >
-                                                    {child}
+                                                    {opt.name}
                                                 </div>
-                                            ))}
-                                        </React.Fragment>
-                                    ))}
-                                </div>
-                            )}
+                                                {opt.children.map(child => (
+                                                    <div
+                                                        key={child}
+                                                        onClick={() => handleSelectScope(`${opt.name} - ${child}`)}
+                                                        className="p-3 pl-8 hover:bg-muted cursor-pointer text-text-secondary text-sm"
+                                                    >
+                                                        {child}
+                                                    </div>
+                                                ))}
+                                            </React.Fragment>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -316,43 +313,15 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         />
                     </div>
 
-                    {/* Time Filter */}
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-text-primary">Production Overview</h2>
-                        <TimeFilter selected={timeFilter} onChange={setTimeFilter} />
-                    </div>
+                    {/* AI Farm Advisor */}
+                    <FarmAdvisor sector={activeSector} />
 
-                    {/* Chart Placeholder */}
-                    <div className="bg-card rounded-2xl shadow-sm border border-border p-6 h-64 flex items-center justify-center">
-                        <div className="text-center text-text-secondary">
-                            <p className="font-medium">Production chart will appear here</p>
-                            <p className="text-sm mt-1">Start logging daily activities to see trends</p>
-                            <button
-                                onClick={() => onNavigate('tasks')}
-                                className="mt-4 text-primary font-medium hover:underline"
-                            >
-                                Log today's activity →
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Profitability Calculator */}
-                    <ProfitabilityCalculator sector={activeSector} />
-
-                    {/* Today's Action Card */}
+                    {/* Today's Actions (Condensed) */}
                     <TodaysActionCard onViewAll={() => onNavigate('actions')} />
 
-                    {/* Community Tips */}
-                    <CommunityTips sector={activeSector} />
-
-                    {/* Right Panel - Desktop Only */}
-                    {/* Log History */}
-                    <div className="mt-8">
-                        <LogHistory onNavigate={onNavigate} />
-                    </div>
+                    {/* Navigation Cards */}
+                    <NavigationCards onNavigate={onNavigate} />
                 </main>
-
-                {/* Right Panel - Desktop Only (Empty now, removing to allow main content to center/expand effectively) */}
             </div>
         </div>
     );

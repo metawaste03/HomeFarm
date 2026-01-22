@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Screen } from '../App';
-import { SalesIcon, BoxIcon, ChevronRightIcon, WalletIcon } from './icons';
+import { SalesIcon, BoxIcon, ChevronRightIcon, WalletIcon, ChevronLeftIcon } from './icons';
 
 interface BusinessScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -11,7 +11,16 @@ const BusinessScreen: React.FC<BusinessScreenProps> = ({ onNavigate }) => {
     return (
         <div className="bg-background min-h-screen">
             <header className="bg-card p-4 pt-6 shadow-sm sticky top-0 z-10">
-                <h1 className="text-2xl font-bold text-center text-text-primary">Business Hub</h1>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => onNavigate('dashboard')}
+                        className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
+                        aria-label="Back to Dashboard"
+                    >
+                        <ChevronLeftIcon className="w-6 h-6 text-text-secondary" />
+                    </button>
+                    <h1 className="text-2xl font-bold text-text-primary">Business Hub</h1>
+                </div>
             </header>
 
             <div className="p-4 space-y-4">

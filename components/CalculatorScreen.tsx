@@ -1,15 +1,20 @@
 import React, { useState, useMemo } from 'react';
 import { CalculatorIcon, LayerIcon, BroilerIcon, FishIcon, ChevronLeftIcon, DownloadIcon } from './icons';
+import type { Screen } from '../App';
 
 type CalculatorSector = 'Layer' | 'Broiler' | 'Aquaculture' | null;
 
-const CalculatorScreen: React.FC = () => {
+interface CalculatorScreenProps {
+    onNavigate?: (screen: Screen) => void;
+}
+
+const CalculatorScreen: React.FC<CalculatorScreenProps> = ({ onNavigate }) => {
     const [selectedSector, setSelectedSector] = useState<CalculatorSector>(null);
 
     const handleBack = () => setSelectedSector(null);
 
     if (!selectedSector) {
-        return <SectorSelector onSelectSector={setSelectedSector} />;
+        return <SectorSelector onSelectSector={setSelectedSector} onNavigate={onNavigate} />;
     }
 
     switch (selectedSector) {
@@ -29,9 +34,10 @@ const CalculatorScreen: React.FC = () => {
 // ============================================
 interface SectorSelectorProps {
     onSelectSector: (sector: CalculatorSector) => void;
+    onNavigate?: (screen: Screen) => void;
 }
 
-const SectorSelector: React.FC<SectorSelectorProps> = ({ onSelectSector }) => {
+const SectorSelector: React.FC<SectorSelectorProps> = ({ onSelectSector, onNavigate }) => {
     const sectors = [
         {
             id: 'Layer' as CalculatorSector,
@@ -65,17 +71,28 @@ const SectorSelector: React.FC<SectorSelectorProps> = ({ onSelectSector }) => {
     return (
         <div className="bg-background min-h-screen p-4 lg:p-6">
             <div className="max-w-2xl mx-auto">
-                {/* Header */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl mb-4">
-                        <CalculatorIcon className="w-10 h-10 text-primary" />
+                {/* Header with Back Button */}
+                <div className="flex items-center gap-3 mb-6">
+                    {onNavigate && (
+                        <button
+                            onClick={() => onNavigate('dashboard')}
+                            className="p-2 -ml-2 rounded-lg hover:bg-muted transition-colors"
+                            aria-label="Back to Dashboard"
+                        >
+                            <ChevronLeftIcon className="w-6 h-6 text-text-secondary" />
+                        </button>
+                    )}
+                    <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl">
+                        <CalculatorIcon className="w-8 h-8 text-primary" />
                     </div>
-                    <h1 className="text-2xl lg:text-3xl font-bold text-text-primary mb-2">
-                        Profitability Calculator
-                    </h1>
-                    <p className="text-text-secondary">
-                        Select your business type to get started
-                    </p>
+                    <div>
+                        <h1 className="text-2xl font-bold text-text-primary">
+                            Profitability Calculator
+                        </h1>
+                        <p className="text-text-secondary text-sm">
+                            Select your business type
+                        </p>
+                    </div>
                 </div>
 
                 {/* Sector Cards */}
