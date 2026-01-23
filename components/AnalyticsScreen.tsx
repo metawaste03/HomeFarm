@@ -20,71 +20,7 @@ interface AnalyticsScreenProps {
     theme: Theme;
 }
 
-const MOCK_ANALYTICS_DATA = {
-    'Layer': {
-        financials: { revenue: 1250000, expenses: 800000 },
-        incomeVsExpense: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], income: [250000, 300000, 320000, 380000], expenses: [210000, 190000, 200000, 200000] },
-        expenseBreakdown: { labels: ['Feed', 'Stock', 'Utilities', 'Labor'], data: [65, 20, 10, 5] },
-        kpi1: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], data: [88, 90, 92, 91.5], title: 'Hen-Day Production %' },
-        kpi2: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], data: [0.5, 0.6, 0.55, 0.7], title: 'Mortality Rate (%)' },
-        insights: [
-            { icon: 'NairaIcon', title: 'Biggest Cost', text: 'Feed was your primary expense for this batch, accounting for 65% of your total costs.' },
-            { icon: 'ArrowTrendingUpIcon', title: 'Peak Production', text: 'The batch reached peak production (92%) during Week 3.' },
-            { icon: 'FeedBagIcon', title: 'Feed Efficiency', text: 'Feed intake remained stable against production, indicating good conversion.' },
-            { icon: 'WarningIcon', title: 'Key Health Event', text: 'A slight increase in mortality was noted in Week 4, correlating with a minor dip in production.' }
-        ]
-    },
-    'Broiler': {
-        financials: { revenue: 1800000, expenses: 1450000 },
-        incomeVsExpense: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], income: [0, 0, 400000, 1400000], expenses: [300000, 350000, 400000, 400000] },
-        expenseBreakdown: { labels: ['Feed', 'Stock', 'Medication', 'Utilities'], data: [60, 25, 8, 7] },
-        kpi1: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], data: [1.2, 1.4, 1.6, 1.75], title: 'FCR Trend' },
-        kpi2: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], data: [50, 80, 110, 150], title: 'Average Daily Gain (g)' },
-        insights: [
-            { icon: 'NairaIcon', title: 'Biggest Cost', text: 'Feed was your primary expense for this batch, accounting for 60% of your total costs.' },
-            { icon: 'ArrowTrendingUpIcon', title: 'Break-Even Point', text: 'This batch became profitable during Week 4 of its lifecycle.' },
-            { icon: 'FeedBagIcon', title: 'Feed Performance', text: 'Your final Feed Conversion Ratio (FCR) was 1.75. This is better than your previous batch\'s FCR of 1.92.' },
-            { icon: 'WarningIcon', title: 'Key Health Event', text: 'The highest mortality was recorded in Week 2, likely due to heat stress noted in the logs.' }
-        ]
-    },
-    'Fish': {
-        financials: { revenue: 950000, expenses: 600000 },
-        incomeVsExpense: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], income: [100000, 150000, 250000, 450000], expenses: [150000, 150000, 150000, 150000] },
-        expenseBreakdown: { labels: ['Feed', 'Stock', 'Power', 'Water'], data: [55, 30, 10, 5] },
-        kpi1: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], data: [1.5, 1.8, 2.1, 2.0], title: 'Specific Growth Rate (SGR)' },
-        kpi2: { labels: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], data: [0.02, 0.03, 0.02, 0.05], title: 'Ammonia (ppm)' },
-        insights: [
-            { icon: 'NairaIcon', title: 'Biggest Cost', text: 'Feed was your primary expense for this batch, accounting for 55% of your total costs.' },
-            { icon: 'ArrowTrendingUpIcon', title: 'Break-Even Point', text: 'This batch became profitable during Week 3.' },
-            { icon: 'FeedBagIcon', title: 'Feed Performance', text: 'The best Specific Growth Rate (SGR) of 2.1 was achieved in Week 3.' },
-            { icon: 'WarningIcon', title: 'Water Quality Alert', text: 'An ammonia spike was recorded in Week 4, which correlated with a slight dip in growth rate.' }
-        ]
-    }
-};
-
-const MOCK_HEALTH_LOGS = [
-    {
-        id: 1,
-        date: '2025-11-18',
-        time: '08:30',
-        symptoms: ['Lethargy', 'Reduced Appetite'],
-        medication: 'Multivitamin Boost',
-        dosage: '20g per 100L water',
-        photo: null,
-        notes: 'Birds seem tired. Administered vitamins to boost immunity during weather change.'
-    },
-    {
-        id: 2,
-        date: '2025-11-15',
-        time: '14:00',
-        symptoms: ['Coughing'],
-        medication: 'Tylosin',
-        dosage: '1g per 2L',
-        photo: 'https://placehold.co/300x200/red/white?text=Sick+Bird', // Placeholder
-        notes: 'Observed 3 birds coughing in Pen A. Isolated immediately.'
-    }
-];
-
+// Icon mapping for dynamic insight rendering
 const iconMap: { [key: string]: React.FC<any> } = {
     NairaIcon,
     ArrowTrendingUpIcon,
@@ -123,6 +59,20 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
 
         fetchLogs();
     }, [farms]);
+
+    // Auto-select first batch when sector changes or when batches become available
+    useEffect(() => {
+        const sectorBatches = batches.filter(b => b.sector === activeSector);
+        if (sectorBatches.length > 0 && !selectedBatchId) {
+            setSelectedBatchId(sectorBatches[0].id);
+        } else if (sectorBatches.length > 0 && selectedBatchId) {
+            // Check if selected batch is still in current sector
+            const batchInSector = sectorBatches.find(b => b.id === selectedBatchId);
+            if (!batchInSector) {
+                setSelectedBatchId(sectorBatches[0].id);
+            }
+        }
+    }, [activeSector, batches]);
 
     // Calculate real data milestones
     const milestones = useMemo(() => {
@@ -194,9 +144,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
     }, [logs, activeSector]);
 
     const realChartData = useMemo(() => {
-        const mock = MOCK_ANALYTICS_DATA[activeSector];
-
-        // 1. Expense Breakdown
+        // 1. Expense Breakdown from real inventory data
         const expensesByCategory: Record<string, number> = {};
         inventoryItems.forEach(item => {
             const itemCost = item.transactions
@@ -208,10 +156,15 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
         });
         const expLabels = Object.keys(expensesByCategory);
         const expData = Object.values(expensesByCategory);
+        const totalExpenses = expData.reduce((a, b) => a + b, 0);
 
-        // 2. Log Data (KPIs)
-        const sortedLogs = [...sectorLogs].reverse(); // Ascending date
-        const kpiLabels = sortedLogs.map(l => new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+        // 2. Log Data (KPIs) from real daily logs
+        const sortedLogs = [...sectorLogs].sort((a, b) =>
+            new Date(a.log_date).getTime() - new Date(b.log_date).getTime()
+        );
+        const kpiLabels = sortedLogs.map(l =>
+            new Date(l.log_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+        );
 
         const productionData = sortedLogs.map(l => {
             const acts = l.activities as any;
@@ -223,26 +176,156 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
             return acts?.mortality || 0;
         });
 
+        const feedData = sortedLogs.map(l => {
+            const acts = l.activities as any;
+            return acts?.feed?.kg || 0;
+        });
+
+        // 3. Calculate real totals
+        const totalProduction = productionData.reduce((a, b) => a + b, 0);
+        const totalMortality = mortalityData.reduce((a, b) => a + b, 0);
+        const totalFeed = feedData.reduce((a, b) => a + b, 0);
+        const avgProduction = productionData.length > 0 ? totalProduction / productionData.length : 0;
+
+        // 4. Find biggest expense category
+        let biggestExpense = { category: 'Unknown', percentage: 0 };
+        if (expLabels.length > 0 && totalExpenses > 0) {
+            const maxExpense = Math.max(...expData);
+            const maxIndex = expData.indexOf(maxExpense);
+            biggestExpense = {
+                category: expLabels[maxIndex],
+                percentage: Math.round((maxExpense / totalExpenses) * 100)
+            };
+        }
+
+        // 5. Find peak production day
+        let peakProduction = { value: 0, date: '' };
+        if (productionData.length > 0) {
+            const maxProd = Math.max(...productionData);
+            const maxIndex = productionData.indexOf(maxProd);
+            peakProduction = {
+                value: maxProd,
+                date: kpiLabels[maxIndex] || 'N/A'
+            };
+        }
+
+        // 6. Generate dynamic insights based on real data
+        const insights: Array<{ icon: string; title: string; text: string }> = [];
+
+        // Biggest Cost insight
+        if (expLabels.length > 0) {
+            insights.push({
+                icon: 'NairaIcon',
+                title: 'Biggest Cost',
+                text: `${biggestExpense.category} was your primary expense, accounting for ${biggestExpense.percentage}% of your total costs (₦${totalExpenses.toLocaleString()}).`
+            });
+        } else {
+            insights.push({
+                icon: 'NairaIcon',
+                title: 'Expense Tracking',
+                text: 'Start tracking your expenses to see cost breakdowns here.'
+            });
+        }
+
+        // Production insight
+        if (totalProduction > 0) {
+            insights.push({
+                icon: 'ArrowTrendingUpIcon',
+                title: 'Peak Production',
+                text: `Your highest production was ${peakProduction.value.toLocaleString()} eggs on ${peakProduction.date}. Average daily production: ${Math.round(avgProduction).toLocaleString()} eggs.`
+            });
+        } else if (activeSector === 'Layer') {
+            insights.push({
+                icon: 'ArrowTrendingUpIcon',
+                title: 'Production Tracking',
+                text: 'Log your daily egg collection to track production trends.'
+            });
+        }
+
+        // Feed insight
+        if (totalFeed > 0) {
+            const fcr = totalProduction > 0 ? (totalFeed / (totalProduction / 10)).toFixed(2) : 'N/A';
+            insights.push({
+                icon: 'FeedBagIcon',
+                title: 'Feed Consumption',
+                text: `Total feed consumed: ${totalFeed.toLocaleString()} kg. ${activeSector === 'Layer' && totalProduction > 0 ? `Feed Conversion Ratio: ${fcr} kg/dozen eggs.` : ''}`
+            });
+        } else {
+            insights.push({
+                icon: 'FeedBagIcon',
+                title: 'Feed Tracking',
+                text: 'Log your daily feed consumption to track efficiency.'
+            });
+        }
+
+        // Mortality insight
+        if (totalMortality > 0) {
+            insights.push({
+                icon: 'WarningIcon',
+                title: 'Mortality Report',
+                text: `Total mortality recorded: ${totalMortality} birds. Monitor this closely and check for patterns in your logs.`
+            });
+        } else if (sortedLogs.length > 0) {
+            insights.push({
+                icon: 'WarningIcon',
+                title: 'Health Status',
+                text: 'No mortality recorded in your logs. Keep up the good work!'
+            });
+        }
+
+        // 7. Income vs Expense real data (grouped by week)
+        const weeklyIncome: number[] = [];
+        const weeklyExpenses: number[] = [];
+        const weekLabels: string[] = [];
+
+        // Group sales by week
+        const sectorSales = sales.filter(s => s.sector === activeSector);
+        const now = new Date();
+        for (let i = 3; i >= 0; i--) {
+            const weekStart = new Date(now.getTime() - (i + 1) * 7 * 24 * 60 * 60 * 1000);
+            const weekEnd = new Date(now.getTime() - i * 7 * 24 * 60 * 60 * 1000);
+
+            const weekIncome = sectorSales
+                .filter(s => {
+                    const saleDate = new Date(s.date);
+                    return saleDate >= weekStart && saleDate < weekEnd;
+                })
+                .reduce((sum, s) => sum + s.amount, 0);
+
+            weeklyIncome.push(weekIncome);
+            weekLabels.push(`Wk ${4 - i}`);
+        }
+
+        // Distribute total expenses across weeks (simplified)
+        const weeklyExpenseAmount = totalExpenses / 4;
+        for (let i = 0; i < 4; i++) {
+            weeklyExpenses.push(weeklyExpenseAmount);
+        }
+
         return {
-            ...mock,
+            financials: realFinancials,
+            incomeVsExpense: {
+                labels: weekLabels,
+                income: weeklyIncome,
+                expenses: weeklyExpenses
+            },
             expenseBreakdown: {
-                labels: expLabels.length > 0 ? expLabels : mock.expenseBreakdown.labels,
-                data: expData.length > 0 ? expData : mock.expenseBreakdown.data
+                labels: expLabels.length > 0 ? expLabels : ['No data'],
+                data: expData.length > 0 ? expData : [1]
             },
             kpi1: {
-                ...mock.kpi1,
-                title: 'Production (Eggs)',
-                labels: kpiLabels.length > 0 ? kpiLabels : mock.kpi1.labels,
-                data: kpiLabels.length > 0 ? productionData : mock.kpi1.data
+                title: activeSector === 'Layer' ? 'Egg Production' : activeSector === 'Broiler' ? 'Weight Gain' : 'Fish Growth',
+                labels: kpiLabels.length > 0 ? kpiLabels : ['No data'],
+                data: productionData.length > 0 ? productionData : [0]
             },
             kpi2: {
-                ...mock.kpi2,
                 title: 'Mortality',
-                labels: kpiLabels.length > 0 ? kpiLabels : mock.kpi2.labels,
-                data: kpiLabels.length > 0 ? mortalityData : mock.kpi2.data
-            }
+                labels: kpiLabels.length > 0 ? kpiLabels : ['No data'],
+                data: mortalityData.length > 0 ? mortalityData : [0]
+            },
+            insights
         };
-    }, [activeSector, logs, inventoryItems]);
+    }, [activeSector, sectorLogs, inventoryItems, sales, realFinancials]);
 
     const data = realChartData;
 

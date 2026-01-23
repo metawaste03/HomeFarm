@@ -19,6 +19,14 @@ const colorClasses = {
     yellow: 'bg-yellow-500',
 };
 
+const borderColorClasses = {
+    blue: 'border-blue-200 dark:border-blue-800',
+    green: 'border-lime-200 dark:border-lime-800',
+    purple: 'border-purple-200 dark:border-purple-800',
+    orange: 'border-orange-200 dark:border-orange-800',
+    yellow: 'border-yellow-200 dark:border-yellow-800',
+};
+
 const KpiCard: React.FC<KpiCardProps> = ({
     icon,
     label,
@@ -41,10 +49,10 @@ const KpiCard: React.FC<KpiCardProps> = ({
 
     return (
         <div
-            className={`bg-card rounded-2xl shadow-sm border border-border overflow-hidden card-hover animate-slide-up opacity-0 stagger-${staggerIndex + 1} ${className} [animation-fill-mode:forwards]`}
+            className={`bg-card rounded-2xl shadow-md border-2 ${borderColorClasses[accentColor]} overflow-hidden card-hover animate-slide-up opacity-0 stagger-${staggerIndex + 1} ${className} [animation-fill-mode:forwards] hover:shadow-lg transition-shadow duration-200`}
         >
             {/* Accent bar */}
-            <div className={`h-1 ${colorClasses[accentColor]}`} />
+            <div className={`h-1.5 ${colorClasses[accentColor]}`} />
 
             <div className="p-5">
                 <div className="flex items-center gap-3 mb-3">

@@ -1,8 +1,15 @@
-// TodaysActionCard - Dashboard card showing top priority action
+// TodaysActionCard - Dashboard card with red gradient showing top priority action
 import React from 'react';
 import { useActions } from '../contexts/ActionsContext';
 import { WarningIcon, InfoIcon, ChevronRightIcon, CloseIcon } from './icons';
 import type { ActionSeverity } from '../types/database';
+
+// Lightning bolt icon for the card
+const LightningIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+);
 
 interface TodaysActionCardProps {
     onViewAll?: () => void;
@@ -30,88 +37,104 @@ const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: stri
 };
 
 export default function TodaysActionCard({ onViewAll }: TodaysActionCardProps) {
-    const { getTodaysTopAction, loading } = useActions();
+    const { getTodaysTopAction, actions, loading } = useActions();
+
+    // Count urgent alerts (critical + warning)
+    const urgentCount = actions.filter(a =>
+        a.rule.severity === 'critical' || a.rule.severity === 'warning'
+    ).length;
 
     if (loading) {
         return (
-            <div className="bg-card rounded-lg p-4 border border-border animate-pulse">
-                <div className="h-6 bg-surface rounded w-1/3 mb-3"></div>
-                <div className="h-4 bg-surface rounded w-2/3 mb-2"></div>
-                <div className="h-4 bg-surface rounded w-1/2"></div>
+            <div className="bg-gradient-to-r from-red-900 to-red-700 rounded-2xl p-5 animate-pulse shadow-lg">
+                <div className="h-6 bg-white/20 rounded w-1/3 mb-3"></div>
+                <div className="h-4 bg-white/20 rounded w-2/3 mb-2"></div>
+                <div className="h-4 bg-white/20 rounded w-1/2"></div>
             </div>
         );
     }
 
     const topAction = getTodaysTopAction();
 
+    // No actions state - still show the card with neutral message
     if (!topAction) {
         return (
-            <div className="bg-card rounded-lg p-5 border border-border">
-                <h3 className="font-bold text-lg mb-2 text-text">Today's Actions</h3>
-                <div className="flex items-center gap-2 text-text-secondary">
-                    <InfoIcon className="w-5 h-5" />
-                    <p className="text-sm">All caught up! No actions needed right now.</p>
+            <button
+                onClick={onViewAll}
+                className="w-full bg-gradient-to-r from-red-900 to-red-700 rounded-2xl p-5 
+                    hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 
+                    shadow-lg hover:shadow-xl group backdrop-blur-sm border border-white/10"
+            >
+                <div className="flex items-start gap-4">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/20 shrink-0">
+                        <LightningIcon className="w-7 h-7 text-yellow-400" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 text-left min-w-0">
+                        <h3 className="font-bold text-white text-sm uppercase tracking-wide mb-1">
+                            TODAY'S ACTION
+                        </h3>
+                        <p className="text-white/80 text-sm leading-relaxed">
+                            All caught up! No urgent actions needed right now. Check back later for updates.
+                        </p>
+                    </div>
+
+                    {/* Chevron */}
+                    <ChevronRightIcon className="w-6 h-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 mt-1" />
                 </div>
-            </div>
+
+                {/* Status footer */}
+                <div className="mt-4 pt-3 border-t border-white/20">
+                    <div className="flex items-center justify-between">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-green-500 text-white text-xs font-bold uppercase">
+                            ✓ All Clear
+                        </span>
+                        <ChevronRightIcon className="w-4 h-4 text-white/70" />
+                    </div>
+                </div>
+            </button>
         );
     }
 
-    const config = severityConfig[topAction.rule.severity];
-    const Icon = config.icon;
-
     return (
-        <div className={`rounded-lg p-5 border-2 ${config.bg}`}>
-            <div className="flex items-start justify-between mb-3">
-                <h3 className="font-bold text-lg text-text">Today's Action</h3>
-                {onViewAll && (
-                    <button
-                        onClick={onViewAll}
-                        className="text-sm text-primary hover:text-primary-dark font-medium flex items-center gap-1"
-                    >
-                        View All
-                        <ChevronRightIcon className="w-4 h-4" />
-                    </button>
-                )}
-            </div>
-
-            <div className="flex gap-3">
-                <div className={`flex-shrink-0 ${config.color}`}>
-                    <Icon className="w-6 h-6" />
+        <button
+            onClick={onViewAll}
+            className="w-full bg-gradient-to-r from-red-900 to-red-700 rounded-2xl p-5 
+                hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 
+                shadow-lg hover:shadow-xl group backdrop-blur-sm border border-white/10
+                text-left"
+        >
+            <div className="flex items-start gap-4">
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white/20 shrink-0">
+                    <LightningIcon className="w-7 h-7 text-yellow-400" />
                 </div>
+
+                {/* Content */}
                 <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-base text-text mb-1">
-                        {topAction.rule.title}
-                    </h4>
-                    <p className="text-sm text-text-secondary mb-2">{topAction.rule.description}</p>
+                    <h3 className="font-bold text-white text-sm uppercase tracking-wide mb-1">
+                        TODAY'S ACTION
+                    </h3>
+                    <p className="text-white/80 text-sm leading-relaxed">
+                        Immediate insights based on your latest logs. See real-time alerts for water pH levels or poultry temperature fluctuations.
+                    </p>
+                </div>
 
-                    {topAction.metadata && Object.keys(topAction.metadata).length > 0 && (
-                        <div className="text-xs mb-3 bg-surface dark:bg-black/20 rounded px-2 py-1 text-text">
-                            {Object.entries(topAction.metadata).map(([key, value]) => (
-                                <span key={key} className="mr-3">
-                                    <span className="font-medium">{key}:</span> {String(value)}
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                {/* Chevron */}
+                <ChevronRightIcon className="w-6 h-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all shrink-0 mt-1" />
+            </div>
 
-                    <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${config.textColor} bg-surface dark:bg-black/30`}>
-                            {topAction.rule.severity.toUpperCase()}
-                        </span>
-                        {topAction.rule.sector && (
-                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-surface dark:bg-black/20 text-text">
-                                {topAction.rule.sector}
-                            </span>
-                        )}
-                    </div>
+            {/* Status footer */}
+            <div className="mt-4 pt-3 border-t border-white/20">
+                <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-red-500 text-white text-xs font-bold uppercase tracking-wide">
+                        {urgentCount} URGENT ALERT{urgentCount !== 1 ? 'S' : ''}
+                    </span>
+                    <ChevronRightIcon className="w-4 h-4 text-white/70" />
                 </div>
             </div>
-
-            <div className="mt-4 pt-3 border-t border-border/30">
-                <p className="text-sm font-medium text-text">
-                    ✅ {topAction.rule.action_text}
-                </p>
-            </div>
-        </div>
+        </button>
     );
 }
