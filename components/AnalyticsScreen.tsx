@@ -593,43 +593,46 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                         {viewMode === 'health' && (
                             <div className="space-y-4 animate-fade-in pt-2">
                                 <h3 className="text-lg font-bold text-text-primary px-1">Health & Treatment History</h3>
-                                {MOCK_HEALTH_LOGS.map(log => (
-                                    <div key={log.id} className="bg-card rounded-xl shadow-sm overflow-hidden border-l-4 border-danger">
-                                        <div className="p-4">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <p className="font-bold text-text-primary">{new Date(log.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-                                                    <p className="text-xs text-text-secondary">{log.time}</p>
-                                                </div>
-                                                {log.photo && (
-                                                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
-                                                        <img src={log.photo} alt="Evidence" className="w-full h-full object-cover" />
+                                {sectorLogs.length > 0 ? (
+                                    sectorLogs
+                                        .filter(log => {
+                                            const acts = log.activities as any;
+                                            return acts?.health || acts?.medication || acts?.symptoms;
+                                        })
+                                        .slice(0, 5)
+                                        .map(log => {
+                                            const acts = log.activities as any;
+                                            return (
+                                                <div key={log.id} className="bg-card rounded-xl shadow-sm overflow-hidden border-l-4 border-primary">
+                                                    <div className="p-4">
+                                                        <div className="flex justify-between items-start mb-3">
+                                                            <div>
+                                                                <p className="font-bold text-text-primary">
+                                                                    {new Date(log.log_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                                                                </p>
+                                                                <p className="text-xs text-text-secondary">From daily log</p>
+                                                            </div>
+                                                        </div>
+                                                        {acts?.health && (
+                                                            <p className="text-sm text-text-secondary mb-2">
+                                                                <span className="font-medium">Health Notes:</span> {acts.health}
+                                                            </p>
+                                                        )}
+                                                        {acts?.notes && (
+                                                            <p className="text-sm text-text-secondary italic">"{acts.notes}"</p>
+                                                        )}
                                                     </div>
-                                                )}
-                                            </div>
-
-                                            <div className="flex flex-wrap gap-2 mb-3">
-                                                {log.symptoms.map(sym => (
-                                                    <span key={sym} className="px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-danger dark:bg-red-900/30">
-                                                        {sym}
-                                                    </span>
-                                                ))}
-                                            </div>
-
-                                            <div className="bg-muted/50 p-3 rounded-lg mb-3">
-                                                <div className="flex items-center gap-2 text-sm font-semibold text-text-primary mb-1">
-                                                    <PillIcon className="w-4 h-4 text-primary" />
-                                                    {log.medication}
                                                 </div>
-                                                <p className="text-xs text-text-secondary ml-6">{log.dosage}</p>
-                                            </div>
-
-                                            {log.notes && (
-                                                <p className="text-sm text-text-secondary italic">"{log.notes}"</p>
-                                            )}
-                                        </div>
+                                            );
+                                        })
+                                ) : (
+                                    <div className="bg-card rounded-xl p-6 text-center">
+                                        <p className="text-text-secondary">No health logs recorded yet.</p>
+                                        <p className="text-sm text-text-secondary mt-2">
+                                            Health observations from your daily logs will appear here.
+                                        </p>
                                     </div>
-                                ))}
+                                )}
                             </div>
                         )}
                     </>
