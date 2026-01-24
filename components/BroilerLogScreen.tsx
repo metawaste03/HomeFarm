@@ -226,7 +226,7 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
                         </div>
                     </div>
 
-                    <InputCard icon={<MortalityIcon className="w-8 h-8 text-danger" />} label="Mortality" value={mortality} onValueChange={setMortality} onIncrement={() => setMortality(c => c + 1)} onDecrement={() => setMortality(c => Math.max(0, c - 1))} />
+                    <InputCard icon={<MortalityIcon className="w-8 h-8 text-danger" />} label="Mortality" value={mortality} onValueChange={setMortality} onIncrement={() => setMortality(c => c + 1)} onDecrement={() => setMortality(c => Math.max(0, c - 1))} incrementColorClass="bg-danger" />
 
                     <div className="grid grid-cols-2 gap-3">
                         <button onClick={() => setWeightModalOpen(true)} className="bg-card p-4 rounded-xl shadow-sm flex flex-col items-center justify-center gap-2 hover:bg-muted transition-colors">

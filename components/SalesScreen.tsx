@@ -4,6 +4,8 @@ import type { Screen } from '../App';
 import { PencilIcon, TrashIcon, SalesIcon, PlusIcon, ChevronLeftIcon } from './icons';
 import type { Sector } from './BatchManagementScreen';
 import { useSales, Sale } from '../contexts/SalesContext';
+import { useBusiness } from '../contexts/BusinessContext';
+import { useFarm } from '../contexts/FarmContext';
 
 interface SalesScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -14,6 +16,8 @@ interface SalesScreenProps {
 
 const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setIsModalOpen, activeSector }) => {
     const { sales, addSale, updateSale, deleteSale } = useSales();
+    const { checkProductAvailability, recordUsage } = useBusiness();
+    const { farms } = useFarm();
     const [editingSale, setEditingSale] = useState<Sale | null>(null);
 
     const filteredSales = useMemo(() => {
@@ -30,7 +34,30 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
         setIsModalOpen(false);
     };
 
-    const handleSaveSale = (saleData: Omit<Sale, 'id'>) => {
+    const handleSaveSale = async (saleData: Omit<Sale, 'id'>) => {
+        // Validation check
+        const availability = checkProductAvailability(saleData.item, saleData.quantity);
+
+        // Special handling for Eggs/Products
+        if (activeSector === 'Layer' || saleData.item.toLowerCase().includes('egg')) {
+            if (!availability.itemId) {
+                alert(`Error: '${saleData.item}' not found in inventory. Have you recorded today's collection?`);
+                return;
+            }
+            if (!availability.available) {
+                alert(`Error: Insufficient stock for '${saleData.item}'. Only ${availability.currentQty} available in inventory.`);
+                return;
+            }
+
+            // Deduct from inventory
+            try {
+                await recordUsage(availability.itemId, saleData.quantity, `Sale - ${saleData.date}`);
+            } catch (err: any) {
+                alert(`Failed to update inventory: ${err.message}`);
+                return;
+            }
+        }
+
         if (editingSale) {
             updateSale({ ...saleData, id: editingSale.id });
         } else {
@@ -75,6 +102,7 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                             onSave={handleSaveSale}
                             onClose={handleCloseModal}
                             activeSector={activeSector}
+                            inventoryItems={useBusiness().inventoryItems}
                         />
                     )}
                 </div>
@@ -151,7 +179,7 @@ const SalesScreen: React.FC<SalesScreenProps> = ({ onNavigate, isModalOpen, setI
                 </div>
             </div>
 
-            {isModalOpen && <AddSaleForm sale={editingSale} onSave={handleSaveSale} onClose={handleCloseModal} activeSector={activeSector} />}
+            {isModalOpen && <AddSaleForm sale={editingSale} onSave={handleSaveSale} onClose={handleCloseModal} activeSector={activeSector} inventoryItems={useBusiness().inventoryItems} />}
         </div>
     );
 };
@@ -161,9 +189,10 @@ interface AddSaleFormProps {
     onSave: (sale: Omit<Sale, 'id'>) => void;
     onClose: () => void;
     activeSector: Sector;
+    inventoryItems: any[];
 }
 
-const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, activeSector }) => {
+const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, activeSector, inventoryItems }) => {
     const getDefaultUnit = () => {
         switch (activeSector) {
             case 'Layer': return 'Crates';
@@ -220,7 +249,21 @@ const AddSaleForm: React.FC<AddSaleFormProps> = ({ sale, onSave, onClose, active
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-text-secondary mb-1">Item Sold</label>
-                            <input type="text" name="item" value={formData.item} onChange={handleChange} placeholder={getPlaceholder()} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required />
+                            <input
+                                type="text"
+                                name="item"
+                                value={formData.item}
+                                onChange={handleChange}
+                                placeholder={getPlaceholder()}
+                                className="w-full p-3 border border-border rounded-lg bg-card text-text-primary"
+                                list="inventory-items"
+                                required
+                            />
+                            <datalist id="inventory-items">
+                                {inventoryItems.filter(i => i.category === 'Product').map(item => (
+                                    <option key={item.id} value={item.name} />
+                                ))}
+                            </datalist>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>

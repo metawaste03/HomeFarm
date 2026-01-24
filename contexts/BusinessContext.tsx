@@ -4,7 +4,7 @@ import { useAuth } from './AuthContext';
 import { useFarm } from './FarmContext';
 import type { Tables } from '../types/database';
 
-export type InventoryCategory = 'Feed' | 'Medication' | 'Equipment' | 'Other';
+export type InventoryCategory = 'Feed' | 'Medication' | 'Equipment' | 'Product' | 'Other';
 
 export interface Transaction {
     id: string;
@@ -59,9 +59,11 @@ interface BusinessContextType {
     updateInventoryItem: (itemId: string, updates: Partial<InventoryItem>) => Promise<void>;
     // New inventory usage functions
     recordUsage: (itemId: string, quantity: number, notes?: string) => Promise<void>;
+    recordProduction: (farmId: string, itemName: string, category: InventoryCategory, quantity: number, unit: string, notes?: string) => Promise<void>;
     getAvailableFeed: () => InventoryItem[];
     getAvailableMedication: () => InventoryItem[];
     checkAvailability: (itemId: string, requestedQty: number) => { available: boolean; currentQty: number; itemName: string };
+    checkProductAvailability: (itemName: string, quantity: number) => { available: boolean; currentQty: number; itemName: string; itemId?: string };
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
@@ -340,6 +342,71 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         }
     };
 
+    // Record production of items (add to stock)
+    const recordProduction = async (farmId: string, itemName: string, category: InventoryCategory, quantity: number, unit: string, notes?: string) => {
+        try {
+            // Find if item already exists
+            const existingItem = inventoryItems.find(i => i.name.toLowerCase() === itemName.toLowerCase());
+
+            if (existingItem) {
+                const newQuantity = existingItem.quantity + quantity;
+                await inventoryService.update(existingItem.id, { quantity: newQuantity });
+
+                const dbTransaction = await transactionsService.create({
+                    item_id: existingItem.id,
+                    transaction_date: new Date().toISOString().split('T')[0],
+                    type: 'purchase', // Using purchase type for addition to stock
+                    quantity: quantity,
+                    unit: existingItem.unit,
+                    cost: null,
+                    supplier: null,
+                    notes: notes || 'Daily log production',
+                });
+
+                const appTransaction = dbTransactionToAppTransaction(dbTransaction);
+
+                setInventoryItems(prev => prev.map(i => {
+                    if (i.id === existingItem.id) {
+                        return {
+                            ...i,
+                            quantity: newQuantity,
+                            transactions: [appTransaction, ...i.transactions],
+                        };
+                    }
+                    return i;
+                }));
+            } else {
+                // Create new item
+                const newItem = await inventoryService.create({
+                    farm_id: farmId,
+                    name: itemName,
+                    category: category,
+                    quantity: quantity,
+                    unit: unit,
+                    min_threshold: 0,
+                });
+
+                const dbTransaction = await transactionsService.create({
+                    item_id: newItem.id,
+                    transaction_date: new Date().toISOString().split('T')[0],
+                    type: 'purchase',
+                    quantity: quantity,
+                    unit: unit,
+                    cost: null,
+                    supplier: null,
+                    notes: notes || 'Daily log production',
+                });
+
+                const appTransaction = dbTransactionToAppTransaction(dbTransaction);
+                const appItem = dbItemToAppItem(newItem, [appTransaction]);
+                setInventoryItems(prev => [appItem, ...prev]);
+            }
+        } catch (err) {
+            console.error('Error recording production:', err);
+            throw err;
+        }
+    };
+
     // Get available feed items (quantity > 0)
     const getAvailableFeed = useCallback(() => {
         return inventoryItems.filter(item => item.category === 'Feed' && item.quantity > 0);
@@ -363,6 +430,20 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         };
     }, [inventoryItems]);
 
+    // Check if product is available by name
+    const checkProductAvailability = useCallback((itemName: string, quantity: number) => {
+        const item = inventoryItems.find(i => i.name.toLowerCase() === itemName.toLowerCase());
+        if (!item) {
+            return { available: false, currentQty: 0, itemName };
+        }
+        return {
+            available: item.quantity >= quantity,
+            currentQty: item.quantity,
+            itemName: item.name,
+            itemId: item.id
+        };
+    }, [inventoryItems]);
+
     return (
         <BusinessContext.Provider value={{
             inventoryItems,
@@ -376,9 +457,11 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
             addSupplier,
             refreshData,
             recordUsage,
+            recordProduction,
             getAvailableFeed,
             getAvailableMedication,
             checkAvailability,
+            checkProductAvailability,
         }}>
             {children}
         </BusinessContext.Provider>

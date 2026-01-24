@@ -10,10 +10,20 @@ interface InputCardProps {
     onIncrement: () => void;
     onDecrement: () => void;
     children?: ReactNode;
+    incrementColorClass?: string;
 }
 
-const InputCard: React.FC<InputCardProps> = ({ icon, label, value, onValueChange, onIncrement, onDecrement, children }) => {
-    
+const InputCard: React.FC<InputCardProps> = ({
+    icon,
+    label,
+    value,
+    onValueChange,
+    onIncrement,
+    onDecrement,
+    children,
+    incrementColorClass = 'bg-primary'
+}) => {
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const num = parseInt(e.target.value, 10);
         if (!isNaN(num)) {
@@ -46,7 +56,7 @@ const InputCard: React.FC<InputCardProps> = ({ icon, label, value, onValueChange
                 />
                 <button
                     onClick={onIncrement}
-                    className="bg-primary rounded-full p-3 text-white hover:bg-primary-600 active:bg-primary-700 transition-colors transform active:scale-90"
+                    className={`${incrementColorClass} rounded-full p-3 text-white hover:opacity-90 active:scale-90 transition-all transform`}
                     aria-label={`Increase ${label}`}
                 >
                     <PlusIcon className="w-8 h-8" />
@@ -75,7 +85,7 @@ export const SubInput: React.FC<SubInputProps> = ({ label, value, onValueChange 
             onValueChange(0);
         }
     };
-    
+
     return (
         <div className="flex items-center justify-between bg-muted p-2 rounded-lg">
             <span className="text-text-secondary font-medium w-1/3">{label}</span>
@@ -83,7 +93,7 @@ export const SubInput: React.FC<SubInputProps> = ({ label, value, onValueChange 
                 <button onClick={decrement} className="p-1 rounded-md text-text-secondary hover:bg-border">
                     <MinusIcon className="w-4 h-4" />
                 </button>
-                <input 
+                <input
                     type="number"
                     value={value.toString()}
                     onChange={handleInputChange}

@@ -29,7 +29,7 @@ interface DailyLogScreenProps {
 
 const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch, activeSector }) => {
     const { user } = useAuth();
-    const { getAvailableFeed, checkAvailability, recordUsage } = useBusiness();
+    const { getAvailableFeed, checkAvailability, recordUsage, recordProduction } = useBusiness();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -196,6 +196,23 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                 notes: notes || null,
                 created_by: user.id,
             });
+
+            // Record each egg category in inventory
+            if (grandTotalEggs > 0) {
+                for (const [category, data] of Object.entries(eggData)) {
+                    const counts = data as { crates: number; eggs: number; subTotal: number };
+                    if (counts.subTotal > 0) {
+                        await recordProduction(
+                            String(farm.id),
+                            `${category} Eggs`,
+                            'Product',
+                            counts.subTotal,
+                            'eggs',
+                            `Daily production - ${date}`
+                        );
+                    }
+                }
+            }
 
             setShowConfirmation(true);
 
@@ -421,6 +438,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                         onValueChange={setMortality}
                         onIncrement={() => setMortality(c => c + 1)}
                         onDecrement={() => setMortality(c => Math.max(0, c - 1))}
+                        incrementColorClass="bg-danger"
                     >
                         {/* Health Log Trigger within Mortality Card context for Layers */}
                         <div className="mt-4 border-t border-border pt-3">

@@ -14,7 +14,7 @@ export type BatchStatus = 'Active' | 'Completed';
 export type TaskStatus = 'pending' | 'completed';
 export type RecurringType = 'No' | 'Daily' | 'Weekly' | 'Monthly';
 export type TransactionType = 'purchase' | 'usage';
-export type InventoryCategory = 'Feed' | 'Medication' | 'Equipment' | 'Other';
+export type InventoryCategory = 'Feed' | 'Medication' | 'Equipment' | 'Product' | 'Other';
 export type FarmRole = 'owner' | 'manager' | 'worker';
 
 // Action Rules types
