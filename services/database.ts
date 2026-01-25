@@ -419,15 +419,39 @@ export const dailyLogsService = {
 // ============================================
 
 export const healthSchedulesService = {
-    async list(batchId: string) {
+    // Get all universal templates (available to all users)
+    async listUniversal(sector?: string) {
+        let query = supabase
+            .from('health_schedules')
+            .select('*')
+            .eq('is_universal', true)
+            .order('day_number', { ascending: true });
+
+        if (sector) {
+            query = query.eq('sector', sector);
+        }
+
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data || []) as Tables<'health_schedules'>[];
+    },
+
+    // Get schedules for a specific batch
+    async listForBatch(batchId: string) {
         const { data, error } = await supabase
             .from('health_schedules')
             .select('*')
             .eq('batch_id', batchId)
+            .eq('is_universal', false)
             .order('scheduled_date', { ascending: true });
 
         if (error) throw error;
         return (data || []) as Tables<'health_schedules'>[];
+    },
+
+    // Legacy list method for backwards compatibility
+    async list(batchId: string) {
+        return this.listForBatch(batchId);
     },
 
     async create(schedule: Insertable<'health_schedules'>) {
@@ -464,6 +488,59 @@ export const healthSchedulesService = {
 
     async toggleComplete(id: string, completed: boolean) {
         return this.update(id, { completed: !completed });
+    },
+
+    // Copy universal template to a specific batch
+    async copyTemplateToBatch(templateSector: string, batchId: string, startDate: string) {
+        // Fetch universal templates for the sector
+        const templates = await this.listUniversal(templateSector);
+
+        // Convert start date to Date object
+        const batchStartDate = new Date(startDate);
+
+        // Create batch-specific schedules from templates
+        const scheduleInserts = templates.map(template => ({
+            batch_id: batchId,
+            vaccine_name: template.vaccine_name,
+            scheduled_date: new Date(
+                batchStartDate.getTime() + (template.day_number! - 1) * 24 * 60 * 60 * 1000
+            ).toISOString().split('T')[0],
+            completed: false,
+            notes: template.notes,
+            is_universal: false,
+            sector: template.sector,
+            day_number: template.day_number,
+            is_compulsory: template.is_compulsory,
+            dosage: template.dosage,
+            administration_method: template.administration_method,
+        }));
+
+        // Insert all schedules
+        const { data, error } = await supabase
+            .from('health_schedules')
+            .insert(scheduleInserts as any)
+            .select();
+
+        if (error) throw error;
+        return (data || []) as Tables<'health_schedules'>[];
+    },
+
+    // Calculate batch age in days
+    async getBatchAge(batchId: string): Promise<number | null> {
+        const { data: batch, error } = await supabase
+            .from('batches')
+            .select('start_date')
+            .eq('id', batchId)
+            .single();
+
+        if (error || !batch || !batch.start_date) return null;
+
+        const startDate = new Date(batch.start_date);
+        const today = new Date();
+        const diffTime = today.getTime() - startDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        return diffDays + 1; // +1 because day 1 starts on start_date
     },
 };
 

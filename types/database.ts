@@ -389,30 +389,49 @@ export interface Database {
             health_schedules: {
                 Row: {
                     id: string;
-                    batch_id: string;
+                    batch_id: string | null;
                     vaccine_name: string;
-                    scheduled_date: string;
+                    scheduled_date: string | null;
                     completed: boolean;
                     notes: string | null;
                     created_at: string;
+                    // New columns for universal templates
+                    is_universal: boolean;
+                    sector: Sector | null;
+                    day_number: number | null;
+                    is_compulsory: boolean;
+                    dosage: string | null;
+                    administration_method: string | null;
                 };
                 Insert: {
                     id?: string;
-                    batch_id: string;
+                    batch_id?: string | null;
                     vaccine_name: string;
-                    scheduled_date: string;
+                    scheduled_date?: string | null;
                     completed?: boolean;
                     notes?: string | null;
                     created_at?: string;
+                    is_universal?: boolean;
+                    sector?: Sector | null;
+                    day_number?: number | null;
+                    is_compulsory?: boolean;
+                    dosage?: string | null;
+                    administration_method?: string | null;
                 };
                 Update: {
                     id?: string;
-                    batch_id?: string;
+                    batch_id?: string | null;
                     vaccine_name?: string;
-                    scheduled_date?: string;
+                    scheduled_date?: string | null;
                     completed?: boolean;
                     notes?: string | null;
                     created_at?: string;
+                    is_universal?: boolean;
+                    sector?: Sector | null;
+                    day_number?: number | null;
+                    is_compulsory?: boolean;
+                    dosage?: string | null;
+                    administration_method?: string | null;
                 };
             };
             tips: {

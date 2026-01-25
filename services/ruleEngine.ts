@@ -185,26 +185,45 @@ const conditionEvaluators: Record<ConditionType, (
     },
 
     health_schedule_due: (rule, context) => {
-        const params = rule.condition_params as { days_ahead: number };
-        const daysAhead = params.days_ahead || 3;
+        const params = rule.condition_params as { days_tolerance?: number };
+        const daysTolerance = params.days_tolerance || 0;
         const results: RuleEvaluationResult[] = [];
 
-        const now = new Date();
-        const futureDate = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset to start of day for accurate comparison
 
         context.healthSchedules.forEach(schedule => {
+            // Skip completed vaccinations
             if (schedule.completed) return;
 
+            // Skip universal templates (they don't have batch_id or scheduled_date)
+            if (schedule.is_universal || !schedule.scheduled_date || !schedule.batch_id) return;
+
             const scheduleDate = new Date(schedule.scheduled_date);
-            if (scheduleDate <= futureDate && scheduleDate >= now) {
+            scheduleDate.setHours(0, 0, 0, 0);
+
+            // Calculate days difference
+            const daysDiff = Math.floor((scheduleDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Trigger if vaccination is due today, overdue, or within tolerance
+            if (daysDiff <= daysTolerance) {
                 const batch = context.batches.find(b => b.id === schedule.batch_id);
+                const isOverdue = daysDiff < 0;
+
                 results.push({
                     shouldTrigger: true,
                     batchId: schedule.batch_id,
                     metadata: {
                         vaccine: schedule.vaccine_name,
                         scheduledDate: schedule.scheduled_date,
-                        batchName: batch?.name || 'Unknown'
+                        batchName: batch?.name || 'Unknown',
+                        sector: batch?.sector, // Add sector for filtering
+                        dayNumber: schedule.day_number,
+                        dosage: schedule.dosage,
+                        method: schedule.administration_method,
+                        isCompulsory: schedule.is_compulsory,
+                        isOverdue: isOverdue,
+                        daysOverdue: isOverdue ? Math.abs(daysDiff) : 0
                     }
                 });
             }

@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import type { Screen } from '../App';
 import { ChevronDownIcon, ChickenIcon, CalendarIcon, FishIcon, EllipsisIcon, PencilIcon, TrashIcon, PlusIcon, StethoscopeIcon, ChevronLeftIcon } from './icons';
 import type { Farm } from './FarmManagementScreen';
+import BatchHealthSchedule from './BatchHealthSchedule';
 
 export type Sector = 'Layer' | 'Broiler' | 'Fish';
 type Role = 'Owner' | 'Manager' | 'Worker';
@@ -225,6 +226,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
     // Collapsible section states - keep form shorter
     const [showDetails, setShowDetails] = useState(true);
     const [showCostAge, setShowCostAge] = useState(false);
+    const [showHealthSchedule, setShowHealthSchedule] = useState(isEditing); // Show by default when editing
 
     useEffect(() => {
         if (!isEditing) {
@@ -356,29 +358,29 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                             </div>
                         )}
 
-                        <div>
-                            <label className="block text-sm font-semibold text-text-secondary mb-2">5. Health Schedule (Optional)</label>
-                            <div className="relative">
-                                <select
-                                    value={scheduleId}
-                                    onChange={(e) => setScheduleId(e.target.value)}
-                                    className="w-full p-3 border border-border rounded-lg bg-card text-text-primary appearance-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow"
-                                    aria-label="Health Schedule"
-                                >
-                                    <option value="">No Schedule (None)</option>
-                                    {availableSchedules.map(schedule => (
-                                        <option key={schedule.id} value={schedule.id}>{schedule.name}</option>
-                                    ))}
-                                </select>
-                                <ChevronDownIcon className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary" />
-                            </div>
-                            {scheduleId && (
-                                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-text-secondary animate-fade-in">
-                                    <span className="font-bold text-primary block mb-1">Schedule Details:</span>
-                                    {availableSchedules.find(s => s.id === scheduleId)?.description}
+                        {/* Health Schedule Display - Only when editing a batch */}
+                        {isEditing && batchToEdit && (
+                            <div>
+                                <div className="flex justify-between items-center">
+                                    <label className="block text-sm font-semibold text-text-secondary">Health Schedule</label>
+                                    <label htmlFor="health-schedule-toggle" className="flex items-center cursor-pointer">
+                                        <div className="relative">
+                                            <input type="checkbox" id="health-schedule-toggle" className="sr-only" checked={showHealthSchedule} onChange={() => setShowHealthSchedule(!showHealthSchedule)} aria-label="Toggle Health Schedule" />
+                                            <div className="block bg-muted w-12 h-7 rounded-full"></div>
+                                            <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showHealthSchedule ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
+                                        </div>
+                                    </label>
                                 </div>
-                            )}
-                        </div>
+                                {showHealthSchedule && (
+                                    <div className="mt-3 p-4 bg-muted rounded-lg animate-fade-in">
+                                        <BatchHealthSchedule
+                                            batchId={String(batchToEdit.id)}
+                                            batchStartDate={batchToEdit.startDate || null}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </form>
 
