@@ -118,8 +118,8 @@ const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigat
                     START NEW BATCH
                 </button>
 
-                <BatchList title="Active Batches" batches={activeBatches} currentUserRole={currentUserRole} onEdit={setEditingBatch} onDelete={setDeletingBatch} onNavigate={onNavigate} />
-                <BatchList title="Completed Batches" batches={completedBatches} currentUserRole={currentUserRole} onEdit={setEditingBatch} onDelete={setDeletingBatch} onNavigate={onNavigate} />
+                <BatchList title="Active Batches" batches={activeBatches} currentUserRole={currentUserRole} onEdit={setEditingBatch} onDelete={setDeletingBatch} />
+                <BatchList title="Completed Batches" batches={completedBatches} currentUserRole={currentUserRole} onEdit={setEditingBatch} onDelete={setDeletingBatch} />
             </div>
 
             {(isModalOpen || editingBatch) && <BatchForm onSave={handleSave} onClose={closeForms} batchToEdit={editingBatch} selectedFarm={selectedFarm} activeSector={activeSector} />}
@@ -128,7 +128,7 @@ const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigat
     );
 };
 
-const BatchList: React.FC<{ title: string; batches: Batch[]; currentUserRole: Role; onEdit: (b: Batch) => void; onDelete: (b: Batch) => void; onNavigate: (screen: Screen, params?: Record<string, any>) => void; }> = ({ title, batches, currentUserRole, onEdit, onDelete, onNavigate }) => {
+const BatchList: React.FC<{ title: string; batches: Batch[]; currentUserRole: Role; onEdit: (b: Batch) => void; onDelete: (b: Batch) => void; }> = ({ title, batches, currentUserRole, onEdit, onDelete }) => {
     if (batches.length === 0) {
         return null;
     }
@@ -137,14 +137,14 @@ const BatchList: React.FC<{ title: string; batches: Batch[]; currentUserRole: Ro
             <h2 className="text-lg font-bold text-text-primary mb-2">{title}</h2>
             <div className="space-y-3">
                 {batches.map(batch => (
-                    <BatchCard key={batch.id} batch={batch} currentUserRole={currentUserRole} onEdit={onEdit} onDelete={onDelete} onNavigate={onNavigate} />
+                    <BatchCard key={batch.id} batch={batch} currentUserRole={currentUserRole} onEdit={onEdit} onDelete={onDelete} />
                 ))}
             </div>
         </div>
     );
 };
 
-const BatchCard: React.FC<{ batch: Batch; currentUserRole: Role; onEdit: (b: Batch) => void; onDelete: (b: Batch) => void; onNavigate: (screen: Screen, params?: Record<string, any>) => void; }> = ({ batch, currentUserRole, onEdit, onDelete, onNavigate }) => {
+const BatchCard: React.FC<{ batch: Batch; currentUserRole: Role; onEdit: (b: Batch) => void; onDelete: (b: Batch) => void; }> = ({ batch, currentUserRole, onEdit, onDelete }) => {
     const isCompleted = batch.status === 'Completed';
     const [isMenuOpen, setMenuOpen] = useState(false);
 
@@ -168,10 +168,7 @@ const BatchCard: React.FC<{ batch: Batch; currentUserRole: Role; onEdit: (b: Bat
                             {isMenuOpen && (
                                 <>
                                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)}></div>
-                                    <div className="absolute right-0 mt-2 w-48 bg-popover rounded-md shadow-lg z-20 border border-border" onMouseLeave={() => setMenuOpen(false)}>
-                                        <button onClick={() => { onNavigate('batch_health_schedule', { batchId: String(batch.id) }); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-muted flex items-center gap-2">
-                                            <StethoscopeIcon className="w-4 h-4" /> View Health Schedule
-                                        </button>
+                                    <div className="absolute right-0 mt-2 w-40 bg-popover rounded-md shadow-lg z-20 border border-border" onMouseLeave={() => setMenuOpen(false)}>
                                         <button onClick={() => { onEdit(batch); setMenuOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-muted flex items-center gap-2">
                                             <PencilIcon className="w-4 h-4" /> Edit Batch
                                         </button>
@@ -195,14 +192,6 @@ const BatchCard: React.FC<{ batch: Batch; currentUserRole: Role; onEdit: (b: Bat
                     <span>{batch.age} old</span>
                 </div>
             </div>
-            {/* Quick Health Schedule Button */}
-            <button
-                onClick={() => onNavigate('batch_health_schedule', { batchId: String(batch.id) })}
-                className="mt-3 w-full text-sm text-primary bg-primary/10 px-3 py-2 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/20 transition-colors"
-            >
-                <StethoscopeIcon className="w-4 h-4" />
-                <span>View Health Schedule</span>
-            </button>
         </div>
     );
 };
