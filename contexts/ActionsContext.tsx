@@ -188,10 +188,13 @@ export function ActionsProvider({ children }: { children: React.ReactNode }) {
                 return true;
             }
 
-            // For rules with no sector, check if the batch belongs to this sector
-            const metadataSector = (a.metadata as any)?.sector;
-            if (a.rule.sector === null && metadataSector === sector) {
-                return true;
+            // For rules with no sector (like health_schedule_due), 
+            // check if the batch/metadata belongs to this sector
+            if (a.rule.sector === null) {
+                const metadataSector = (a.metadata as any)?.sector;
+                if (metadataSector === sector) {
+                    return true;
+                }
             }
 
             return false;

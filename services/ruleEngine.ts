@@ -209,6 +209,8 @@ const conditionEvaluators: Record<ConditionType, (
             if (daysDiff <= daysTolerance) {
                 const batch = context.batches.find(b => b.id === schedule.batch_id);
                 const isOverdue = daysDiff < 0;
+                // Use schedule.sector if available, otherwise fallback to batch.sector
+                const taskSector = schedule.sector || batch?.sector;
 
                 results.push({
                     shouldTrigger: true,
@@ -217,7 +219,7 @@ const conditionEvaluators: Record<ConditionType, (
                         vaccine: schedule.vaccine_name,
                         scheduledDate: schedule.scheduled_date,
                         batchName: batch?.name || 'Unknown',
-                        sector: batch?.sector, // Add sector for filtering
+                        sector: taskSector, // Use schedule sector or batch sector
                         dayNumber: schedule.day_number,
                         dosage: schedule.dosage,
                         method: schedule.administration_method,
