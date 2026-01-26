@@ -35,7 +35,7 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
 
             // Load batches if farm is selected
             if (activeFarm) {
-                const farmBatches = await batchesService.list(activeFarm.id);
+                const farmBatches = await batchesService.list(String(activeFarm.id));
                 setBatches(farmBatches.filter(b => b.status === 'Active'));
             }
         } catch (error) {
