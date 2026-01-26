@@ -490,6 +490,120 @@ export const healthSchedulesService = {
         return this.update(id, { completed: !completed });
     },
 
+    // Mark a task as complete with completion date
+    async markComplete(id: string, completedDate?: string) {
+        const date = completedDate || new Date().toISOString().split('T')[0];
+        return this.update(id, {
+            completed: true,
+            completed_date: date
+        });
+    },
+
+    // Mark a task as incomplete
+    async markIncomplete(id: string) {
+        return this.update(id, {
+            completed: false,
+            completed_date: null
+        });
+    },
+
+    // Add a custom health task to a batch
+    async addCustomTask(batchId: string, taskData: {
+        vaccine_name: string;
+        day_number?: number;
+        scheduled_date?: string;
+        dosage?: string;
+        administration_method?: string;
+        notes?: string;
+        is_compulsory?: boolean;
+        sector?: string;
+    }) {
+        const schedule: any = {
+            batch_id: batchId,
+            vaccine_name: taskData.vaccine_name,
+            scheduled_date: taskData.scheduled_date || null,
+            day_number: taskData.day_number || null,
+            dosage: taskData.dosage || null,
+            administration_method: taskData.administration_method || null,
+            notes: taskData.notes || null,
+            is_compulsory: taskData.is_compulsory || false,
+            sector: taskData.sector || null,
+            completed: false,
+            is_universal: false,
+            is_user_template: false,
+        };
+
+        return this.create(schedule);
+    },
+
+    // List user's custom templates
+    async listUserTemplates(userId: string) {
+        const { data, error } = await supabase
+            .from('health_schedules')
+            .select('*')
+            .eq('is_user_template', true)
+            .eq('created_by', userId)
+            .order('template_name', { ascending: true });
+
+        if (error) throw error;
+        return (data || []) as Tables<'health_schedules'>[];
+    },
+
+    // Get tasks for a specific user template
+    async getTemplateItems(templateName: string, userId: string) {
+        const { data, error } = await supabase
+            .from('health_schedules')
+            .select('*')
+            .eq('is_user_template', true)
+            .eq('template_name', templateName)
+            .eq('created_by', userId)
+            .order('day_number', { ascending: true });
+
+        if (error) throw error;
+        return (data || []) as Tables<'health_schedules'>[];
+    },
+
+    // Create a user template task
+    async createTemplateTask(userId: string, templateName: string, taskData: {
+        vaccine_name: string;
+        day_number: number;
+        dosage?: string;
+        administration_method?: string;
+        notes?: string;
+        is_compulsory?: boolean;
+        sector: string;
+    }) {
+        const schedule: any = {
+            vaccine_name: taskData.vaccine_name,
+            day_number: taskData.day_number,
+            dosage: taskData.dosage || null,
+            administration_method: taskData.administration_method || null,
+            notes: taskData.notes || null,
+            is_compulsory: taskData.is_compulsory || false,
+            sector: taskData.sector,
+            is_universal: false,
+            is_user_template: true,
+            template_name: templateName,
+            created_by: userId,
+            batch_id: null,
+            completed: false,
+        };
+
+        return this.create(schedule);
+    },
+
+    // Delete all tasks in a user template
+    async deleteTemplate(templateName: string, userId: string) {
+        const { error } = await supabase
+            .from('health_schedules')
+            .delete()
+            .eq('is_user_template', true)
+            .eq('template_name', templateName)
+            .eq('created_by', userId);
+
+        if (error) throw error;
+    },
+
     // Copy universal template to a specific batch
     async copyTemplateToBatch(templateSector: string, batchId: string, startDate: string) {
         // Fetch universal templates for the sector
@@ -508,6 +622,46 @@ export const healthSchedulesService = {
             completed: false,
             notes: template.notes,
             is_universal: false,
+            sector: template.sector,
+            day_number: template.day_number,
+            is_compulsory: template.is_compulsory,
+            dosage: template.dosage,
+            administration_method: template.administration_method,
+        }));
+
+        // Insert all schedules
+        const { data, error } = await supabase
+            .from('health_schedules')
+            .insert(scheduleInserts as any)
+            .select();
+
+        if (error) throw error;
+        return (data || []) as Tables<'health_schedules'>[];
+    },
+
+    // Copy user template to a specific batch
+    async copyUserTemplateToBatch(templateName: string, userId: string, batchId: string, startDate: string) {
+        // Fetch user template tasks
+        const templates = await this.getTemplateItems(templateName, userId);
+
+        if (templates.length === 0) {
+            throw new Error('Template not found or has no tasks');
+        }
+
+        // Convert start date to Date object
+        const batchStartDate = new Date(startDate);
+
+        // Create batch-specific schedules from templates
+        const scheduleInserts = templates.map(template => ({
+            batch_id: batchId,
+            vaccine_name: template.vaccine_name,
+            scheduled_date: new Date(
+                batchStartDate.getTime() + (template.day_number! - 1) * 24 * 60 * 60 * 1000
+            ).toISOString().split('T')[0],
+            completed: false,
+            notes: template.notes,
+            is_universal: false,
+            is_user_template: false,
             sector: template.sector,
             day_number: template.day_number,
             is_compulsory: template.is_compulsory,

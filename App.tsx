@@ -15,6 +15,7 @@ import LoginScreen from './components/LoginScreen';
 import BusinessScreen from './components/BusinessScreen';
 import InventoryScreen from './components/InventoryScreen';
 import HealthScheduleScreen from './components/HealthScheduleScreen';
+import BatchHealthScheduleScreen from './components/BatchHealthScheduleScreen';
 import TaskManagementScreen from './components/TaskManagementScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
 import ExpensesScreen from './components/ExpensesScreen';
@@ -33,7 +34,7 @@ import { UIProvider, useUI } from './contexts/UIContext';
 import ActionsScreen from './components/ActionsScreen';
 import CalculatorScreen from './components/CalculatorScreen';
 
-export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'calculator' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history';
+export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'calculator' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'batch_health_schedule' | 'expenses' | 'log_history';
 export type Theme = 'light' | 'dark' | 'system';
 
 const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => {
@@ -41,6 +42,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
   const { signOut } = useAuth();
   const { isBottomNavVisible } = useUI();
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
+  const [screenParams, setScreenParams] = useState<Record<string, any>>({});
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
   const [isNewBatchModalOpen, setIsNewBatchModalOpen] = useState(false);
   const [activeSector, setActiveSector] = useState<Sector>('Layer');
@@ -67,8 +69,9 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     return farms.find(f => f.name === farmName) || null;
   }, [selectedScope, farms]);
 
-  const navigateTo = useCallback((screen: Screen) => {
+  const navigateTo = useCallback((screen: Screen, params?: Record<string, any>) => {
     setCurrentScreen(screen);
+    setScreenParams(params || {});
     // Scroll to top when navigating to a new screen
     window.scrollTo(0, 0);
   }, []);
@@ -171,6 +174,8 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
         />;
       case 'health_schedules':
         return <HealthScheduleScreen onNavigate={navigateTo} />;
+      case 'batch_health_schedule':
+        return <BatchHealthScheduleScreen onNavigate={navigateTo} batchId={screenParams.batchId} />;
       case 'expenses':
         return <ExpensesScreen onNavigate={navigateTo} />;
       case 'log_history':
@@ -191,7 +196,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   }
 
-  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions', 'calculator'];
+  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'batch_health_schedule', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions', 'calculator'];
   const showFab = !screensWithoutFab.includes(currentScreen) && farms.length > 0;
 
   return (
@@ -338,7 +343,7 @@ interface NavItemProps {
 const BottomNavItem: React.FC<NavItemProps> = ({ icon: Icon, label, screen, currentScreen, onNavigate }) => {
   const isActive = currentScreen === screen ||
     (screen === 'business' && (currentScreen === 'sales' || currentScreen === 'inventory')) ||
-    (screen === 'settings' && (currentScreen === 'team' || currentScreen === 'farms' || currentScreen === 'batches' || currentScreen === 'health_schedules'));
+    (screen === 'settings' && (currentScreen === 'team' || currentScreen === 'farms' || currentScreen === 'batches' || currentScreen === 'health_schedules' || currentScreen === 'batch_health_schedule'));
 
   return (
     <button onClick={() => onNavigate(screen)} className={`flex flex-col items-center justify-center p-3 w-full transition-colors ${isActive ? 'text-primary' : 'text-text-secondary hover:text-primary'}`}>
@@ -351,7 +356,7 @@ const BottomNavItem: React.FC<NavItemProps> = ({ icon: Icon, label, screen, curr
 const SidebarNavItem: React.FC<NavItemProps> = ({ icon: Icon, label, screen, currentScreen, onNavigate }) => {
   const isActive = currentScreen === screen ||
     (screen === 'business' && (currentScreen === 'sales' || currentScreen === 'inventory')) ||
-    (screen === 'settings' && (currentScreen === 'team' || currentScreen === 'farms' || currentScreen === 'batches' || currentScreen === 'health_schedules'));
+    (screen === 'settings' && (currentScreen === 'team' || currentScreen === 'farms' || currentScreen === 'batches' || currentScreen === 'health_schedules' || currentScreen === 'batch_health_schedule'));
 
   return (
     <button onClick={() => onNavigate(screen)} className={`w-full flex items-center space-x-4 p-3 rounded-xl transition-colors ${isActive ? 'bg-primary/10 text-primary font-bold' : 'text-text-secondary hover:bg-muted hover:text-text-primary'}`}>

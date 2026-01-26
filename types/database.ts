@@ -395,13 +395,18 @@ export interface Database {
                     completed: boolean;
                     notes: string | null;
                     created_at: string;
-                    // New columns for universal templates
+                    // Columns for universal templates
                     is_universal: boolean;
                     sector: Sector | null;
                     day_number: number | null;
                     is_compulsory: boolean;
                     dosage: string | null;
                     administration_method: string | null;
+                    // Columns for user templates
+                    created_by: string | null;
+                    template_name: string | null;
+                    is_user_template: boolean;
+                    completed_date: string | null;
                 };
                 Insert: {
                     id?: string;
@@ -417,6 +422,10 @@ export interface Database {
                     is_compulsory?: boolean;
                     dosage?: string | null;
                     administration_method?: string | null;
+                    created_by?: string | null;
+                    template_name?: string | null;
+                    is_user_template?: boolean;
+                    completed_date?: string | null;
                 };
                 Update: {
                     id?: string;
@@ -432,6 +441,10 @@ export interface Database {
                     is_compulsory?: boolean;
                     dosage?: string | null;
                     administration_method?: string | null;
+                    created_by?: string | null;
+                    template_name?: string | null;
+                    is_user_template?: boolean;
+                    completed_date?: string | null;
                 };
             };
             tips: {
