@@ -492,18 +492,17 @@ export const healthSchedulesService = {
 
     // Mark a task as complete with completion date
     async markComplete(id: string, completedDate?: string) {
-        const date = completedDate || new Date().toISOString().split('T')[0];
+        // Note: completed_date column requires migration 020 to be applied
+        // For now, just update the completed boolean
         return this.update(id, {
-            completed: true,
-            completed_date: date
+            completed: true
         });
     },
 
     // Mark a task as incomplete
     async markIncomplete(id: string) {
         return this.update(id, {
-            completed: false,
-            completed_date: null
+            completed: false
         });
     },
 
@@ -530,7 +529,7 @@ export const healthSchedulesService = {
             sector: taskData.sector || null,
             completed: false,
             is_universal: false,
-            is_user_template: false,
+            // Note: is_user_template and created_by columns require migration 020 to be applied
         };
 
         return this.create(schedule);
