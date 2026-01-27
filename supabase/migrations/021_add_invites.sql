@@ -33,7 +33,7 @@ SELECT USING (
             SELECT farm_id
             FROM farm_members
             WHERE user_id = auth.uid()
-                AND role IN ('Owner', 'Manager')
+                AND role IN ('owner', 'manager')
         )
     );
 -- Farm owners and managers can create invites
@@ -43,7 +43,7 @@ INSERT WITH CHECK (
             SELECT farm_id
             FROM farm_members
             WHERE user_id = auth.uid()
-                AND role IN ('Owner', 'Manager')
+                AND role IN ('owner', 'manager')
         )
     );
 -- Farm owners and managers can update invites (cancel, etc.)
@@ -53,7 +53,7 @@ UPDATE USING (
             SELECT farm_id
             FROM farm_members
             WHERE user_id = auth.uid()
-                AND role IN ('Owner', 'Manager')
+                AND role IN ('owner', 'manager')
         )
     );
 -- Users can view invites sent to their email (for processing on signup/login)
