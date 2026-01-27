@@ -11,6 +11,7 @@
     --muted-background: #f1f5f9;
     /* slate-100 */
     --popover-background: #ffffff;
+    --input-background: #ffffff;
     --border-color: #e2e8f0;
     /* slate-200 */
     --primary-text-color: #1e293b;
@@ -37,6 +38,7 @@
     --muted-background: #1e293b;
     /* slate-800 */
     --popover-background: #0f172a;
+    --input-background: #1e293b;
     --border-color: #334155;
     /* slate-700 */
     --primary-text-color: #e2e8f0;

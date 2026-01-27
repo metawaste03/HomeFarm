@@ -15,6 +15,7 @@ export default {
                 card: 'var(--card-background)',
                 'muted': 'var(--muted-background)',
                 'popover': 'var(--popover-background)',
+                'input': 'var(--input-background)',
                 border: 'var(--border-color)',
                 'text-primary': 'var(--primary-text-color)',
                 'text-secondary': 'var(--secondary-text-color)',

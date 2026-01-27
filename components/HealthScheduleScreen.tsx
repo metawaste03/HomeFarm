@@ -202,6 +202,20 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
         }
     };
 
+    const handleDeleteTask = async (taskId: string) => {
+        if (!confirm('Are you sure you want to delete this task?')) {
+            return;
+        }
+
+        try {
+            await healthSchedulesService.delete(taskId);
+            await loadData();
+        } catch (error) {
+            console.error('Error deleting task:', error);
+            alert('Failed to delete task. Please try again.');
+        }
+    };
+
     const handleDeleteBatchSchedule = async (batchId: string) => {
         if (!confirm('Are you sure you want to delete all health tasks for this batch? This cannot be undone.')) {
             return;
@@ -365,15 +379,15 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
                                                             <div
                                                                 key={task.id}
                                                                 className={`flex items-center justify-between p-3 rounded-lg ${task.status === 'due' ? 'bg-danger/5 border border-danger/30' :
-                                                                        task.status === 'today' ? 'bg-primary/5 border border-primary/30' :
-                                                                            task.status === 'completed' ? 'bg-success/5' :
-                                                                                'bg-muted'
+                                                                    task.status === 'today' ? 'bg-primary/5 border border-primary/30' :
+                                                                        task.status === 'completed' ? 'bg-success/5' :
+                                                                            'bg-muted'
                                                                     }`}
                                                             >
                                                                 <div className="flex items-center gap-3">
                                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${task.is_compulsory
-                                                                            ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 border-2 border-orange-500'
-                                                                            : 'bg-card border-2 border-border text-text-secondary'
+                                                                        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 border-2 border-orange-500'
+                                                                        : 'bg-card border-2 border-border text-text-secondary'
                                                                         }`}>
                                                                         {task.day_number || '?'}
                                                                     </div>
@@ -405,15 +419,22 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
                                                                             onClick={() => handleMarkComplete(task.id)}
                                                                             disabled={isMarking}
                                                                             className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${task.status === 'due'
-                                                                                    ? 'bg-danger text-white'
-                                                                                    : task.status === 'today'
-                                                                                        ? 'bg-primary text-white'
-                                                                                        : 'bg-muted text-text-secondary'
+                                                                                ? 'bg-danger text-white'
+                                                                                : task.status === 'today'
+                                                                                    ? 'bg-primary text-white'
+                                                                                    : 'bg-muted text-text-secondary'
                                                                                 } disabled:opacity-50`}
                                                                         >
                                                                             {isMarking ? '...' : 'Mark Done'}
                                                                         </button>
                                                                     )}
+                                                                    <button
+                                                                        onClick={() => handleDeleteTask(task.id)}
+                                                                        className="p-1.5 rounded-lg text-text-secondary hover:text-danger hover:bg-danger/10 transition-colors"
+                                                                        title="Delete task"
+                                                                    >
+                                                                        <TrashIcon className="w-4 h-4" />
+                                                                    </button>
                                                                 </div>
                                                             </div>
                                                         );
@@ -492,8 +513,8 @@ const HealthScheduleScreen: React.FC<HealthScheduleScreenProps> = ({ onNavigate 
                                 {layerTemplates.slice(0, 5).map((task) => (
                                     <div key={task.id} className="flex items-center gap-3 py-2">
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${task.is_compulsory
-                                                ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 border border-orange-400'
-                                                : 'bg-muted text-text-secondary border border-border'
+                                            ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 border border-orange-400'
+                                            : 'bg-muted text-text-secondary border border-border'
                                             }`}>
                                             {task.day_number}
                                         </div>
@@ -600,8 +621,8 @@ const CopyTemplateModal: React.FC<CopyTemplateModalProps> = ({ batches, existing
                                 <label
                                     key={batch.id}
                                     className={`block p-4 border-2 rounded-lg cursor-pointer transition-colors ${selectedBatchId === batch.id
-                                            ? 'border-primary bg-primary/5'
-                                            : 'border-border hover:border-primary/50'
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-border hover:border-primary/50'
                                         }`}
                                 >
                                     <input
@@ -754,7 +775,7 @@ const AddHealthTaskModal: React.FC<AddHealthTaskModalProps> = ({ batchStartDate,
                                 onChange={e => setDayNumber(e.target.value ? parseInt(e.target.value) : '')}
                                 placeholder="e.g., 14"
                                 min="1"
-                                className="w-full px-4 py-3 rounded-lg bg-input border border-border text-text-primary"
+                                className="w-full px-4 py-3 rounded-lg bg-input border border-border text-text-primary placeholder:text-text-secondary"
                             />
                         </div>
                     ) : (
@@ -776,7 +797,7 @@ const AddHealthTaskModal: React.FC<AddHealthTaskModalProps> = ({ batchStartDate,
                             value={dosage}
                             onChange={e => setDosage(e.target.value)}
                             placeholder="e.g., 0.5ml per bird"
-                            className="w-full px-4 py-3 rounded-lg bg-input border border-border text-text-primary"
+                            className="w-full px-4 py-3 rounded-lg bg-input border border-border text-text-primary placeholder:text-text-secondary"
                         />
                     </div>
 
