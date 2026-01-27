@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { invitesService } from '../services/database';
 
 interface AuthContextType {
     user: User | null;
@@ -22,21 +23,47 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [session, setSession] = useState<Session | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // Process any pending invites for a user after authentication
+    const processPendingInvites = async (userId: string, email: string) => {
+        try {
+            const results = await invitesService.processForUser(userId, email);
+            if (results.length > 0) {
+                const successful = results.filter(r => r.success);
+                if (successful.length > 0) {
+                    console.log(`Processed ${successful.length} pending invite(s) for ${email}`);
+                }
+            }
+        } catch (error) {
+            // Silently fail - invites table might not exist yet
+            console.log('Could not process invites (table may not exist yet):', error);
+        }
+    };
+
     useEffect(() => {
         // Get initial session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
+
+            // Process pending invites if user is logged in
+            if (session?.user) {
+                processPendingInvites(session.user.id, session.user.email || '');
+            }
         });
 
         // Listen for auth changes
         const {
             data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
+        } = supabase.auth.onAuthStateChange((event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
             setLoading(false);
+
+            // Process pending invites on sign in or sign up
+            if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user) {
+                processPendingInvites(session.user.id, session.user.email || '');
+            }
         });
 
         return () => subscription.unsubscribe();

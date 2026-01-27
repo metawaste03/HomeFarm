@@ -723,33 +723,70 @@ export const farmMembersService = {
         return data;
     },
 
-    async invite(email: string, farmId: string, role: string) {
-        // This functionality normally requires an Edge Function to handle invites securely
-        // For this demo, we'll assume the user exists and just add them if found, 
-        // or throw error if not found. Real app would send email.
-
-        // 1. Find user by email
-        const { data: users, error: userError } = await supabase
+    async invite(email: string, farmId: string, role: string, invitedBy: string) {
+        // First check if user with this email already exists
+        const { data: existingUser, error: userError } = await supabase
             .from('users')
             .select('id')
-            .eq('email', email)
+            .eq('email', email.toLowerCase())
             .single();
 
-        if (userError || !users) throw new Error("User not found (Invite only works for existing users in this demo)");
+        if (existingUser && !userError) {
+            // User exists - add them directly to farm_members
+            // Check if they're already a member
+            const { data: existingMember } = await supabase
+                .from('farm_members')
+                .select('id')
+                .eq('farm_id', farmId)
+                .eq('user_id', existingUser.id)
+                .single();
 
-        // 2. Add to farm_members
-        const { data, error } = await supabase
-            .from('farm_members')
+            if (existingMember) {
+                throw new Error("This user is already a member of this farm");
+            }
+
+            const { data, error } = await supabase
+                .from('farm_members')
+                .insert({
+                    farm_id: farmId,
+                    user_id: existingUser.id,
+                    role
+                } as any)
+                .select()
+                .single();
+
+            if (error) throw error;
+            return { type: 'added', data };
+        }
+
+        // User doesn't exist - create a pending invite
+        // First check if there's already a pending invite for this email
+        const { data: existingInvite } = await supabase
+            .from('invites')
+            .select('id')
+            .eq('farm_id', farmId)
+            .eq('email', email.toLowerCase())
+            .eq('status', 'pending')
+            .single();
+
+        if (existingInvite) {
+            throw new Error("An invite has already been sent to this email");
+        }
+
+        const { data: invite, error: inviteError } = await supabase
+            .from('invites')
             .insert({
                 farm_id: farmId,
-                user_id: users.id,
-                role
+                email: email.toLowerCase(),
+                role,
+                invited_by: invitedBy,
+                status: 'pending'
             } as any)
             .select()
             .single();
 
-        if (error) throw error;
-        return data;
+        if (inviteError) throw inviteError;
+        return { type: 'invited', data: invite };
     },
 
     async updateRole(memberId: string, role: string) {
@@ -771,6 +808,108 @@ export const farmMembersService = {
             .eq('id', memberId);
 
         if (error) throw error;
+    },
+};
+
+// ============================================
+// INVITES (Pending Team Member Invitations)
+// ============================================
+
+export const invitesService = {
+    // List pending invites for a farm
+    async listForFarm(farmId: string) {
+        const { data, error } = await supabase
+            .from('invites')
+            .select(`
+                id,
+                email,
+                role,
+                invited_at,
+                status,
+                invited_by,
+                inviter:users!invited_by (
+                    full_name,
+                    email
+                )
+            `)
+            .eq('farm_id', farmId)
+            .eq('status', 'pending')
+            .order('invited_at', { ascending: false });
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Cancel a pending invite
+    async cancel(inviteId: string) {
+        const { data, error } = await supabase
+            .from('invites')
+            .update({ status: 'cancelled' } as any)
+            .eq('id', inviteId)
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data;
+    },
+
+    // Get pending invites for an email (used during signup)
+    async getForEmail(email: string) {
+        const { data, error } = await supabase
+            .from('invites')
+            .select(`
+                id,
+                farm_id,
+                role,
+                status,
+                farm:farms (
+                    id,
+                    name
+                )
+            `)
+            .eq('email', email.toLowerCase())
+            .eq('status', 'pending');
+
+        if (error) throw error;
+        return data || [];
+    },
+
+    // Process pending invites for a user (called after signup/login)
+    async processForUser(userId: string, email: string) {
+        // Get all pending invites for this email
+        const pendingInvites = await this.getForEmail(email);
+
+        const results = [];
+        for (const invite of pendingInvites) {
+            try {
+                // Add user to the farm
+                const { error: memberError } = await supabase
+                    .from('farm_members')
+                    .insert({
+                        farm_id: invite.farm_id,
+                        user_id: userId,
+                        role: invite.role
+                    } as any);
+
+                if (memberError) throw memberError;
+
+                // Mark invite as accepted
+                await supabase
+                    .from('invites')
+                    .update({
+                        status: 'accepted',
+                        accepted_at: new Date().toISOString()
+                    } as any)
+                    .eq('id', invite.id);
+
+                results.push({ invite, success: true });
+            } catch (err) {
+                console.error('Error processing invite:', err);
+                results.push({ invite, success: false, error: err });
+            }
+        }
+
+        return results;
     },
 };
 

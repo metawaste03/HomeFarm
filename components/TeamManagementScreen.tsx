@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import type { Screen } from '../App';
-import { UserPlusIcon, EllipsisIcon, TrashIcon, PencilIcon, ChevronLeftIcon } from './icons';
-import { useTeam, TeamMember } from '../contexts/TeamContext';
+import { UserPlusIcon, EllipsisIcon, TrashIcon, PencilIcon, ChevronLeftIcon, ClockIcon, XCircleIcon } from './icons';
+import { useTeam, TeamMember, PendingInvite } from '../contexts/TeamContext';
 
 type Role = 'Owner' | 'Manager' | 'Worker';
 
@@ -12,10 +12,12 @@ interface TeamManagementScreenProps {
 }
 
 const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate }) => {
-    const { teamMembers, inviteMember, updateMemberRole, removeMember, isLoading } = useTeam();
+    const { teamMembers, pendingInvites, inviteMember, updateMemberRole, removeMember, cancelInvite, isLoading } = useTeam();
     const [isInviteModalOpen, setInviteModalOpen] = useState(false);
     const [userToRemove, setUserToRemove] = useState<TeamMember | null>(null);
     const [userToEditRole, setUserToEditRole] = useState<TeamMember | null>(null);
+    const [inviteToCancel, setInviteToCancel] = useState<PendingInvite | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     const handleRemoveUser = async (memberId: string) => {
         try {
@@ -29,12 +31,30 @@ const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate 
     const handleInviteUser = async (name: string, contact: string, role: Role) => {
         if (role === 'Owner') return; // Cannot invite owner
         try {
-            await inviteMember(contact, role); // Assuming contact is email
+            const result = await inviteMember(contact, role); // Assuming contact is email
             setInviteModalOpen(false);
-        } catch (error) {
-            alert("Failed to invite member. Ensure user exists (demo limitation).");
+
+            if (result.type === 'added') {
+                setSuccessMessage(`${contact} has been added to the team!`);
+            } else {
+                setSuccessMessage(`Invitation sent to ${contact}! They will be added to the team when they sign up.`);
+            }
+            // Clear success message after 5 seconds
+            setTimeout(() => setSuccessMessage(null), 5000);
+        } catch (error: any) {
+            const message = error?.message || "Failed to invite member.";
+            alert(message);
         }
     }
+
+    const handleCancelInvite = async (inviteId: string) => {
+        try {
+            await cancelInvite(inviteId);
+            setInviteToCancel(null);
+        } catch (error) {
+            alert("Failed to cancel invite.");
+        }
+    };
 
     const handleSaveRoleChange = async (memberId: string, newRole: Role) => {
         if (newRole === 'Owner') return;
@@ -62,6 +82,16 @@ const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate 
             </header>
 
             <div className="p-4 space-y-4">
+                {/* Success Message */}
+                {successMessage && (
+                    <div className="bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-800 dark:text-green-300 px-4 py-3 rounded-xl flex items-center gap-2">
+                        <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-sm">{successMessage}</span>
+                    </div>
+                )}
+
                 <button
                     onClick={() => setInviteModalOpen(true)}
                     className="w-full bg-primary text-white font-bold py-3 px-4 rounded-xl text-lg flex items-center justify-center gap-2 hover:bg-primary-600 active:bg-primary-700 transition-colors"
@@ -70,7 +100,9 @@ const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate 
                     NEW MEMBER
                 </button>
 
+                {/* Active Team Members */}
                 <div className="space-y-3">
+                    <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">Active Members ({teamMembers.length})</h2>
                     {teamMembers.map(member => (
                         <UserCard
                             key={member.id}
@@ -79,12 +111,33 @@ const TeamManagementScreen: React.FC<TeamManagementScreenProps> = ({ onNavigate 
                             onChangeRole={() => setUserToEditRole(member)}
                         />
                     ))}
+                    {teamMembers.length === 0 && (
+                        <p className="text-center text-text-secondary py-4">No team members yet.</p>
+                    )}
                 </div>
+
+                {/* Pending Invites */}
+                {pendingInvites.length > 0 && (
+                    <div className="space-y-3 mt-6">
+                        <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wide flex items-center gap-2">
+                            <ClockIcon className="w-4 h-4" />
+                            Pending Invites ({pendingInvites.length})
+                        </h2>
+                        {pendingInvites.map(invite => (
+                            <PendingInviteCard
+                                key={invite.id}
+                                invite={invite}
+                                onCancel={() => setInviteToCancel(invite)}
+                            />
+                        ))}
+                    </div>
+                )}
             </div>
 
             {isInviteModalOpen && <InviteMemberModal onClose={() => setInviteModalOpen(false)} onInvite={handleInviteUser} />}
             {userToRemove && <RemoveConfirmationModal user={userToRemove} onClose={() => setUserToRemove(null)} onConfirm={() => handleRemoveUser(userToRemove.id)} />}
             {userToEditRole && <ChangeRoleModal user={userToEditRole} onClose={() => setUserToEditRole(null)} onSave={handleSaveRoleChange} />}
+            {inviteToCancel && <CancelInviteModal invite={inviteToCancel} onClose={() => setInviteToCancel(null)} onConfirm={() => handleCancelInvite(inviteToCancel.id)} />}
         </div>
     );
 };
@@ -139,6 +192,32 @@ const UserCard: React.FC<{ user: TeamMember, onRemove: () => void, onChangeRole:
     );
 }
 
+const PendingInviteCard: React.FC<{ invite: PendingInvite, onCancel: () => void }> = ({ invite, onCancel }) => {
+    const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    return (
+        <div className="bg-card rounded-2xl shadow-md p-4 flex justify-between items-center border-l-4 border-amber-400">
+            <div>
+                <p className="font-bold text-lg text-text-primary">{invite.email}</p>
+                <div className="text-xs font-semibold px-2 py-1 rounded-full inline-block mt-1 bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
+                    Pending - {invite.role}
+                </div>
+                <p className="text-sm text-text-secondary mt-2">Invited on {formatDate(invite.invitedAt)}</p>
+            </div>
+            <button
+                onClick={onCancel}
+                className="p-2 text-danger hover:bg-red-500/10 rounded-full"
+                aria-label="Cancel invite"
+            >
+                <XCircleIcon className="w-6 h-6" />
+            </button>
+        </div>
+    );
+};
+
 interface InviteMemberModalProps { onClose: () => void; onInvite: (name: string, contact: string, role: Role) => void; }
 type InviteMethod = 'email' | 'phone';
 const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite }) => {
@@ -147,13 +226,18 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite
     const [email, setEmail] = useState('');
     const [phone, setPhone] = useState('');
     const [role, setRole] = useState<Role>('Worker');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const contact = inviteMethod === 'email' ? email : phone;
         if (!contact || !role) return alert('Please fill out all required fields.');
-        // Note: Full name is not used in backend invite logic currently (assumes existing user), but kept for UI
-        onInvite(fullName, contact, role);
+        setIsSubmitting(true);
+        try {
+            await onInvite(fullName, contact, role);
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -162,7 +246,7 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite
                 <h3 className="text-lg font-bold p-4 border-b border-border text-text-primary">Invite Team Member</h3>
                 <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-3">
                     <div>
-                        <label className="block text-xs font-medium text-text-secondary mb-1">Full Name (Optional for existing users)</label>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">Full Name (Optional)</label>
                         <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Enter name" className="w-full p-2.5 border border-border rounded-lg bg-card text-text-primary text-sm" />
                     </div>
                     <div>
@@ -182,11 +266,19 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({ onClose, onInvite
                             <button type="button" onClick={() => setRole('Worker')} className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition ${role === 'Worker' ? 'bg-primary text-white' : 'bg-muted text-text-secondary'}`}>Worker</button>
                         </div>
                     </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-4">
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                            <strong>Note:</strong> If the person already has an account, they'll be added immediately.
+                            Otherwise, they'll receive an invitation and be added when they sign up.
+                        </p>
+                    </div>
                 </form>
                 {/* Sticky Footer - Always Visible */}
                 <div className="p-4 border-t border-border bg-popover sticky bottom-0 z-10 flex gap-2">
-                    <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-text-primary bg-danger hover:bg-red-600 font-bold text-sm">Cancel</button>
-                    <button onClick={handleSubmit} className="flex-1 py-2.5 rounded-xl text-white bg-primary hover:bg-primary-600 font-bold text-sm">Send Invite</button>
+                    <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl text-text-primary bg-danger hover:bg-red-600 font-bold text-sm" disabled={isSubmitting}>Cancel</button>
+                    <button onClick={handleSubmit} className="flex-1 py-2.5 rounded-xl text-white bg-primary hover:bg-primary-600 font-bold text-sm disabled:opacity-50" disabled={isSubmitting}>
+                        {isSubmitting ? 'Sending...' : 'Send Invite'}
+                    </button>
                 </div>
             </div>
         </div>
@@ -202,6 +294,20 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({ user,
             <div className="flex justify-center gap-4">
                 <button onClick={onClose} className="px-8 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
                 <button onClick={onConfirm} className="px-8 py-2 rounded-lg text-white bg-danger hover:bg-red-600 font-semibold">REMOVE</button>
+            </div>
+        </div>
+    </div>
+);
+
+interface CancelInviteModalProps { invite: PendingInvite; onClose: () => void; onConfirm: () => void; }
+const CancelInviteModal: React.FC<CancelInviteModalProps> = ({ invite, onClose, onConfirm }) => (
+    <div className="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-popover rounded-2xl shadow-lg p-6 w-full max-w-sm text-center" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold mb-2 text-text-primary">Cancel Invite?</h3>
+            <p className="text-text-secondary text-sm mb-6">This will cancel the pending invitation to <span className="font-semibold">{invite.email}</span>.</p>
+            <div className="flex justify-center gap-4">
+                <button onClick={onClose} className="px-8 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Keep</button>
+                <button onClick={onConfirm} className="px-8 py-2 rounded-lg text-white bg-danger hover:bg-red-600 font-semibold">Cancel Invite</button>
             </div>
         </div>
     </div>

@@ -602,6 +602,44 @@ export interface Database {
                     metadata?: Json;
                 };
             };
+            invites: {
+                Row: {
+                    id: string;
+                    farm_id: string;
+                    email: string;
+                    role: 'Manager' | 'Worker';
+                    invited_by: string;
+                    invited_at: string;
+                    status: 'pending' | 'accepted' | 'cancelled' | 'expired';
+                    accepted_at: string | null;
+                    created_at: string;
+                    updated_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    farm_id: string;
+                    email: string;
+                    role: 'Manager' | 'Worker';
+                    invited_by: string;
+                    invited_at?: string;
+                    status?: 'pending' | 'accepted' | 'cancelled' | 'expired';
+                    accepted_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+                Update: {
+                    id?: string;
+                    farm_id?: string;
+                    email?: string;
+                    role?: 'Manager' | 'Worker';
+                    invited_by?: string;
+                    invited_at?: string;
+                    status?: 'pending' | 'accepted' | 'cancelled' | 'expired';
+                    accepted_at?: string | null;
+                    created_at?: string;
+                    updated_at?: string;
+                };
+            };
         };
         Views: {};
         Functions: {};
