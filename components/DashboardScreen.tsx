@@ -10,7 +10,8 @@ import KpiCard from './KpiCard';
 import { dailyLogsService } from '../services/database';
 import type { Tables } from '../types/database';
 import TodaysActionCard from './TodaysActionCard';
-import FarmAdvisor from './FarmAdvisor';
+// V2 FEATURE - Hidden for V1 launch
+// import FarmAdvisor from './FarmAdvisor';
 import NavigationCards from './NavigationCards';
 
 interface DashboardScreenProps {
@@ -313,8 +314,8 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         />
                     </div>
 
-                    {/* AI Farm Advisor */}
-                    <FarmAdvisor sector={activeSector} />
+                    {/* V2 FEATURE - AI Farm Advisor - Hidden for V1 launch */}
+                    {/* <FarmAdvisor sector={activeSector} /> */}
 
                     {/* Today's Actions (Condensed) */}
                     <TodaysActionCard onViewAll={() => onNavigate('actions')} />
