@@ -20,21 +20,7 @@ export type Batch = {
     startDate?: string;
 };
 
-export type HealthScheduleTemplate = {
-    id: string;
-    name: string;
-    sector: Sector;
-    description: string;
-};
 
-const MOCK_SCHEDULES: HealthScheduleTemplate[] = [
-    { id: 'sched_1', name: 'Standard Broiler Cycle (6 Weeks)', sector: 'Broiler', description: 'Includes Gumboro, Lasota, and Coccidiosis treatments.' },
-    { id: 'sched_2', name: 'Extended Broiler Cycle (8 Weeks)', sector: 'Broiler', description: 'For heavier birds, includes additional boosters.' },
-    { id: 'sched_3', name: 'Layer Pullet Rearing', sector: 'Layer', description: 'Comprehensive vaccination from Day 1 to Point of Lay.' },
-    { id: 'sched_4', name: 'Layer Production Phase', sector: 'Layer', description: 'Monthly boosters and deworming schedule.' },
-    { id: 'sched_5', name: 'Tilapia Growth Plan', sector: 'Fish', description: 'Water treatment and probiotic schedule.' },
-    { id: 'sched_6', name: 'Catfish Intensive Care', sector: 'Fish', description: 'Antibiotic prophylaxis and water quality management.' },
-];
 
 interface BatchManagementScreenProps {
     onNavigate: (screen: Screen, params?: Record<string, any>) => void;
@@ -122,7 +108,7 @@ const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigat
                 <BatchList title="Completed Batches" batches={completedBatches} currentUserRole={currentUserRole} onEdit={setEditingBatch} onDelete={setDeletingBatch} />
             </div>
 
-            {(isModalOpen || editingBatch) && <BatchForm onSave={handleSave} onClose={closeForms} batchToEdit={editingBatch} selectedFarm={selectedFarm} activeSector={activeSector} />}
+            {(isModalOpen || editingBatch) && <BatchForm onSave={handleSave} onClose={closeForms} batchToEdit={editingBatch} selectedFarm={selectedFarm} activeSector={activeSector} farms={farms} />}
             {deletingBatch && <DeleteConfirmationModal batch={deletingBatch} onConfirm={handleConfirmDelete} onClose={() => setDeletingBatch(null)} />}
         </div>
     );
@@ -202,40 +188,33 @@ interface BatchFormProps {
     batchToEdit?: Batch | null;
     selectedFarm: string;
     activeSector: Sector;
+    farms: { id: string | number; name: string }[];
 }
 
-const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, selectedFarm, activeSector }) => {
+const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, selectedFarm, activeSector, farms }) => {
     const isEditing = !!batchToEdit;
-    const [sector, setSector] = useState<Sector | null>(batchToEdit?.sector || activeSector);
+    const [sector, setSector] = useState<Sector>(batchToEdit?.sector || activeSector);
     const [name, setName] = useState(batchToEdit?.name || '');
+    // For new batches, auto-select if only one farm exists
+    const [farmName, setFarmName] = useState(() => {
+        if (batchToEdit?.farm) return batchToEdit.farm;
+        if (selectedFarm !== "All Farms") return selectedFarm;
+        // Auto-select if only one farm
+        if (farms.length === 1) return farms[0].name;
+        return '';
+    });
     const [startDate, setStartDate] = useState(batchToEdit?.startDate || new Date().toISOString().split('T')[0]);
     const [stockCount, setStockCount] = useState<number>(batchToEdit?.stockCount || 0);
-    const [stockCost, setStockCost] = useState<number>(0);
+    const [totalCost, setTotalCost] = useState<number>(0);
     const [stockAge, setStockAge] = useState(batchToEdit?.age || '');
-    const [addFeed, setAddFeed] = useState(false);
-    const [feedBrand, setFeedBrand] = useState('');
-    const [feedQuantity, setFeedQuantity] = useState<number>(0);
-    const [scheduleId, setScheduleId] = useState<string>(batchToEdit?.scheduleId || '');
-
-    // Collapsible section states - keep form shorter
-    const [showDetails, setShowDetails] = useState(true);
-    const [showCostAge, setShowCostAge] = useState(false);
-    const [showHealthSchedule, setShowHealthSchedule] = useState(isEditing); // Show by default when editing
+    const [notes, setNotes] = useState('');
+    const [showHealthSchedule, setShowHealthSchedule] = useState(isEditing);
 
     useEffect(() => {
         if (!isEditing) {
             setSector(activeSector);
-            // Reset schedule when switching context if not editing
-            setScheduleId('');
         }
     }, [activeSector, isEditing]);
-
-    // Reset schedule selection if sector changes manually in form
-    useEffect(() => {
-        if (!isEditing) {
-            setScheduleId('');
-        }
-    }, [sector]);
 
     const handleNumericChange = (setter: React.Dispatch<React.SetStateAction<number>>) => (e: React.ChangeEvent<HTMLInputElement>) => {
         setter(e.target.value === '' ? 0 : parseInt(e.target.value, 10));
@@ -243,114 +222,179 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!sector || !name || stockCount <= 0) { alert("Please fill in all required fields: Sector, Name, and Number of Stock."); return; }
-        if (!isEditing && stockCost <= 0) { alert("Please fill in the Total Cost of Stock."); return; }
+
+        // Validation
+        if (!sector) {
+            alert("Please select a sector (Layer, Broiler, or Fish).");
+            return;
+        }
+        if (!name.trim()) {
+            alert("Please enter a batch name.");
+            return;
+        }
+        if (!isEditing && !farmName) {
+            alert("Please select a farm for this batch.");
+            return;
+        }
+        if (stockCount <= 0) {
+            alert("Please enter the number of stock.");
+            return;
+        }
+        if (!isEditing && totalCost <= 0) {
+            alert("Please enter the total cost of stock.");
+            return;
+        }
+
         onSave({
-            name,
-            farm: batchToEdit?.farm || selectedFarm,
+            name: name.trim(),
+            farm: batchToEdit?.farm || farmName,
             sector,
             stockCount,
             status: batchToEdit?.status || 'Active',
-            age: stockAge || batchToEdit?.age || '1 day',
-            scheduleId: scheduleId || undefined,
+            age: stockAge || '1 day',
             startDate: startDate || undefined
         }, batchToEdit?.id);
     };
 
-    const availableSchedules = MOCK_SCHEDULES.filter(s => s.sector === sector);
-
-    const SectorCard: React.FC<{ value: Sector; label: string }> = ({ value, label }) => (
-        <button type="button" onClick={() => setSector(value)} className={`flex flex-col items-center justify-center p-3 border-2 rounded-xl w-full transition-all ${sector === value ? 'border-primary bg-green-50 dark:bg-green-900/20 shadow-md' : 'border-border bg-card hover:border-gray-400 dark:hover:border-gray-500'}`}>
-            <span className={`font-bold text-lg ${sector === value ? 'text-primary' : 'text-text-primary'}`}>{label}</span>
+    const SectorTab: React.FC<{ value: Sector; label: string }> = ({ value, label }) => (
+        <button
+            type="button"
+            onClick={() => setSector(value)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${sector === value
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-muted text-text-secondary hover:bg-border'
+                }`}
+        >
+            {label}
         </button>
     );
 
     return (
-        <div className="fixed inset-0 bg-black/50 z-30 flex items-start sm:items-center justify-center p-4 sm:p-4 overflow-y-auto" onClick={onClose}>
-            <div className="bg-popover rounded-2xl shadow-lg w-full sm:max-w-md max-h-[85vh] flex flex-col mt-4 sm:mt-0" onClick={e => e.stopPropagation()}>
-                {/* Fixed Header */}
-                <div className="p-4 border-b border-border flex-shrink-0">
-                    <h3 className="text-xl font-bold text-center text-text-primary">{isEditing ? 'Edit Batch' : 'Start a New Batch'}</h3>
+        <div className="fixed inset-0 bg-black/60 z-30 flex items-start justify-center p-2 pb-20 overflow-y-auto" onClick={onClose}>
+            <div className="bg-card rounded-2xl shadow-xl w-full max-w-md flex flex-col mt-2 border border-border max-h-[calc(100vh-5rem)]" onClick={e => e.stopPropagation()}>
+                {/* Header with Sector Tabs */}
+                <div className="p-3 border-b border-border flex-shrink-0">
+                    <div className="flex items-center justify-center gap-2">
+                        <SectorTab value="Layer" label="Layers" />
+                        <SectorTab value="Broiler" label="Broilers" />
+                        <SectorTab value="Fish" label="Fish" />
+                    </div>
                 </div>
 
                 {/* Scrollable Form Content */}
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
-                    <div className="flex-grow overflow-y-auto p-4 sm:p-6 space-y-4">
-                        {/* Sector selection - no header, just the cards */}
-                        <div className="grid grid-cols-3 gap-3">
-                            <SectorCard value="Layer" label="Layer" />
-                            <SectorCard value="Broiler" label="Broiler" />
-                            <SectorCard value="Fish" label="Fish" />
+                    <div className="flex-grow overflow-y-auto p-3 space-y-3">
+                        {/* Farm Selection (only for new batches with multiple farms) */}
+                        {!isEditing && farms.length > 1 && (
+                            <div>
+                                <label htmlFor="farm-select" className="block text-sm font-medium text-text-secondary mb-1">Farm *</label>
+                                <select
+                                    id="farm-select"
+                                    value={farmName}
+                                    onChange={(e) => setFarmName(e.target.value)}
+                                    className="w-full p-2 border border-border rounded-lg bg-input text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    required
+                                    aria-label="Select farm"
+                                >
+                                    <option value="">Select a farm...</option>
+                                    {farms.map(farm => (
+                                        <option key={farm.id} value={farm.name}>{farm.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+                        {/* Show farm name as text when only one farm */}
+                        {!isEditing && farms.length === 1 && (
+                            <div>
+                                <label className="block text-sm font-medium text-text-secondary mb-1">Farm</label>
+                                <div className="w-full p-2 border border-border rounded-lg bg-muted text-text-primary">
+                                    {farms[0].name}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Batch Name */}
+                        <div>
+                            <label htmlFor="batch-name" className="block text-sm font-medium text-text-secondary mb-1">Batch Name *</label>
+                            <input
+                                id="batch-name"
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder={`e.g., Jan 2026 ${sector}s - Pen 1`}
+                                className="w-full p-2 border border-border rounded-lg bg-input text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                                required
+                            />
                         </div>
 
-                        {/* Section 2: Batch Details - Toggle switch style */}
+                        {/* Start Date */}
                         <div>
-                            <div className="flex justify-between items-center">
-                                <label className="block text-sm font-semibold text-text-secondary">Batch Details *</label>
-                                <label htmlFor="details-toggle" className="flex items-center cursor-pointer">
-                                    <div className="relative">
-                                        <input type="checkbox" id="details-toggle" className="sr-only" checked={showDetails} onChange={() => setShowDetails(!showDetails)} aria-label="Toggle Batch Details" />
-                                        <div className="block bg-muted w-12 h-7 rounded-full"></div>
-                                        <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showDetails ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
-                                    </div>
+                            <label htmlFor="start-date" className="block text-sm font-medium text-text-secondary mb-1">
+                                {isEditing ? 'Start Date' : 'Date of Arrival'}
+                            </label>
+                            <input
+                                id="start-date"
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="w-full p-2 border border-border rounded-lg bg-input text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                                aria-label="Start Date"
+                            />
+                        </div>
+
+                        {/* Two-column layout for Quantity and Cost */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-text-secondary mb-1">
+                                    Quantity ({sector === 'Fish' ? 'Fish' : 'Birds'}) *
                                 </label>
+                                <input
+                                    type="number"
+                                    value={stockCount > 0 ? stockCount : ''}
+                                    onChange={handleNumericChange(setStockCount)}
+                                    placeholder="500"
+                                    className="w-full p-2 border border-border rounded-lg bg-input text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                                    required
+                                />
                             </div>
-                            {showDetails && (
-                                <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
-                                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={`Batch Name (e.g., ${sector} Batch)`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Batch Name" />
-                                    <div>
-                                        <label htmlFor="start-date" className="text-xs text-text-secondary">{isEditing ? 'Start Date' : 'Date of Arrival'}</label>
-                                        <input id="start-date" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Start Date" />
-                                    </div>
-                                    <input type="number" value={stockCount > 0 ? stockCount : ''} onChange={handleNumericChange(setStockCount)} placeholder={`Number of ${sector === 'Fish' ? 'Fish' : 'Birds'} *`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Stock Count" />
+                            {!isEditing && (
+                                <div>
+                                    <label className="block text-sm font-medium text-text-secondary mb-1">Total Cost (₦) *</label>
+                                    <input
+                                        type="number"
+                                        value={totalCost > 0 ? totalCost : ''}
+                                        onChange={handleNumericChange(setTotalCost)}
+                                        placeholder="150000"
+                                        className="w-full p-2 border border-border rounded-lg bg-input text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                                        required
+                                    />
                                 </div>
                             )}
                         </div>
 
-                        {/* Section 3: Cost & Age - Toggle switch style (only for new batches) */}
-                        {!isEditing && (
-                            <div>
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-sm font-semibold text-text-secondary">Stock Cost & Age *</label>
-                                    <label htmlFor="cost-toggle" className="flex items-center cursor-pointer">
-                                        <div className="relative">
-                                            <input type="checkbox" id="cost-toggle" className="sr-only" checked={showCostAge} onChange={() => setShowCostAge(!showCostAge)} aria-label="Toggle Stock Cost & Age details" />
-                                            <div className="block bg-muted w-12 h-7 rounded-full"></div>
-                                            <div className={`dot absolute left-1 top-1 w-5 h-5 rounded-full transition-transform ${showCostAge ? 'translate-x-full bg-primary' : 'bg-white dark:bg-slate-400'}`}></div>
-                                        </div>
-                                    </label>
-                                </div>
-                                {showCostAge && (
-                                    <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
-                                        <div className="relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary">₦</span>
-                                            <input type="number" value={stockCost > 0 ? stockCost : ''} onChange={handleNumericChange(setStockCost)} placeholder="Total Cost of Stock *" className="w-full p-3 pl-8 border border-border rounded-lg bg-card text-text-primary" required aria-label="Total Cost of Stock" />
-                                        </div>
-                                        <input type="text" value={stockAge} onChange={(e) => setStockAge(e.target.value)} placeholder={`Age (e.g., ${sector === 'Fish' ? 'Fingerlings' : 'Day-Old'})`} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" aria-label="Stock Age" />
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        {!isEditing && (
-                            <div>
-                                <div className="flex justify-between items-center">
-                                    <label className="block text-sm font-semibold text-text-secondary">4. Add Starting Feed Inventory? (Optional)</label>
-                                    <label htmlFor="feed-toggle" className="flex items-center cursor-pointer">
-                                        <div className="relative">
-                                            <input type="checkbox" id="feed-toggle" className="sr-only" checked={addFeed} onChange={() => setAddFeed(!addFeed)} />
-                                            <div className="block bg-muted w-12 h-7 rounded-full"></div>
-                                            <div className={`dot absolute left-1 top-1 bg-white dark:bg-slate-400 w-5 h-5 rounded-full transition-transform ${addFeed ? 'translate-x-full bg-primary' : ''}`}></div>
-                                        </div>
-                                    </label>
-                                </div>
-                                {addFeed && (
-                                    <div className="mt-3 space-y-3 p-3 bg-muted rounded-lg animate-fade-in">
-                                        <input type="text" value={feedBrand} onChange={(e) => setFeedBrand(e.target.value)} placeholder="Feed Brand / Type" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
-                                        <input type="number" value={feedQuantity > 0 ? feedQuantity : ''} onChange={handleNumericChange(setFeedQuantity)} placeholder="Quantity on Hand (Bags/kg)" className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" />
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                        {/* Age */}
+                        <div>
+                            <label className="block text-sm font-medium text-text-secondary mb-1">Age (Weeks)</label>
+                            <input
+                                type="text"
+                                value={stockAge}
+                                onChange={(e) => setStockAge(e.target.value)}
+                                placeholder={sector === 'Fish' ? 'Fingerlings' : 'Day-Old'}
+                                className="w-full p-2 border border-border rounded-lg bg-input text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                            />
+                        </div>
+
+                        {/* Summary/Notes */}
+                        <div>
+                            <label className="block text-sm font-medium text-text-secondary mb-1">Summary/Notes</label>
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Vaccination done, feed changed to starter."
+                                rows={2}
+                                className="w-full p-2 border border-border rounded-lg bg-input text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent resize-none text-sm"
+                            />
+                        </div>
 
                         {/* Health Schedule Display - Only when editing a batch */}
                         {isEditing && batchToEdit && (
@@ -376,17 +420,22 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                             </div>
                         )}
                     </div>
-                </form>
 
-                {/* Sticky Footer - Always Visible */}
-                <div className="p-4 border-t border-border bg-popover sticky bottom-0 z-10 flex gap-3">
-                    <button type="button" onClick={onClose} className="px-5 py-3 rounded-xl text-text-primary bg-danger hover:bg-red-600 font-bold">Cancel</button>
-                    <button onClick={handleSubmit} className="flex-grow text-white font-bold py-3 px-4 rounded-xl bg-primary hover:bg-primary-600 active:scale-95 transition-all">Submit</button>
-                </div>
+                    {/* Save Button - Always Visible */}
+                    <div className="p-3 border-t border-border bg-card flex-shrink-0">
+                        <button
+                            type="submit"
+                            className="w-full text-white font-bold py-3 px-6 rounded-xl bg-primary hover:bg-green-600 active:scale-[0.98] transition-all text-lg shadow-lg"
+                        >
+                            SAVE BATCH
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );
 };
+
 
 interface DeleteConfirmationModalProps { batch: Batch; onClose: () => void; onConfirm: () => void; }
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({ batch, onClose, onConfirm }) => {
