@@ -914,52 +914,6 @@ export const invitesService = {
 };
 
 // ============================================
-// COMMUNITY TIPS
-// ============================================
-
-export const tipsService = {
-    async list(sector: string) {
-        const { data, error } = await supabase
-            .from('tips')
-            .select('*')
-            .eq('sector', sector)
-            .order('votes', { ascending: false });
-
-        if (error) throw error;
-        return (data || []) as Tables<'tips'>[];
-    },
-
-    async create(tip: Insertable<'tips'>) {
-        const { data, error } = await supabase
-            .from('tips')
-            .insert(tip as any)
-            .select()
-            .single();
-
-        if (error) throw error;
-        return data as Tables<'tips'>;
-    },
-
-    async vote(tipId: string, userId: string, voteType: number) {
-        const { error } = await supabase
-            .from('tip_votes')
-            .upsert({ tip_id: tipId, user_id: userId, vote_type: voteType });
-
-        if (error) throw error;
-    },
-
-    async getUserVotes(userId: string) {
-        const { data, error } = await supabase
-            .from('tip_votes')
-            .select('*')
-            .eq('user_id', userId);
-
-        if (error) throw error;
-        return (data || []) as Tables<'tip_votes'>[];
-    }
-};
-
-// ============================================
 // ACTION RULES (Today's Actions)
 // ============================================
 
