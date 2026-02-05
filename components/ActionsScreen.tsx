@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useActions } from '../contexts/ActionsContext';
 import { WarningIcon, InfoIcon, CloseIcon, ClockIcon, CheckCircleIcon, ChevronLeftIcon } from './icons';
-import type { ActionSeverity, Sector } from '../types/database';
+import type { ActionSeverity } from '../types/database';
 import type { Screen } from '../App';
 
 const severityConfig: Record<ActionSeverity, { icon: React.FC<{ className?: string }>; color: string; bg: string; textColor: string }> = {
@@ -31,8 +31,7 @@ interface ActionsScreenProps {
 }
 
 export default function ActionsScreen({ onNavigate }: ActionsScreenProps) {
-    const { actions, loading, dismissAction, snoozeAction, resolveAction, getActionsBySector } = useActions();
-    const [sectorFilter, setSectorFilter] = useState<Sector | 'All'>('All');
+    const { actions, loading, dismissAction, snoozeAction, resolveAction } = useActions();
     const [processingId, setProcessingId] = useState<string | null>(null);
 
     const handleDismiss = async (actionId: string) => {
@@ -68,10 +67,6 @@ export default function ActionsScreen({ onNavigate }: ActionsScreenProps) {
         }
     };
 
-    const filteredActions = sectorFilter === 'All'
-        ? actions
-        : getActionsBySector(sectorFilter as Sector);
-
     if (loading) {
         return (
             <div className="min-h-screen bg-surface p-4">
@@ -89,10 +84,10 @@ export default function ActionsScreen({ onNavigate }: ActionsScreenProps) {
 
     return (
         <div className="min-h-screen bg-surface">
-            {/* Header with Back Button */}
+            {/* Header */}
             <div className="bg-card border-b border-border sticky top-0 z-10">
                 <div className="max-w-4xl mx-auto px-4 py-4">
-                    <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-3">
                         {onNavigate && (
                             <button
                                 onClick={() => onNavigate('dashboard')}
@@ -104,40 +99,22 @@ export default function ActionsScreen({ onNavigate }: ActionsScreenProps) {
                         )}
                         <h1 className="text-2xl font-bold text-text">Today's Actions</h1>
                     </div>
-
-                    {/* Sector Filter */}
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                        {(['All', 'Layer', 'Broiler', 'Fish'] as const).map(sector => (
-                            <button
-                                key={sector}
-                                onClick={() => setSectorFilter(sector)}
-                                className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition ${sectorFilter === sector
-                                    ? 'bg-primary text-white'
-                                    : 'bg-surface text-text-secondary hover:bg-border'
-                                    }`}
-                            >
-                                {sector}
-                            </button>
-                        ))}
-                    </div>
                 </div>
             </div>
 
             {/* Actions List */}
             <div className="max-w-4xl mx-auto px-4 py-4 pb-24">
-                {filteredActions.length === 0 ? (
+                {actions.length === 0 ? (
                     <div className="bg-card rounded-lg p-8 text-center border border-border">
                         <InfoIcon className="w-12 h-12 text-text-secondary mx-auto mb-3" />
                         <h3 className="font-bold text-lg text-text mb-1">All Clear!</h3>
                         <p className="text-text-secondary">
-                            {sectorFilter === 'All'
-                                ? "No actions needed right now. Great work!"
-                                : `No ${sectorFilter} actions at the moment.`}
+                            No actions needed right now. Great work!
                         </p>
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {filteredActions.map(action => {
+                        {actions.map(action => {
                             const config = severityConfig[action.rule.severity];
                             const Icon = config.icon;
                             const isProcessing = processingId === action.id;
