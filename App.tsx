@@ -230,7 +230,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
               </button>
             )}
 
-            <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around z-50 lg:hidden">
+            <nav className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around z-50 lg:hidden transition-transform duration-200 ${isBottomNavVisible ? 'translate-y-0' : 'translate-y-full'}`}>
               <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={AnalyticsIcon} label="Stats" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
