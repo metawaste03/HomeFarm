@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HomeFarm</string>
+    <string name="title_activity_main">HomeFarm</string>
+    <string name="package_name">com.homefarm.app</string>
+    <string name="custom_url_scheme">com.homefarm.app</string>
+</resources>

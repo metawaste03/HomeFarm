@@ -1,17 +1,59 @@
 {
   "short_name": "HomeFarm",
   "name": "HomeFarm: Farm Management",
+  "description": "Smart daily logging and management for poultry, layer, and aquaculture farms.",
   "icons": [
     {
-      "src": "/vite.svg",
-      "type": "image/svg+xml",
-      "sizes": "512x512",
+      "src": "/icons/icon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#84cc16",
-  "background_color": "#ffffff"
+  "background_color": "#ffffff",
+  "categories": [
+    "business",
+    "productivity"
+  ]
 }

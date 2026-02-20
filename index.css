@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Safe-area insets for native Android/iOS (notches, gesture nav) */
+/* These are no-ops on regular browsers, only activate inside Capacitor shell */
+html {
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+}
+
+body {
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+}
+
+
 @layer base {
   :root {
     --background-color: #f8fafc;

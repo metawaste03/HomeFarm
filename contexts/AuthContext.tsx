@@ -96,10 +96,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     const signInWithGoogle = async () => {
+        // Detect if running inside Capacitor native shell
+        const isNative = typeof (window as any).Capacitor !== 'undefined';
+        const redirectTo = isNative
+            ? 'com.homefarm.app://login'  // Android deep-link scheme
+            : `${window.location.origin}/`;
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/`,
+                redirectTo,
             },
         });
         return { error };

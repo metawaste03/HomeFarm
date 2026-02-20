@@ -176,6 +176,11 @@ const LoginScreen: React.FC = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 animate-fade-in">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
+          <img
+            src="/icons/icon-192.png"
+            alt="HomeFarm Logo"
+            className="w-24 h-24 mx-auto mb-3 rounded-2xl shadow-lg"
+          />
           <h1 className="text-4xl font-bold text-primary">HomeFarm</h1>
           <p className="text-text-secondary mt-2">Your Farm's Data, Simplified.</p>
         </div>

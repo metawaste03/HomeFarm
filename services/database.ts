@@ -786,6 +786,21 @@ export const farmMembersService = {
             .single();
 
         if (inviteError) throw inviteError;
+
+        // Send the invite email via Supabase Edge Function (fire-and-forget)
+        // If email fails, the invite record still exists — user can be informed
+        try {
+            const { error: emailError } = await supabase.functions.invoke('send-invite-email', {
+                body: { inviteId: invite.id },
+            });
+            if (emailError) {
+                console.warn('Invite email could not be sent:', emailError);
+            }
+        } catch (emailErr) {
+            // Don't fail the invite if email sending fails
+            console.warn('Invite email sending failed (non-critical):', emailErr);
+        }
+
         return { type: 'invited', data: invite };
     },
 
