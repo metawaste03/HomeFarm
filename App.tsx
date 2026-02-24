@@ -155,7 +155,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
           setIsModalOpen={setIsNewBatchModalOpen}
           farms={farms}
           batches={batches}
-          onSaveBatch={(b: any) => 'id' in b ? updateBatch(b) : addBatch(b)}
+          onSaveBatch={async (b: any) => { if ('id' in b) { await updateBatch(b); } else { await addBatch(b); } }}
           onDeleteBatch={(id: any) => deleteBatch(String(id))}
           activeSector={activeSector}
         />;

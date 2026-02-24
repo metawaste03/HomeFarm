@@ -28,7 +28,7 @@ interface BatchManagementScreenProps {
     setIsModalOpen: (isOpen: boolean) => void;
     farms: Farm[];
     batches: Batch[];
-    onSaveBatch: (batch: Batch | Omit<Batch, 'id'>) => void;
+    onSaveBatch: (batch: Batch | Omit<Batch, 'id'>) => Promise<void>;
     onDeleteBatch: (batchId: string | number) => void;
     activeSector: Sector;
 }
@@ -49,10 +49,15 @@ const BatchManagementScreen: React.FC<BatchManagementScreenProps> = ({ onNavigat
         setIsSelectorOpen(false);
     };
 
-    const handleSave = (batchData: Omit<Batch, 'id'>, batchId?: number) => {
+    const handleSave = async (batchData: Omit<Batch, 'id'>, batchId?: number) => {
         const batchToSave = batchId ? { ...batchData, id: batchId } : batchData;
-        onSaveBatch(batchToSave);
-        closeForms();
+        try {
+            await onSaveBatch(batchToSave);
+            closeForms();
+        } catch (err: any) {
+            console.error('Failed to save batch:', err);
+            alert(err?.message || 'Failed to save batch. Please try again.');
+        }
     };
 
     const handleConfirmDelete = () => {
