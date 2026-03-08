@@ -2,6 +2,18 @@ import React, { useState } from 'react';
 import { CameraIcon, BellIcon } from './icons';
 import { useAuth } from '../contexts/AuthContext';
 
+const PRIVACY_POLICY_PREVIEW = `This privacy policy applies to the Homefarm app for mobile devices. The Application collects basic usage data (IP address, pages visited, time spent, OS type). It does not gather precise location or use AI to process your data.
+
+The Service Provider may use your email to contact you. Only aggregated, anonymized data is shared with third parties. Data is retained as long as you use the app. You may request deletion at metawaste03@gmail.com.
+
+The Application does not knowingly collect data from children under 13. For full details, visit Settings → Legal → Privacy Policy within the app.`;
+
+const TERMS_PREVIEW = `By using the Homefarm app you agree to these terms. Unauthorized copying or modification of the Application is prohibited. All intellectual property remains property of the Service Provider.
+
+The Service Provider may modify the app or introduce charges at any time (communicated clearly). You are responsible for securing your own device. Some features require internet access; data charges from your carrier may apply.
+
+The Service Provider accepts no liability for indirect losses from relying on app data. These terms may be updated at any time. For full details, visit Settings → Legal → Terms & Conditions within the app.`;
+
 // Google Icon component
 const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
   <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -13,6 +25,38 @@ const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 type AuthMode = 'signin' | 'signup' | 'forgot-password' | 'reset-sent' | 'verify-email';
+type LegalDoc = 'privacy' | 'terms' | null;
+
+// Modal to show legal content before user is authenticated
+const LegalModal: React.FC<{ doc: LegalDoc; onClose: () => void }> = ({ doc, onClose }) => {
+  if (!doc) return null;
+  const isPrivacy = doc === 'privacy';
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div
+        className="bg-card w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <h2 className="text-lg font-bold text-text-primary">
+            {isPrivacy ? 'Privacy Policy' : 'Terms & Conditions'}
+          </h2>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-muted text-text-secondary hover:text-text-primary transition-colors" aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-4 overflow-y-auto max-h-80 text-sm text-text-secondary leading-relaxed whitespace-pre-line">
+          {isPrivacy ? PRIVACY_POLICY_PREVIEW : TERMS_PREVIEW}
+        </div>
+        <div className="p-4 border-t border-border">
+          <p className="text-xs text-text-secondary text-center">Full document available in Settings → Legal after sign-in.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const LoginScreen: React.FC = () => {
   const { signUp, signIn, signInWithGoogle, resetPassword } = useAuth();
@@ -24,6 +68,7 @@ const LoginScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDoc>(null);
 
   const handleModeChange = (newMode: AuthMode) => {
     setMode(newMode);
@@ -289,6 +334,15 @@ const LoginScreen: React.FC = () => {
               </div>
             )}
 
+            {mode === 'signup' && (
+              <p className="text-xs text-text-secondary text-center px-1">
+                By creating an account, you agree to our{' '}
+                <button type="button" onClick={() => setLegalDoc('terms')} className="font-semibold text-primary hover:underline">Terms &amp; Conditions</button>
+                {' '}and{' '}
+                <button type="button" onClick={() => setLegalDoc('privacy')} className="font-semibold text-primary hover:underline">Privacy Policy</button>.
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -324,6 +378,7 @@ const LoginScreen: React.FC = () => {
           </p>
         </div>
       </div>
+      <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />
     </div>
   );
 };

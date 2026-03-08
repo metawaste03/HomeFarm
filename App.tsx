@@ -11,7 +11,7 @@ import BroilerLogScreen from './components/BroilerLogScreen';
 import FishLogScreen from './components/FishLogScreen';
 import AnalyticsScreen from './components/AnalyticsScreen';
 import LoginScreen from './components/LoginScreen';
-// WelcomeGuide removed - users now go directly to Dashboard
+import OnboardingWizard from './components/OnboardingWizard';
 import BusinessScreen from './components/BusinessScreen';
 import InventoryScreen from './components/InventoryScreen';
 import HealthScheduleScreen from './components/HealthScheduleScreen';
@@ -19,6 +19,8 @@ import TaskManagementScreen from './components/TaskManagementScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
 import ExpensesScreen from './components/ExpensesScreen';
 import LogHistoryScreen from './components/LogHistoryScreen';
+import PrivacyPolicyScreen from './components/PrivacyPolicyScreen';
+import TermsAndConditionsScreen from './components/TermsAndConditionsScreen';
 import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon, WarningIcon, CalculatorIcon } from './components/icons';
 import { AnalyticsIcon, SettingsIcon } from './components/CustomIcons';
 import { FarmProvider, useFarm, Sector, Batch, Farm } from './contexts/FarmContext';
@@ -33,11 +35,11 @@ import { UIProvider, useUI } from './contexts/UIContext';
 import ActionsScreen from './components/ActionsScreen';
 import CalculatorScreen from './components/CalculatorScreen';
 
-export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'calculator' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history';
+export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'calculator' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history' | 'privacy_policy' | 'terms_and_conditions';
 export type Theme = 'light' | 'dark' | 'system';
 
 const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ theme, setTheme }) => {
-  const { farms, batches, updateBatch, addBatch, deleteBatch, updateFarm, addFarm, deleteFarm } = useFarm();
+  const { farms, batches, updateBatch, addBatch, deleteBatch, updateFarm, addFarm, deleteFarm, loading: farmLoading, refreshData } = useFarm();
   const { signOut } = useAuth();
   const { isBottomNavVisible } = useUI();
   const [currentScreen, setCurrentScreen] = useState<Screen>('dashboard');
@@ -46,6 +48,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
   const [isNewBatchModalOpen, setIsNewBatchModalOpen] = useState(false);
   const [activeSector, setActiveSector] = useState<Sector>('Layer');
   const [selectedScope, setSelectedScope] = useState("");
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
 
 
   // Initialize selectedScope if not set and farms exist
@@ -99,6 +102,18 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
       console.error("Logout failed", error);
     }
   };
+
+  // ONBOARDING GATE: Only show wizard if farms have fully loaded AND there are zero farms
+  // This is bulletproof: farmLoading=true while fetching, so existing users see a spinner, never the wizard.
+  // Once onboardingComplete is set, we skip even if there's a brief re-render before context updates.
+  if (!onboardingComplete && !farmLoading && farms.length === 0) {
+    return (
+      <OnboardingWizard onComplete={() => {
+        setOnboardingComplete(true);
+        refreshData();
+      }} />
+    );
+  }
 
   const renderScreen = () => {
     switch (currentScreen) {
@@ -181,6 +196,10 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
         return <ActionsScreen onNavigate={navigateTo} />;
       case 'calculator':
         return <CalculatorScreen onNavigate={navigateTo} />;
+      case 'privacy_policy':
+        return <PrivacyPolicyScreen onNavigate={navigateTo} />;
+      case 'terms_and_conditions':
+        return <TermsAndConditionsScreen onNavigate={navigateTo} />;
       default:
         return <DashboardScreen
           onNavigate={navigateTo}
@@ -193,7 +212,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   }
 
-  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions', 'calculator'];
+  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions', 'calculator', 'privacy_policy', 'terms_and_conditions'];
   const showFab = !screensWithoutFab.includes(currentScreen) && farms.length > 0;
 
   return (

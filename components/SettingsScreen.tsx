@@ -11,6 +11,22 @@ const AppearanceIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const ShieldIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+);
+
+const DocumentIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+    </svg>
+);
+
 
 interface SettingsScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -93,6 +109,22 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, onLogout, c
                         label="Subscription"
                         description="Manage your billing and plan."
                         onClick={() => { }}
+                    />
+                </div>
+
+                <p className="px-2 text-sm text-text-secondary font-semibold mt-6">LEGAL</p>
+                <div className="bg-card rounded-2xl shadow-md overflow-hidden">
+                    <SettingsMenuItem
+                        icon={<ShieldIcon className="w-6 h-6 text-primary" />}
+                        label="Privacy Policy"
+                        description="How we collect and use your data."
+                        onClick={() => onNavigate('privacy_policy')}
+                    />
+                    <SettingsMenuItem
+                        icon={<DocumentIcon className="w-6 h-6 text-primary" />}
+                        label="Terms &amp; Conditions"
+                        description="Rules governing use of the app."
+                        onClick={() => onNavigate('terms_and_conditions')}
                     />
                 </div>
 
