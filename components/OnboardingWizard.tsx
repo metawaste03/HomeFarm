@@ -4,6 +4,7 @@ import { ChickenIcon, FishIcon } from './icons';
 
 interface OnboardingWizardProps {
     onComplete: () => void;
+    onSkip: () => void;
 }
 
 const SECTOR_OPTIONS: { value: Sector; label: string; icon: React.FC<{ className?: string }>; color: string }[] = [
@@ -12,9 +13,9 @@ const SECTOR_OPTIONS: { value: Sector; label: string; icon: React.FC<{ className
     { value: 'Fish', label: 'Aquaculture', icon: FishIcon, color: 'bg-blue-500' },
 ];
 
-const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
-    // Step state: 1 = Create Farm, 2 = Create Batch
-    const [step, setStep] = useState<1 | 2>(1);
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onSkip }) => {
+    // Step state: 1 = Create Farm, 2 = Create Batch, 3 = Celebration
+    const [step, setStep] = useState<1 | 2 | 3>(1);
     const { addFarm, addBatch, farms, refreshData } = useFarm();
 
     // --- Step 1: Farm ---
@@ -44,7 +45,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         setFarmLoading(true);
         try {
             await addFarm({ name: trimmedName, location: farmLocation.trim() || undefined });
-            // Small delay to let context update
             await refreshData();
             setStep(2);
         } catch (err: any) {
@@ -69,7 +69,6 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
             return;
         }
 
-        // Get the farm we just created (should be the first one)
         const targetFarm = farms[0];
         if (!targetFarm) {
             setBatchError('Something went wrong. Please reload the app.');
@@ -89,7 +88,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                 startDate: startDate || undefined,
             });
             await refreshData();
-            onComplete();
+            setStep(3); // Show celebration
         } catch (err: any) {
             console.error('Onboarding: Failed to create batch', err);
             setBatchError(err?.message || 'Failed to create batch. Please try again.');
@@ -98,14 +97,33 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
         }
     };
 
+    const handleFinishCelebration = () => {
+        onComplete();
+    };
+
     return (
         <div className="fixed inset-0 bg-background z-[100] flex items-center justify-center p-4 overflow-y-auto">
             <div className="w-full max-w-md mx-auto">
+                {/* Skip Button */}
+                {step < 3 && (
+                    <button
+                        onClick={onSkip}
+                        className="absolute top-4 right-4 text-text-secondary hover:text-text-primary transition-colors p-2"
+                        aria-label="Skip onboarding"
+                    >
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                )}
+
                 {/* Progress indicator */}
-                <div className="flex items-center justify-center gap-3 mb-8">
-                    <div className={`h-2 rounded-full transition-all duration-500 ${step >= 1 ? 'bg-primary w-16' : 'bg-muted w-12'}`} />
-                    <div className={`h-2 rounded-full transition-all duration-500 ${step >= 2 ? 'bg-primary w-16' : 'bg-muted w-12'}`} />
-                </div>
+                {step < 3 && (
+                    <div className="flex items-center justify-center gap-3 mb-8">
+                        <div className={`h-2 rounded-full transition-all duration-500 ${step >= 1 ? 'bg-primary w-16' : 'bg-muted w-12'}`} />
+                        <div className={`h-2 rounded-full transition-all duration-500 ${step >= 2 ? 'bg-primary w-16' : 'bg-muted w-12'}`} />
+                    </div>
+                )}
 
                 {/* Card */}
                 <div className="bg-card rounded-2xl shadow-xl border border-border p-6 animate-fade-in">
@@ -174,7 +192,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                                 </button>
                             </form>
                         </>
-                    ) : (
+                    ) : step === 2 ? (
                         <>
                             {/* Step 2: Create Batch */}
                             <div className="text-center mb-6">
@@ -279,13 +297,51 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete }) => {
                                 </button>
                             </form>
                         </>
+                    ) : (
+                        <>
+                            {/* Step 3: Celebration */}
+                            <div className="text-center mb-6">
+                                {/* Celebration Animation */}
+                                <div className="relative inline-flex items-center justify-center w-24 h-24 mb-4">
+                                    <div className="absolute inset-0 animate-ping bg-primary/20 rounded-full"></div>
+                                    <div className="absolute inset-2 animate-pulse bg-primary/30 rounded-full"></div>
+                                    <div className="relative inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary text-white">
+                                        <span className="text-3xl">🎉</span>
+                                    </div>
+                                </div>
+
+                                {/* Confetti-like decorative elements */}
+                                <div className="flex justify-center gap-2 mb-4">
+                                    <span className="text-2xl animate-bounce" style={{ animationDelay: '0ms' }}>✨</span>
+                                    <span className="text-2xl animate-bounce" style={{ animationDelay: '100ms' }}>🎊</span>
+                                    <span className="text-2xl animate-bounce" style={{ animationDelay: '200ms' }}>✨</span>
+                                </div>
+
+                                <h1 className="text-2xl font-bold text-text-primary mb-2">Congratulations!</h1>
+                                <p className="text-text-secondary text-sm mb-4">
+                                    You've taken the first step to knowing what's happening at your facilities.
+                                </p>
+                                <p className="text-text-secondary text-sm">
+                                    Now you can start tracking daily activities, monitoring progress, and making data-driven decisions for <strong className="text-text-primary">{farms[0]?.name}</strong>.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={handleFinishCelebration}
+                                className="w-full bg-primary text-white font-bold py-3.5 rounded-xl text-lg hover:bg-primary-600 active:bg-primary-700 transition-colors flex items-center justify-center gap-2"
+                            >
+                                Let's Get Started! →
+                            </button>
+                        </>
                     )}
                 </div>
 
                 {/* Subtle footer */}
-                <p className="text-center text-text-secondary/50 text-xs mt-6">
-                    Step {step} of 2
-                </p>
+                {step < 3 && (
+                    <p className="text-center text-text-secondary/50 text-xs mt-6">
+                        Step {step} of 2
+                    </p>
+                )}
             </div>
         </div>
     );

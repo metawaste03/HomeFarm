@@ -103,15 +103,21 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   };
 
-  // ONBOARDING GATE: Only show wizard if farms have fully loaded AND there are zero farms
+  // ONBOARDING GATE: Show wizard after login if user has no farms AND no batches
   // This is bulletproof: farmLoading=true while fetching, so existing users see a spinner, never the wizard.
   // Once onboardingComplete is set, we skip even if there's a brief re-render before context updates.
-  if (!onboardingComplete && !farmLoading && farms.length === 0) {
+  const hasNoFarmOrBatch = farms.length === 0 || batches.length === 0;
+  if (!onboardingComplete && !farmLoading && hasNoFarmOrBatch) {
     return (
-      <OnboardingWizard onComplete={() => {
-        setOnboardingComplete(true);
-        refreshData();
-      }} />
+      <OnboardingWizard 
+        onComplete={() => {
+          setOnboardingComplete(true);
+          refreshData();
+        }} 
+        onSkip={() => {
+          setOnboardingComplete(true);
+        }} 
+      />
     );
   }
 
