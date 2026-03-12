@@ -105,11 +105,12 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ onNavigate, onLogout, c
                         description="Manage your personal information."
                         onClick={() => setProfileModalOpen(true)}
                     />
-                    <SettingsMenuItem
+                    {/* Subscription - hidden until feature is built */}
+                    {/* <SettingsMenuItem
                         label="Subscription"
                         description="Manage your billing and plan."
                         onClick={() => { }}
-                    />
+                    /> */}
                 </div>
 
                 <p className="px-2 text-sm text-text-secondary font-semibold mt-6">LEGAL</p>
