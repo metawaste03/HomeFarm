@@ -48,6 +48,13 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
     const [feedError, setFeedError] = useState<string | null>(null);
     const availableFeed = getAvailableFeed();
 
+    // Auto-select feed if only one item in inventory
+    React.useEffect(() => {
+        if (availableFeed.length === 1 && !selectedFeedId) {
+            setSelectedFeedId(availableFeed[0].id);
+        }
+    }, [availableFeed.length]);
+
     // Mortality State
     const [mortality, setMortality] = useState(0);
 
@@ -152,6 +159,12 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
             return;
         }
 
+        // Validate feed selection - required when feed is logged
+        if (feedKg > 0 && availableFeed.length > 0 && !selectedFeedId) {
+            setFeedError('Please select a feed type from inventory before saving.');
+            return;
+        }
+
         // Validate feed availability if feed is being logged
         if (feedKg > 0 && selectedFeedId) {
             const availability = checkAvailability(selectedFeedId, feedKg);
@@ -253,20 +266,25 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                         <h1 className="text-2xl font-bold text-text-primary">Daily Log</h1>
 
                         {/* Date Badge */}
-                        <div className="relative mt-3 inline-block">
-                            <label
-                                htmlFor="date-picker"
-                                className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm font-medium text-text-primary cursor-pointer hover:bg-border transition-colors"
+                        <div className="mt-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const dateInput = document.getElementById('date-picker') as HTMLInputElement | null;
+                                    if (dateInput) dateInput.showPicker();
+                                }}
+                                className="inline-flex items-center gap-2 px-4 py-2 bg-muted rounded-full text-sm font-medium text-text-primary hover:bg-border transition-colors"
                             >
                                 <CalendarIcon className="w-4 h-4 text-primary" />
                                 <span>{new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                            </label>
+                            </button>
                             <input
                                 id="date-picker"
                                 type="date"
                                 value={date}
                                 onChange={(e) => setDate(e.target.value)}
-                                className="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                                className="fixed top-0 left-0 w-0 h-0 opacity-0 pointer-events-none"
+                                aria-label="Select date"
                             />
                         </div>
                     </div>
@@ -393,6 +411,11 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                             <label htmlFor="feed-select" className="block text-sm font-medium text-text-secondary mb-1">Select Feed from Inventory</label>
                             {availableFeed.length === 0 ? (
                                 <p className="text-sm text-text-secondary italic">No feed in inventory. Add feed in the Inventory section first.</p>
+                            ) : availableFeed.length === 1 ? (
+                                <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+                                    <span>✓</span>
+                                    <span>Auto-selected: <strong>{availableFeed[0].name}</strong> ({availableFeed[0].quantity} {availableFeed[0].unit} available)</span>
+                                </p>
                             ) : (
                                 <select
                                     id="feed-select"
@@ -410,6 +433,12 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                                         </option>
                                     ))}
                                 </select>
+                            )}
+                            {availableFeed.length > 1 && feedKg > 0 && !selectedFeedId && (
+                                <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg flex items-center gap-2 text-amber-700 dark:text-amber-400 text-sm font-medium">
+                                    <span>⚠️</span>
+                                    <span>Please select a feed type from the dropdown above.</span>
+                                </div>
                             )}
                             {feedAvailability && !feedAvailability.available && (
                                 <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-danger text-sm font-medium">

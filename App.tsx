@@ -218,7 +218,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   }
 
-  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions', 'calculator', 'privacy_policy', 'terms_and_conditions'];
+  const screensWithoutFab: Screen[] = ['dashboard', 'team', 'farms', 'log', 'inventory', 'health_schedules', 'tasks', 'sales', 'business', 'batches', 'analytics', 'actions', 'calculator', 'privacy_policy', 'terms_and_conditions', 'expenses'];
   const showFab = !screensWithoutFab.includes(currentScreen) && farms.length > 0;
 
   return (

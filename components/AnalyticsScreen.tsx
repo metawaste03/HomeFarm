@@ -28,6 +28,67 @@ const iconMap: { [key: string]: React.FC<any> } = {
     WarningIcon,
 };
 
+// Industry Standard FCR Benchmarks
+// Lower FCR = Better efficiency (less feed needed per unit of production)
+const FCR_BENCHMARKS = {
+    Layer: {
+        excellent: { max: 5.5, label: 'Excellent' },  // kg feed per crate
+        good: { max: 6.5, label: 'Good' },
+        average: { max: 7.5, label: 'Average' },
+        poor: { min: 7.5, label: 'Needs Improvement' }
+    },
+    Broiler: {
+        excellent: { max: 1.5, label: 'Excellent' },  // kg feed per kg weight
+        good: { max: 1.7, label: 'Good' },
+        average: { max: 1.9, label: 'Average' },
+        poor: { min: 1.9, label: 'Needs Improvement' }
+    },
+    Fish: {
+        excellent: { max: 1.3, label: 'Excellent' },  // kg feed per kg fish (Tilapia/Catfish)
+        good: { max: 1.5, label: 'Good' },
+        average: { max: 1.8, label: 'Average' },
+        poor: { min: 1.8, label: 'Needs Improvement' }
+    }
+};
+
+// Helper function to evaluate FCR against industry standards
+const evaluateFCR = (fcr: number, sector: Sector): { status: 'excellent' | 'good' | 'average' | 'poor'; label: string; color: string; explanation: string } => {
+    const benchmarks = FCR_BENCHMARKS[sector];
+    if (!benchmarks) {
+        return { status: 'average', label: 'Average', color: 'text-yellow-500', explanation: '' };
+    }
+
+    if (fcr <= benchmarks.excellent.max) {
+        return {
+            status: 'excellent',
+            label: benchmarks.excellent.label,
+            color: 'text-green-500',
+            explanation: 'Your feed efficiency is excellent! You\'re minimizing feed waste and maximizing production.'
+        };
+    } else if (fcr <= benchmarks.good.max) {
+        return {
+            status: 'good',
+            label: benchmarks.good.label,
+            color: 'text-green-500',
+            explanation: 'Good feed efficiency. There\'s room for improvement, but you\'re performing well.'
+        };
+    } else if (fcr <= benchmarks.average.max) {
+        return {
+            status: 'average',
+            label: benchmarks.average.label,
+            color: 'text-yellow-500',
+            explanation: 'Average feed efficiency. Consider reviewing feed management, storage, and feeding practices.'
+        };
+    } else {
+        return {
+            status: 'poor',
+            label: benchmarks.poor.label,
+            color: 'text-red-500',
+            explanation: 'Feed efficiency needs improvement. High FCR increases costs. Check for feed waste, quality issues, or health problems.'
+        };
+    }
+};
+
 
 const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, batches, activeSector, onSectorChange, theme }) => {
     const { sales } = useSales();
@@ -115,10 +176,11 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
     }, [sales, inventoryItems, activeSector]);
 
     // Check if all milestones are complete
+    // Note: Sales is not required as FCR, mortality, production and other key metrics
+    // are derived from daily logs and inventory, not sales
     const hasEnoughData = milestones.batches >= 1 &&
         milestones.dailyLogs >= 7 &&
-        milestones.expenses >= 2 &&
-        milestones.sales >= 1;
+        milestones.expenses >= 2;
 
     const chartRefs = {
         incomeExpense: useRef<HTMLCanvasElement>(null),
@@ -168,7 +230,14 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
 
         const productionData = sortedLogs.map(l => {
             const acts = l.activities as any;
-            return acts?.eggCollection?.total || 0;
+            // For Layers: egg collection total
+            // For Broilers/Fish: average weight from weight samples (in grams)
+            if (activeSector === 'Layer') {
+                return acts?.eggCollection?.total || 0;
+            } else {
+                // For Broilers and Fish, use average weight from weight samples
+                return acts?.weightSample?.averageWeightGrams || 0;
+            }
         });
 
         const mortalityData = sortedLogs.map(l => {
@@ -210,7 +279,13 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
         }
 
         // 6. Generate dynamic insights based on real data
-        const insights: Array<{ icon: string; title: string; text: string }> = [];
+        const insights: Array<{ 
+            icon: string; 
+            title: string; 
+            text: string;
+            statusColor?: string;
+            statusLabel?: string;
+        }> = [];
 
         // Biggest Cost insight
         if (expLabels.length > 0) {
@@ -229,10 +304,18 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
 
         // Production insight
         if (totalProduction > 0) {
+            let productionText = '';
+            if (activeSector === 'Layer') {
+                productionText = `Your highest production was ${peakProduction.value.toLocaleString()} eggs on ${peakProduction.date}. Average daily production: ${Math.round(avgProduction).toLocaleString()} eggs.`;
+            } else if (activeSector === 'Broiler') {
+                productionText = `Highest avg. weight recorded: ${peakProduction.value.toLocaleString()}g on ${peakProduction.date}. Current avg. weight: ${Math.round(avgProduction).toLocaleString()}g.`;
+            } else if (activeSector === 'Fish') {
+                productionText = `Highest avg. weight recorded: ${peakProduction.value.toLocaleString()}g on ${peakProduction.date}. Current avg. weight: ${Math.round(avgProduction).toLocaleString()}g.`;
+            }
             insights.push({
                 icon: 'ArrowTrendingUpIcon',
                 title: 'Peak Production',
-                text: `Your highest production was ${peakProduction.value.toLocaleString()} eggs on ${peakProduction.date}. Average daily production: ${Math.round(avgProduction).toLocaleString()} eggs.`
+                text: productionText
             });
         } else if (activeSector === 'Layer') {
             insights.push({
@@ -240,16 +323,59 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                 title: 'Production Tracking',
                 text: 'Log your daily egg collection to track production trends.'
             });
+        } else if (activeSector === 'Broiler') {
+            insights.push({
+                icon: 'ArrowTrendingUpIcon',
+                title: 'Weight Tracking',
+                text: 'Log weight samples to track growth trends.'
+            });
+        } else if (activeSector === 'Fish') {
+            insights.push({
+                icon: 'ArrowTrendingUpIcon',
+                title: 'Growth Tracking',
+                text: 'Log weight samples to track fish growth.'
+            });
         }
 
-        // Feed insight
+        // Feed insight with FCR calculation and industry benchmark comparison
         if (totalFeed > 0) {
-            const fcr = totalProduction > 0 ? (totalFeed / (totalProduction / 10)).toFixed(2) : 'N/A';
-            insights.push({
-                icon: 'FeedBagIcon',
-                title: 'Feed Consumption',
-                text: `Total feed consumed: ${totalFeed.toLocaleString()} kg. ${activeSector === 'Layer' && totalProduction > 0 ? `Feed Conversion Ratio: ${fcr} kg/dozen eggs.` : ''}`
-            });
+            let fcrValue: number | null = null;
+            let fcrUnit = '';
+            
+            if (activeSector === 'Layer' && totalProduction > 0) {
+                // FCR for Layers: kg feed per crate of eggs (1 crate = 30 eggs)
+                const cratesOfEggs = totalProduction / 30;
+                fcrValue = cratesOfEggs > 0 ? totalFeed / cratesOfEggs : null;
+                fcrUnit = 'kg feed per crate of eggs';
+            } else if (activeSector === 'Broiler' && totalProduction > 0) {
+                // FCR for Broilers: kg feed per kg weight gain
+                const totalWeightKg = totalProduction / 1000;
+                fcrValue = totalWeightKg > 0 ? totalFeed / totalWeightKg : null;
+                fcrUnit = 'kg feed per kg weight gain';
+            } else if (activeSector === 'Fish' && totalProduction > 0) {
+                // FCR for Fish: kg feed per kg fish weight
+                const totalWeightKg = totalProduction / 1000;
+                fcrValue = totalWeightKg > 0 ? totalFeed / totalWeightKg : null;
+                fcrUnit = 'kg feed per kg fish';
+            }
+            
+            if (fcrValue !== null) {
+                const fcrFormatted = fcrValue.toFixed(2);
+                const evaluation = evaluateFCR(fcrValue, activeSector);
+                insights.push({
+                    icon: 'FeedBagIcon',
+                    title: 'Feed Efficiency (FCR)',
+                    text: `FCR: ${fcrFormatted} ${fcrUnit}. ${evaluation.explanation}`,
+                    statusColor: evaluation.color,
+                    statusLabel: evaluation.label
+                });
+            } else {
+                insights.push({
+                    icon: 'FeedBagIcon',
+                    title: 'Feed Consumption',
+                    text: `Total feed consumed: ${totalFeed.toLocaleString()} kg. Log production data to calculate FCR.`
+                });
+            }
         } else {
             insights.push({
                 icon: 'FeedBagIcon',
@@ -464,14 +590,27 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
         </div>
     );
 
-    const InsightCard: React.FC<{ icon: React.ReactNode; title: string; text: string }> = ({ icon, title, text }) => (
+    const InsightCard: React.FC<{ 
+        icon: React.ReactNode; 
+        title: string; 
+        text: string;
+        statusColor?: string;
+        statusLabel?: string;
+    }> = ({ icon, title, text, statusColor, statusLabel }) => (
         <div className="bg-card p-4 rounded-xl shadow-sm flex items-start gap-4">
             <div className="flex-shrink-0 bg-green-100 dark:bg-green-900/50 text-primary p-3 rounded-full">
                 {icon}
             </div>
-            <div>
-                <h4 className="font-bold text-text-primary">{title}</h4>
-                <p className="text-sm text-text-secondary mt-1">{text}</p>
+            <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-bold text-text-primary">{title}</h4>
+                    {statusLabel && statusColor && (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${statusColor.replace('text-', 'bg-').replace('500', '100')} dark:${statusColor.replace('text-', 'bg-').replace('500', '900/30')} ${statusColor}`}>
+                            {statusLabel}
+                        </span>
+                    )}
+                </div>
+                <p className="text-sm text-text-secondary">{text}</p>
             </div>
         </div>
     );
@@ -561,6 +700,8 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                                             icon={<IconComponent className="w-6 h-6" />}
                                             title={insight.title}
                                             text={insight.text}
+                                            statusColor={insight.statusColor}
+                                            statusLabel={insight.statusLabel}
                                         />
                                     ) : null;
                                 })}
