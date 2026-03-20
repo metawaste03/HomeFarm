@@ -74,8 +74,13 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
     // Check feed availability when amount or item changes
     const feedAvailability = useMemo(() => {
         if (!selectedFeedId || feedKg <= 0) return null;
+        const selectedFeed = availableFeed.find(f => f.id === selectedFeedId);
+        if (!selectedFeed) return null;
+        
+        // Feed is always recorded in Kg in the daily log
+        // checkAvailability already handles the conversion in BusinessContext
         return checkAvailability(selectedFeedId, feedKg);
-    }, [selectedFeedId, feedKg, checkAvailability]);
+    }, [selectedFeedId, feedKg, availableFeed, checkAvailability]);
 
     const grandTotalEggs = useMemo(() => {
         // FIX: Add type assertion as Object.values can be inferred as `unknown[]`.
@@ -414,7 +419,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                             ) : availableFeed.length === 1 ? (
                                 <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
                                     <span>✓</span>
-                                    <span>Auto-selected: <strong>{availableFeed[0].name}</strong> ({availableFeed[0].quantity} {availableFeed[0].unit} available)</span>
+                                    <span>Auto-selected: <strong>{availableFeed[0].name}</strong> ({availableFeed[0].weightPerUnit && availableFeed[0].unit.toLowerCase().includes('bag') ? `${availableFeed[0].quantity} kg (${(availableFeed[0].quantity / availableFeed[0].weightPerUnit).toFixed(2)} bags)` : `${availableFeed[0].quantity} ${availableFeed[0].unit}`} available)</span>
                                 </p>
                             ) : (
                                 <select
@@ -429,7 +434,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                                     <option value="">-- Select Feed --</option>
                                     {availableFeed.map(item => (
                                         <option key={item.id} value={item.id}>
-                                            {item.name} ({item.quantity} {item.unit} available)
+                                            {item.name} ({item.weightPerUnit && item.unit.toLowerCase().includes('bag') ? `${item.quantity} kg (${(item.quantity / item.weightPerUnit).toFixed(2)} bags)` : `${item.quantity} ${item.unit}`} available)
                                         </option>
                                     ))}
                                 </select>

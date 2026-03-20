@@ -268,6 +268,8 @@ export interface Database {
                     unit: string;
                     min_threshold: number;
                     created_at: string;
+                    weight_per_unit: number;
+                    base_unit: string;
                 };
                 Insert: {
                     id?: string;
@@ -278,6 +280,8 @@ export interface Database {
                     unit: string;
                     min_threshold?: number;
                     created_at?: string;
+                    weight_per_unit?: number;
+                    base_unit?: string;
                 };
                 Update: {
                     id?: string;
@@ -288,6 +292,8 @@ export interface Database {
                     unit?: string;
                     min_threshold?: number;
                     created_at?: string;
+                    weight_per_unit?: number;
+                    base_unit?: string;
                 };
             };
             transactions: {

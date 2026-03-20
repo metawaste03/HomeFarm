@@ -26,6 +26,8 @@ export interface InventoryItem {
     minThreshold: number;
     transactions: Transaction[];
     farmId?: string;
+    weightPerUnit?: number; // Weight in Kg per unit (e.g., 25 for 25Kg bags)
+    baseUnit?: string; // Base unit for internal tracking (e.g., 'kg')
 }
 
 export interface Supplier {
@@ -51,6 +53,7 @@ interface BusinessContextType {
         cost: number;
         date: string;
         supplier?: string;
+        weightPerUnit?: number;
     }) => Promise<void>;
     updateThreshold: (itemId: string, newThreshold: number) => Promise<void>;
     addSupplier: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
@@ -64,6 +67,9 @@ interface BusinessContextType {
     getAvailableMedication: () => InventoryItem[];
     checkAvailability: (itemId: string, requestedQty: number) => { available: boolean; currentQty: number; itemName: string };
     checkProductAvailability: (itemName: string, quantity: number) => { available: boolean; currentQty: number; itemName: string; itemId?: string };
+    // Unit conversion functions
+    convertToBaseUnits: (item: InventoryItem, displayQuantity: number) => number;
+    convertToDisplayUnits: (item: InventoryItem, baseQuantity: number) => number;
 }
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
@@ -78,6 +84,8 @@ const dbItemToAppItem = (dbItem: Tables<'inventory_items'>, transactions: Transa
     minThreshold: Number(dbItem.min_threshold),
     transactions,
     farmId: dbItem.farm_id,
+    weightPerUnit: Number(dbItem.weight_per_unit),
+    baseUnit: dbItem.base_unit,
 });
 
 // Helper to convert database transaction to app transaction
@@ -168,17 +176,31 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
             };
 
             if (data.isNewItem) {
+                // Calculate total quantity in base units (Kg for feed)
+                let totalQuantity = data.quantity;
+                let weightPerUnit = 1;
+                let baseUnit = 'kg';
+                
+                // If it's feed and unit is bags, calculate total weight in Kg
+                if (data.category === 'Feed' && data.unit.toLowerCase().includes('bag')) {
+                    weightPerUnit = data.weightPerUnit || 1;
+                    totalQuantity = data.quantity * weightPerUnit;
+                    baseUnit = 'kg';
+                }
+
                 // Create new inventory item
                 const newItem = await inventoryService.create({
                     farm_id: String(farmId),
                     name: data.name,
                     category: data.category,
-                    quantity: data.quantity,
+                    quantity: totalQuantity,
                     unit: data.unit,
                     min_threshold: 0,
+                    weight_per_unit: weightPerUnit,
+                    base_unit: baseUnit,
                 });
 
-                // Create transaction for the new item
+                // Create transaction for the new item (record in display units)
                 const dbTransaction = await transactionsService.create({
                     item_id: newItem.id,
                     transaction_date: data.date,
@@ -187,7 +209,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
                     unit: data.unit,
                     cost: data.cost,
                     supplier: data.supplier || null,
-                    notes: null,
+                    notes: data.weightPerUnit ? `${data.quantity} ${data.unit} × ${data.weightPerUnit} kg = ${totalQuantity} kg total` : null,
                 });
 
                 const appTransaction = dbTransactionToAppTransaction(dbTransaction);
@@ -198,7 +220,13 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
                 const existingItem = inventoryItems.find(i => i.id === data.itemId);
                 if (!existingItem) throw new Error('Inventory item not found');
 
-                const newQuantity = existingItem.quantity + data.quantity;
+                // Calculate quantity to add in base units
+                let quantityToAdd = data.quantity;
+                if (existingItem.category === 'Feed' && existingItem.unit.toLowerCase().includes('bag') && existingItem.weightPerUnit) {
+                    quantityToAdd = data.quantity * existingItem.weightPerUnit;
+                }
+
+                const newQuantity = existingItem.quantity + quantityToAdd;
 
                 await inventoryService.update(data.itemId, { quantity: newQuantity });
 
@@ -210,7 +238,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
                     unit: existingItem.unit,
                     cost: data.cost,
                     supplier: data.supplier || null,
-                    notes: null,
+                    notes: existingItem.weightPerUnit ? `${data.quantity} ${existingItem.unit} × ${existingItem.weightPerUnit} kg = ${quantityToAdd} kg total` : null,
                 });
 
                 const appTransaction = dbTransactionToAppTransaction(dbTransaction);
@@ -252,6 +280,8 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
             if (updates.category) dbUpdates.category = updates.category;
             if (updates.unit) dbUpdates.unit = updates.unit;
             if (updates.minThreshold !== undefined) dbUpdates.min_threshold = updates.minThreshold;
+            if (updates.weightPerUnit !== undefined) dbUpdates.weight_per_unit = updates.weightPerUnit;
+            if (updates.baseUnit !== undefined) dbUpdates.base_unit = updates.baseUnit;
 
             await inventoryService.update(itemId, dbUpdates);
 
@@ -301,26 +331,31 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         const item = inventoryItems.find(i => i.id === itemId);
         if (!item) throw new Error('Inventory item not found');
 
-        if (item.quantity < quantity) {
-            throw new Error(`Insufficient stock. Only ${item.quantity} ${item.unit} available.`);
+        // Convert quantity to base units if needed
+        const quantityInBaseUnits = convertToBaseUnits(item, quantity);
+
+        if (item.quantity < quantityInBaseUnits) {
+            const displayUnit = item.unit.toLowerCase().includes('bag') ? 'bags' : item.unit;
+            const currentQtyDisplay = convertToDisplayUnits(item, item.quantity);
+            throw new Error(`Insufficient stock. Only ${currentQtyDisplay} ${displayUnit} available.`);
         }
 
-        const newQuantity = item.quantity - quantity;
+        const newQuantity = item.quantity - quantityInBaseUnits;
 
         try {
             // Update inventory quantity
             await inventoryService.update(itemId, { quantity: newQuantity });
 
-            // Create usage transaction
+            // Create usage transaction (record in display units)
             const dbTransaction = await transactionsService.create({
                 item_id: itemId,
                 transaction_date: new Date().toISOString().split('T')[0],
                 type: 'usage',
-                quantity: quantity,
+                quantity: quantity, // Display quantity (what user entered)
                 unit: item.unit,
                 cost: null,
                 supplier: null,
-                notes: notes || 'Daily log consumption',
+                notes: notes || `Daily log consumption (${quantityInBaseUnits} kg)`,
             });
 
             const appTransaction = dbTransactionToAppTransaction(dbTransaction);
@@ -418,11 +453,14 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     }, [inventoryItems]);
 
     // Check if requested quantity is available
+    // Note: requestedQty is always in Kg for feed (as entered in Daily Log)
     const checkAvailability = useCallback((itemId: string, requestedQty: number) => {
         const item = inventoryItems.find(i => i.id === itemId);
         if (!item) {
             return { available: false, currentQty: 0, itemName: 'Unknown' };
         }
+        // item.quantity is already stored in base units (Kg)
+        // requestedQty is in Kg (from Daily Log)
         return {
             available: item.quantity >= requestedQty,
             currentQty: item.quantity,
@@ -444,6 +482,22 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
         };
     }, [inventoryItems]);
 
+    // Convert display quantity to base units (Kg)
+    const convertToBaseUnits = useCallback((item: InventoryItem, displayQuantity: number): number => {
+        if (item.category === 'Feed' && item.unit.toLowerCase().includes('bag') && item.weightPerUnit) {
+            return displayQuantity * item.weightPerUnit;
+        }
+        return displayQuantity;
+    }, []);
+
+    // Convert base units (Kg) to display units
+    const convertToDisplayUnits = useCallback((item: InventoryItem, baseQuantity: number): number => {
+        if (item.category === 'Feed' && item.unit.toLowerCase().includes('bag') && item.weightPerUnit) {
+            return baseQuantity / item.weightPerUnit;
+        }
+        return baseQuantity;
+    }, []);
+
     return (
         <BusinessContext.Provider value={{
             inventoryItems,
@@ -462,6 +516,8 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
             getAvailableMedication,
             checkAvailability,
             checkProductAvailability,
+            convertToBaseUnits,
+            convertToDisplayUnits,
         }}>
             {children}
         </BusinessContext.Provider>

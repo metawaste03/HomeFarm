@@ -38,6 +38,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
     const [newItemName, setNewItemName] = useState('');
     const [newItemCategory, setNewItemCategory] = useState<InventoryCategory>('Feed');
     const [newItemUnit, setNewItemUnit] = useState('');
+    const [newItemWeightPerUnit, setNewItemWeightPerUnit] = useState<number>(0);
     const [purchaseQuantity, setPurchaseQuantity] = useState<number>(0);
     const [purchaseCost, setPurchaseCost] = useState<number>(0);
     const [supplier, setSupplier] = useState('');
@@ -67,7 +68,8 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
             quantity: purchaseQuantity,
             cost: purchaseCost,
             date: purchaseDate,
-            supplier: supplier
+            supplier: supplier,
+            weightPerUnit: newItemCategory === 'Feed' && newItemUnit.toLowerCase().includes('bag') ? newItemWeightPerUnit : undefined
         });
 
         // Reset and close
@@ -77,6 +79,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
         setPurchaseCost(0);
         setNewItemName('');
         setNewItemUnit('');
+        setNewItemWeightPerUnit(0);
         setSupplier('');
     };
 
@@ -158,6 +161,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                 newItemName, setNewItemName,
                                 newItemCategory, setNewItemCategory,
                                 newItemUnit, setNewItemUnit,
+                                newItemWeightPerUnit, setNewItemWeightPerUnit,
                                 purchaseQuantity, setPurchaseQuantity,
                                 purchaseCost, setPurchaseCost,
                                 supplier, setSupplier
@@ -339,6 +343,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                         newItemName, setNewItemName,
                         newItemCategory, setNewItemCategory,
                         newItemUnit, setNewItemUnit,
+                        newItemWeightPerUnit, setNewItemWeightPerUnit,
                         purchaseQuantity, setPurchaseQuantity,
                         purchaseCost, setPurchaseCost,
                         supplier, setSupplier
@@ -358,6 +363,16 @@ interface PurchaseModalProps {
 }
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, onSubmit, formData }) => {
+    // Check if we should show the bag weight input
+    const showBagWeightInput = formData.isNewItem && 
+        formData.newItemCategory === 'Feed' && 
+        formData.newItemUnit.toLowerCase().includes('bag');
+
+    // Calculate total weight for display
+    const totalWeight = showBagWeightInput && formData.purchaseQuantity > 0 && formData.newItemWeightPerUnit > 0
+        ? formData.purchaseQuantity * formData.newItemWeightPerUnit
+        : null;
+
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-4 sm:pt-8 px-4 pb-8 overflow-y-auto" onClick={onClose}>
             <div className="bg-popover rounded-2xl shadow-xl w-full max-w-md max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -383,25 +398,81 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, o
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
-                                        <select value={formData.newItemCategory} onChange={e => formData.setNewItemCategory(e.target.value as InventoryCategory)} className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" aria-label="Category">
+                                        <select 
+                                            value={formData.newItemCategory} 
+                                            onChange={e => {
+                                                formData.setNewItemCategory(e.target.value as InventoryCategory);
+                                                // Reset unit if not Feed category
+                                                if (e.target.value !== 'Feed' && formData.newItemUnit.toLowerCase().includes('bag')) {
+                                                    formData.setNewItemUnit('');
+                                                }
+                                            }} 
+                                            className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" 
+                                            aria-label="Category"
+                                        >
                                             <option value="Feed">Feed</option>
                                             <option value="Medication">Medication</option>
                                             <option value="Equipment">Equipment</option>
                                             <option value="Other">Other</option>
+                                            <option value="Product">Product</option>
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
-                                        <input type="text" value={formData.newItemUnit} onChange={e => formData.setNewItemUnit(e.target.value)} placeholder="e.g., Bags, kg" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Unit" />
+                                        <input 
+                                            type="text" 
+                                            value={formData.newItemUnit} 
+                                            onChange={e => formData.setNewItemUnit(e.target.value)} 
+                                            placeholder="e.g., Bags, kg" 
+                                            className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" 
+                                            required 
+                                            aria-label="Unit" 
+                                        />
                                     </div>
                                 </div>
+                                
+                                {/* Bag Weight Input - Only show for Feed + Bags */}
+                                {showBagWeightInput && (
+                                    <div className="bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-800 rounded-lg p-4 space-y-3">
+                                        <div>
+                                            <label className="block text-sm font-medium text-lime-800 dark:text-lime-300 mb-1">
+                                                Weight per Bag (Kg)
+                                            </label>
+                                            <input 
+                                                type="number" 
+                                                step="0.001"
+                                                value={formData.newItemWeightPerUnit > 0 ? formData.newItemWeightPerUnit : ''} 
+                                                onChange={e => formData.setNewItemWeightPerUnit(parseFloat(e.target.value))} 
+                                                placeholder="e.g., 25 for 25Kg bags" 
+                                                className="w-full p-2 border border-lime-300 dark:border-lime-700 rounded-lg bg-card text-text-primary" 
+                                                required 
+                                                aria-label="Weight per Bag in Kg" 
+                                            />
+                                            <p className="text-xs text-lime-700 dark:text-lime-400 mt-1">
+                                                Enter the weight of each bag in kilograms
+                                            </p>
+                                        </div>
+                                        {totalWeight !== null && formData.newItemWeightPerUnit > 0 && (
+                                            <div className="text-sm font-semibold text-lime-800 dark:text-lime-300">
+                                                Total: {formData.purchaseQuantity} bags × {formData.newItemWeightPerUnit} kg = <strong>{totalWeight.toLocaleString()} kg</strong>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </>
                         ) : (
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Select Item</label>
                                 <select value={formData.purchaseItemId} onChange={e => formData.setPurchaseItemId(e.target.value)} className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Select Item">
                                     <option value="">-- Choose Item --</option>
-                                    {items.map(item => <option key={item.id} value={item.id}>{item.name} ({item.unit})</option>)}
+                                    {items.map(item => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.name} ({item.unit})
+                                            {item.weightPerUnit && item.unit.toLowerCase().includes('bag') 
+                                                ? ` - ${item.weightPerUnit} kg/bag` 
+                                                : ''}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         )}
@@ -409,17 +480,44 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, items, o
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Quantity Purchased</label>
-                                <input type="number" value={formData.purchaseQuantity > 0 ? formData.purchaseQuantity : ''} onChange={e => formData.setPurchaseQuantity(parseFloat(e.target.value))} placeholder="0" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Quantity Purchased" />
+                                <input 
+                                    type="number" 
+                                    value={formData.purchaseQuantity > 0 ? formData.purchaseQuantity : ''} 
+                                    onChange={e => formData.setPurchaseQuantity(parseFloat(e.target.value))} 
+                                    placeholder="0" 
+                                    className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" 
+                                    required 
+                                    aria-label="Quantity Purchased" 
+                                />
+                                {showBagWeightInput && formData.newItemWeightPerUnit > 0 && formData.purchaseQuantity > 0 && (
+                                    <p className="text-xs text-text-secondary mt-1">
+                                        = {totalWeight?.toLocaleString()} kg total
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-text-secondary mb-1">Total Cost (₦)</label>
-                                <input type="number" value={formData.purchaseCost > 0 ? formData.purchaseCost : ''} onChange={e => formData.setPurchaseCost(parseFloat(e.target.value))} placeholder="0" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" required aria-label="Total Cost" />
+                                <input 
+                                    type="number" 
+                                    value={formData.purchaseCost > 0 ? formData.purchaseCost : ''} 
+                                    onChange={e => formData.setPurchaseCost(parseFloat(e.target.value))} 
+                                    placeholder="0" 
+                                    className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" 
+                                    required 
+                                    aria-label="Total Cost" 
+                                />
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-text-secondary mb-1">Supplier (Optional)</label>
-                            <input type="text" value={formData.supplier} onChange={e => formData.setSupplier(e.target.value)} placeholder="e.g., Feed Depot" className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" />
+                            <input 
+                                type="text" 
+                                value={formData.supplier} 
+                                onChange={e => formData.setSupplier(e.target.value)} 
+                                placeholder="e.g., Feed Depot" 
+                                className="w-full p-2 border border-border rounded-lg bg-card text-text-primary" 
+                            />
                         </div>
 
                         <div className="flex justify-end gap-3 pt-4">
