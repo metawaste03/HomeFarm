@@ -30,6 +30,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
     const [editName, setEditName] = useState('');
     const [editCategory, setEditCategory] = useState<InventoryCategory>('Feed');
     const [editUnit, setEditUnit] = useState('');
+    const [editWeightPerUnit, setEditWeightPerUnit] = useState<number>(1);
 
     // Purchase Form State
     const [isNewItem, setIsNewItem] = useState(false);
@@ -48,6 +49,7 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
         setEditName(item.name);
         setEditCategory(item.category);
         setEditUnit(item.unit);
+        setEditWeightPerUnit(item.weightPerUnit || 1);
         setViewMode('detail');
     };
 
@@ -105,9 +107,16 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
         await updateInventoryItem(selectedItem.id, {
             name: editName,
             category: editCategory,
-            unit: editUnit
+            unit: editUnit,
+            weightPerUnit: editCategory === 'Feed' && editUnit.toLowerCase().includes('bag') ? editWeightPerUnit : undefined
         });
-        setSelectedItem(prev => prev ? { ...prev, name: editName, category: editCategory, unit: editUnit } : null);
+        setSelectedItem(prev => prev ? { 
+            ...prev, 
+            name: editName, 
+            category: editCategory, 
+            unit: editUnit,
+            weightPerUnit: editCategory === 'Feed' && editUnit.toLowerCase().includes('bag') ? editWeightPerUnit : prev.weightPerUnit
+        } : null);
         setIsEditModalOpen(false);
     };
 
@@ -268,6 +277,26 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                         <label className="block text-sm font-medium text-text-secondary mb-1">Unit</label>
                                         <input type="text" value={editUnit} onChange={e => setEditUnit(e.target.value)} className="w-full p-3 border border-border rounded-lg bg-card text-text-primary" required aria-label="Unit" />
                                     </div>
+                                    {editCategory === 'Feed' && editUnit.toLowerCase().includes('bag') && (
+                                        <div className="bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-800 rounded-lg p-4">
+                                            <label className="block text-sm font-medium text-lime-800 dark:text-lime-300 mb-1">
+                                                Weight per Bag (Kg)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.001"
+                                                value={editWeightPerUnit > 0 ? editWeightPerUnit : ''}
+                                                onChange={e => setEditWeightPerUnit(parseFloat(e.target.value))}
+                                                placeholder="e.g., 25 for 25Kg bags"
+                                                className="w-full p-2 border border-lime-300 dark:border-lime-700 rounded-lg bg-card text-text-primary"
+                                                required
+                                                aria-label="Weight per Bag in Kg"
+                                            />
+                                            <p className="text-xs text-lime-700 dark:text-lime-400 mt-1">
+                                                Enter the weight of each bag in kilograms
+                                            </p>
+                                        </div>
+                                    )}
                                     <div className="flex justify-end gap-3 pt-4">
                                         <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-2 rounded-lg text-text-primary bg-muted hover:bg-border font-semibold">Cancel</button>
                                         <button type="submit" className="px-4 py-2 rounded-lg text-white bg-primary hover:bg-primary-600 font-semibold">Save Changes</button>
