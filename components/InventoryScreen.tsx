@@ -208,7 +208,11 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                         <div className={`absolute top-0 left-0 w-full h-2 ${getStatusColor(selectedItem)} `}></div>
                         <p className="text-sm text-text-secondary font-bold uppercase mb-2">Current Stock</p>
                         <p className="text-5xl font-bold text-text-primary">{selectedItem.quantity.toLocaleString()}</p>
-                        <p className="text-xl text-text-secondary font-medium mt-1">{selectedItem.unit}</p>
+                        <p className="text-xl text-text-secondary font-medium mt-1">
+                            {selectedItem.category === 'Feed' && selectedItem.unit.toLowerCase().includes('bag') && selectedItem.weightPerUnit 
+                                ? 'kg' 
+                                : selectedItem.unit}
+                        </p>
                     </div>
 
                     <div className="bg-card rounded-xl shadow-sm p-4">
@@ -243,7 +247,12 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                     </div>
                                     <div className="text-right">
                                         <p className={`font-bold text-lg ${tx.type === 'purchase' ? 'text-green-600' : 'text-text-primary'} `}>
-                                            {tx.type === 'purchase' ? '+' : '-'}{tx.quantity.toLocaleString()} <span className="text-sm font-normal text-text-secondary">{tx.unit}</span>
+                                            {tx.type === 'purchase' ? '+' : '-'}{tx.quantity.toLocaleString()} 
+                                            <span className="text-sm font-normal text-text-secondary">
+                                                {selectedItem.category === 'Feed' && tx.unit.toLowerCase().includes('bag') && selectedItem.weightPerUnit 
+                                                    ? 'kg' 
+                                                    : tx.unit}
+                                            </span>
                                         </p>
                                         {tx.cost && <p className="text-xs text-text-secondary">{new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(tx.cost)}</p>}
                                     </div>
@@ -350,7 +359,14 @@ const InventoryScreen: React.FC<InventoryScreenProps> = ({ onNavigate }) => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-bold text-text-primary">{item.quantity.toLocaleString()} <span className="text-sm font-normal text-text-secondary">{item.unit}</span></p>
+                                        <p className="text-xl font-bold text-text-primary">
+                                            {item.quantity.toLocaleString()} 
+                                            <span className="text-sm font-normal text-text-secondary">
+                                                {item.category === 'Feed' && item.unit.toLowerCase().includes('bag') && item.weightPerUnit 
+                                                    ? 'kg' 
+                                                    : item.unit}
+                                            </span>
+                                        </p>
                                     </div>
                                 </div>
                             ))}
