@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, ChickenIcon, BatchIcon, FeedBagIcon } from './icons';
+import { ChevronDownIcon, LayerIcon, BroilerIcon, FishIcon, ChickenIcon, BatchIcon, FeedBagIcon, WarningIcon } from './icons';
+import { ENABLED_SECTORS, stockUnitFor } from '../config/sectors';
 import { AnalyticsIcon } from './CustomIcons';
 import type { Screen } from '../App';
 import { useFarm, Sector } from '../contexts/FarmContext';
@@ -10,9 +11,9 @@ import KpiCard from './KpiCard';
 import { dailyLogsService } from '../services/database';
 import type { Tables } from '../types/database';
 import TodaysActionCard from './TodaysActionCard';
-// V2 FEATURE - Hidden for V1 launch
-// import FarmAdvisor from './FarmAdvisor';
 import NavigationCards from './NavigationCards';
+import LogHistory from './LogHistory';
+import WhatsAppAdvisorCard from './WhatsAppAdvisorCard';
 
 interface DashboardScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -72,6 +73,8 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         };
         fetchLogs();
     }, [farms, selectedScope]);
+
+    const pendingTaskCount = useMemo(() => tasks.filter(t => t.status === 'pending').length, [tasks]);
 
     const sectorBatches = useMemo(() => batches.filter(b => b.sector === activeSector), [batches, activeSector]);
     const activeBatches = useMemo(() => sectorBatches.filter(b => b.status === 'Active'), [sectorBatches]);
@@ -259,9 +262,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
                     {/* Sector Tabs */}
                     <div className="flex gap-2 overflow-x-auto pb-2">
-                        <SectorButton sector="Layer" label="Layers" icon={LayerIcon} />
-                        <SectorButton sector="Broiler" label="Broilers" icon={BroilerIcon} />
-                        <SectorButton sector="Fish" label="Fish" icon={FishIcon} />
+                        {ENABLED_SECTORS.map(s => (
+                            <SectorButton key={s.id} sector={s.id} label={s.label} icon={s.id === 'Broiler' ? BroilerIcon : s.id === 'Fish' ? FishIcon : LayerIcon} />
+                        ))}
                     </div>
 
                     {/* KPI Cards */}
@@ -276,7 +279,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         />
                         <KpiCard
                             icon={<BatchIcon className="w-5 h-5 text-lime-500" />}
-                            label={activeSector === 'Fish' ? 'Active Fish' : 'Active Birds'}
+                            label={`Active ${stockUnitFor(activeSector).replace(/^./, c => c.toUpperCase())}`}
                             value={currentActiveBirds.toLocaleString()}
                             accentColor="green"
                             staggerIndex={1}
@@ -304,7 +307,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                             />
                         )}
                         <KpiCard
-                            icon={<FishIcon className="w-5 h-5 text-orange-500" />}
+                            icon={<WarningIcon className="w-5 h-5 text-orange-500" />}
                             label="Mortality"
                             value={totalMortality.toLocaleString()}
                             trend={mortalityTrend}
@@ -314,14 +317,21 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                         />
                     </div>
 
-                    {/* V2 FEATURE - AI Farm Advisor - Hidden for V1 launch */}
-                    {/* <FarmAdvisor sector={activeSector} /> */}
+                    {/* Log History: real logs, directly under the production overview */}
+                    <LogHistory onNavigate={(s) => onNavigate(s as Screen)} />
+
+                    {/* Advice now lives on WhatsApp (hidden until the number is live) */}
+                    <WhatsAppAdvisorCard />
 
                     {/* Today's Actions (Condensed) */}
                     <TodaysActionCard onViewAll={() => onNavigate('actions')} />
 
                     {/* Navigation Cards */}
-                    <NavigationCards onNavigate={onNavigate} />
+                    <NavigationCards
+                        onNavigate={onNavigate}
+                        taskCount={pendingTaskCount}
+                        salesCount={sales.length}
+                    />
                 </main>
             </div>
         </div>

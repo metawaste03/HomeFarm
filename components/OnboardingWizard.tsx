@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { useFarm, Sector } from '../contexts/FarmContext';
 import { ChickenIcon, FishIcon } from './icons';
+import { ENABLED_SECTORS } from '../config/sectors';
+import { BRAND } from '../config/brand';
 
 interface OnboardingWizardProps {
     onComplete: () => void;
     onSkip: () => void;
 }
 
-const SECTOR_OPTIONS: { value: Sector; label: string; icon: React.FC<{ className?: string }>; color: string }[] = [
-    { value: 'Layer', label: 'Layer (Eggs)', icon: ChickenIcon, color: 'bg-amber-500' },
-    { value: 'Broiler', label: 'Broiler (Meat)', icon: ChickenIcon, color: 'bg-red-500' },
-    { value: 'Fish', label: 'Aquaculture', icon: FishIcon, color: 'bg-blue-500' },
-];
+const SECTOR_STYLE: Record<Sector, { icon: React.FC<{ className?: string }>; color: string }> = {
+    Layer: { icon: ChickenIcon, color: 'bg-amber-500' },
+    Broiler: { icon: ChickenIcon, color: 'bg-red-500' },
+    Fish: { icon: FishIcon, color: 'bg-blue-500' },
+};
+
+const SECTOR_OPTIONS = ENABLED_SECTORS.map(s => ({ value: s.id, label: s.longLabel, ...SECTOR_STYLE[s.id] }));
 
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onSkip }) => {
     // Step state: 1 = Create Farm, 2 = Create Batch, 3 = Celebration
@@ -134,7 +138,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onSkip 
                                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                                     <span className="text-3xl">🏡</span>
                                 </div>
-                                <h1 className="text-2xl font-bold text-text-primary mb-2">Welcome to HomeFarm!</h1>
+                                <h1 className="text-2xl font-bold text-text-primary mb-2">Welcome to {BRAND.name}!</h1>
                                 <p className="text-text-secondary text-sm">Let's get your farm set up. This only takes a minute.</p>
                             </div>
 
@@ -211,7 +215,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onSkip 
                                     <label className="block text-sm font-semibold text-text-primary mb-2">
                                         What are you farming? <span className="text-red-500">*</span>
                                     </label>
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className={`grid gap-2 ${SECTOR_OPTIONS.length > 2 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                                         {SECTOR_OPTIONS.map((opt) => (
                                             <button
                                                 key={opt.value}

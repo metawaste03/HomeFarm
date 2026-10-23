@@ -1,6 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { CalculatorIcon, LayerIcon, BroilerIcon, FishIcon, ChevronLeftIcon, DownloadIcon } from './icons';
 import type { Screen } from '../App';
+import type { Sector } from '../types/database';
+import { isSectorEnabled } from '../config/sectors';
+import { BRAND } from '../config/brand';
 
 type CalculatorSector = 'Layer' | 'Broiler' | 'Aquaculture' | null;
 
@@ -66,7 +69,7 @@ const SectorSelector: React.FC<SectorSelectorProps> = ({ onSelectSector, onNavig
             accentColor: 'from-cyan-500/20 to-teal-500/20',
             borderColor: 'border-cyan-500/30',
         },
-    ];
+    ].filter(s => isSectorEnabled(s.id === 'Aquaculture' ? 'Fish' : s.id as Sector));
 
     return (
         <div className="bg-background min-h-screen p-4 lg:p-6">
@@ -125,7 +128,7 @@ const SectorSelector: React.FC<SectorSelectorProps> = ({ onSelectSector, onNavig
                 {/* Footer */}
                 <div className="mt-8 text-center">
                     <p className="text-sm text-text-secondary">
-                        <span className="text-primary font-medium">HomeFarm</span> — Smart farming decisions, better profits
+                        <span className="text-primary font-medium">{BRAND.name}</span> — Smart farming decisions, better profits
                     </p>
                 </div>
             </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BRAND } from '../config/brand';
 import { CameraIcon, BellIcon } from './icons';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -223,10 +224,10 @@ const LoginScreen: React.FC = () => {
         <div className="text-center mb-8">
           <img
             src="/icons/icon-192.png"
-            alt="HomeFarm Logo"
+            alt={`${BRAND.name} logo`}
             className="w-24 h-24 mx-auto mb-3 rounded-2xl shadow-lg"
           />
-          <h1 className="text-4xl font-bold text-primary">HomeFarm</h1>
+          <h1 className="text-4xl font-bold text-primary">{BRAND.name}</h1>
           <p className="text-text-secondary mt-2">Your Farm's Data, Simplified.</p>
         </div>
 

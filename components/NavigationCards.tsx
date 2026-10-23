@@ -7,8 +7,7 @@ import type { Screen } from '../App';
 interface NavigationCardsProps {
     onNavigate: (screen: Screen) => void;
     taskCount?: number;
-    transactionCount?: number;
-    profileCompletion?: number;
+    salesCount?: number;
 }
 
 interface NavCardItem {
@@ -21,13 +20,13 @@ interface NavCardItem {
     iconBg: string;
 }
 
-const getNavItems = (taskCount: number, transactionCount: number, profileCompletion: number): NavCardItem[] => [
+const getNavItems = (taskCount: number, salesCount: number): NavCardItem[] => [
     {
         screen: 'tasks',
         icon: TaskIcon,
         title: 'TASKS',
         description: 'Manage your daily farm operations. Log feedings and vaccinations.',
-        statusText: `${taskCount} tasks remaining today`,
+        statusText: taskCount === 0 ? 'No pending tasks' : `${taskCount} pending task${taskCount === 1 ? '' : 's'}`,
         gradient: 'from-blue-800 to-blue-600',
         iconBg: 'bg-white/20'
     },
@@ -36,7 +35,7 @@ const getNavItems = (taskCount: number, transactionCount: number, profileComplet
         icon: CalculatorIcon,
         title: 'PROFITABILITY CALCULATOR',
         description: 'Calculate your margins with ease. Input your feed costs and sales to visualize your ROI and projected monthly earnings.',
-        statusText: 'Current Margin: +12%',
+        statusText: 'Estimate profit before you start a batch',
         gradient: 'from-teal-700 to-teal-500',
         iconBg: 'bg-white/20'
     },
@@ -45,7 +44,7 @@ const getNavItems = (taskCount: number, transactionCount: number, profileComplet
         icon: WalletIcon,
         title: 'BUSINESS HUB',
         description: 'Track your farm finances. Manage expenses, record sales, and monitor inventory all in one place.',
-        statusText: `${transactionCount} new transactions`,
+        statusText: `${salesCount} sale${salesCount === 1 ? '' : 's'} recorded`,
         gradient: 'from-amber-700 to-amber-500',
         iconBg: 'bg-white/20'
     },
@@ -53,8 +52,8 @@ const getNavItems = (taskCount: number, transactionCount: number, profileComplet
         screen: 'settings',
         icon: SettingsIcon,
         title: 'SETTINGS',
-        description: 'Customize your farm profile. Manage notifications, calibrate sensor inputs, and adjust your livestock batch details.',
-        statusText: `Profile ${profileCompletion}% complete`,
+        description: 'Manage your farms, batches, team and vaccination schedules.',
+        statusText: 'Farm profile and preferences',
         gradient: 'from-purple-800 to-purple-600',
         iconBg: 'bg-white/20'
     }
@@ -62,11 +61,10 @@ const getNavItems = (taskCount: number, transactionCount: number, profileComplet
 
 export default function NavigationCards({
     onNavigate,
-    taskCount = 4,
-    transactionCount = 3,
-    profileCompletion = 80
+    taskCount = 0,
+    salesCount = 0,
 }: NavigationCardsProps) {
-    const navItems = getNavItems(taskCount, transactionCount, profileCompletion);
+    const navItems = getNavItems(taskCount, salesCount);
 
     return (
         <div className="space-y-4">

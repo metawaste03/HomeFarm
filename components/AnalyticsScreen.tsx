@@ -4,6 +4,7 @@ import { Screen, Theme } from '../App';
 import { Farm } from './FarmManagementScreen';
 import { Batch, Sector } from './BatchManagementScreen';
 import { ChevronDownIcon, NairaIcon, ArrowTrendingUpIcon, FeedBagIcon, WarningIcon, DownloadIcon, StethoscopeIcon, PillIcon, FilterIcon, ChevronLeftIcon } from './icons';
+import { ENABLED_SECTORS } from '../config/sectors';
 import ExportDataModal from './ExportDataModal';
 import AnalyticsProgressTracker from './AnalyticsProgressTracker';
 import { useSales } from '../contexts/SalesContext';
@@ -673,9 +674,7 @@ const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({ onNavigate, farms, ba
                 </div>
 
                 <div className="bg-muted p-1 rounded-full flex gap-1">
-                    <SectorTab sector="Layer" label="Layers" />
-                    <SectorTab sector="Broiler" label="Broilers" />
-                    <SectorTab sector="Fish" label="Fish" />
+                    {ENABLED_SECTORS.map(s => <SectorTab key={s.id} sector={s.id} label={s.label} />)}
                 </div>
             </header>
 

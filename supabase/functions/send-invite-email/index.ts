@@ -8,7 +8,7 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 // Set this in Supabase secrets, e.g. "https://your-app.vercel.app"
-const APP_URL = Deno.env.get('APP_URL') || 'https://homefarm.vercel.app';
+const APP_URL = Deno.env.get('APP_URL') || 'https://app.bonchieagro.com';
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -72,9 +72,9 @@ serve(async (req: Request) => {
                 'Authorization': `Bearer ${RESEND_API_KEY}`,
             },
             body: JSON.stringify({
-                from: 'HomeFarm <onboarding@resend.dev>',
+                from: Deno.env.get('INVITE_FROM') || 'Bonchie Agro <onboarding@resend.dev>',
                 to: [inviteeEmail],
-                subject: `You've been invited to join ${farmName} on HomeFarm`,
+                subject: `You've been invited to join ${farmName} on Bonchie Agro`,
                 html: generateEmailHtml({
                     farmName,
                     inviterName,
@@ -138,7 +138,7 @@ function generateEmailHtml({
           <tr>
             <td style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); padding: 32px 32px 28px; text-align: center;">
               <div style="font-size: 28px; margin-bottom: 8px;">🌾</div>
-              <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.3px;">HomeFarm</h1>
+              <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -0.3px;">Bonchie Agro</h1>
               <p style="color: rgba(255,255,255,0.85); font-size: 13px; margin: 4px 0 0;">Farm Management Made Simple</p>
             </td>
           </tr>
@@ -171,7 +171,7 @@ function generateEmailHtml({
           <tr>
             <td style="border-top: 1px solid #e2e8f0; padding: 20px 32px; text-align: center;">
               <p style="color: #a0aec0; font-size: 12px; margin: 0;">
-                This invitation was sent via HomeFarm. If you didn't expect this, you can safely ignore it.
+                This invitation was sent via Bonchie Agro. If you didn't expect this, you can safely ignore it.
               </p>
             </td>
           </tr>

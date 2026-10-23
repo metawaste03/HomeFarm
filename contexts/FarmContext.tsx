@@ -3,7 +3,8 @@ import { farmsService, batchesService } from '../services/database';
 import { useAuth } from './AuthContext';
 import type { Tables } from '../types/database';
 
-export type Sector = 'Layer' | 'Broiler' | 'Fish';
+import type { Sector } from '../types/database';
+export type { Sector };
 
 // Extended types that include farm name for backwards compatibility
 // ID is string | number to support both legacy components (number) and Supabase (UUID string)

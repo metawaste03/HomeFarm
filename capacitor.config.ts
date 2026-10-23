@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
     appId: 'com.homefarm.app',
-    appName: 'HomeFarm',
+    appName: 'Bonchie Agro',
     webDir: 'dist',
     server: {
         // Use https scheme — required for Supabase auth cookies and secure storage

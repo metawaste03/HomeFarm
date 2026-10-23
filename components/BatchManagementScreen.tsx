@@ -2,10 +2,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import type { Screen } from '../App';
 import { ChevronDownIcon, ChickenIcon, CalendarIcon, FishIcon, EllipsisIcon, PencilIcon, TrashIcon, PlusIcon, StethoscopeIcon, ChevronLeftIcon } from './icons';
+import { ENABLED_SECTORS, stockUnitFor } from '../config/sectors';
 import type { Farm } from './FarmManagementScreen';
 import BatchHealthSchedule from './BatchHealthSchedule';
 
-export type Sector = 'Layer' | 'Broiler' | 'Fish';
+import type { Sector } from '../types/database';
+export type { Sector };
 type Role = 'Owner' | 'Manager' | 'Worker';
 
 export type Batch = {
@@ -176,7 +178,7 @@ const BatchCard: React.FC<{ batch: Batch; currentUserRole: Role; onEdit: (b: Bat
             <div className="mt-4 flex items-center justify-start gap-6 text-sm text-text-secondary">
                 <div className="flex items-center gap-2">
                     {batch.sector === 'Fish' ? <FishIcon className="w-5 h-5" /> : <ChickenIcon className="w-5 h-5" />}
-                    <span>{batch.stockCount.toLocaleString()} {batch.sector === 'Fish' ? 'fish' : 'birds'}</span>
+                    <span>{batch.stockCount.toLocaleString()} {stockUnitFor(batch.sector)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <CalendarIcon className="w-5 h-5" />
@@ -230,7 +232,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
 
         // Validation
         if (!sector) {
-            alert("Please select a sector (Layer, Broiler, or Fish).");
+            alert(`Please select a sector (${ENABLED_SECTORS.map(s => s.label).join(' or ')}).`);
             return;
         }
         if (!name.trim()) {
@@ -280,9 +282,7 @@ const BatchForm: React.FC<BatchFormProps> = ({ onSave, onClose, batchToEdit, sel
                 {/* Header with Sector Tabs */}
                 <div className="p-3 border-b border-border flex-shrink-0">
                     <div className="flex items-center justify-center gap-2">
-                        <SectorTab value="Layer" label="Layers" />
-                        <SectorTab value="Broiler" label="Broilers" />
-                        <SectorTab value="Fish" label="Fish" />
+                        {ENABLED_SECTORS.map(s => <SectorTab key={s.id} value={s.id} label={s.label} />)}
                     </div>
                 </div>
 

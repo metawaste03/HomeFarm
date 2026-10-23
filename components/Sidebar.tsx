@@ -1,4 +1,5 @@
 import React from 'react';
+import { BRAND } from '../config/brand';
 import { GridIcon, ClipboardListIcon, BatchIcon, TaskIcon, WalletIcon, SettingsIcon } from './icons';
 import { AnalyticsIcon } from './CustomIcons';
 import type { Screen } from '../App';
@@ -29,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentScreen, onNavigate, onLogout, 
         <aside className="hidden lg:flex flex-col w-64 bg-slate-900 text-white min-h-screen">
             {/* Logo */}
             <div className="p-6 border-b border-slate-700">
-                <h1 className="text-2xl font-bold text-lime-400">🌾 HomeFarm</h1>
+                <h1 className="text-2xl font-bold text-lime-400">🌾 {BRAND.name}</h1>
             </div>
 
             {/* Navigation */}

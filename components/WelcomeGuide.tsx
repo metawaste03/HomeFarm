@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { BRAND } from '../config/brand';
 import { DashboardIcon, PlusIcon, AnalyticsIcon } from './icons';
 
 interface WelcomeGuideProps {
@@ -8,7 +9,7 @@ interface WelcomeGuideProps {
 
 const guideSteps = [
   {
-    title: "Welcome to HomeFarm!",
+    title: `Welcome to ${BRAND.name}!`,
     text: "Let's take a quick tour to get you started.",
     icon: null,
   },

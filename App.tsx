@@ -1,5 +1,4 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import DailyLogScreen from './components/DailyLogScreen'; // Kept for types or direct use if needed? No, used in Container.
 import TaskContainerScreen from './components/TaskContainerScreen';
 import DashboardScreen from './components/DashboardScreen';
 import SalesScreen from './components/SalesScreen';
@@ -7,8 +6,6 @@ import BatchManagementScreen from './components/BatchManagementScreen';
 import TeamManagementScreen from './components/TeamManagementScreen';
 import SettingsScreen from './components/SettingsScreen';
 import { FarmManagementScreen } from './components/FarmManagementScreen';
-import BroilerLogScreen from './components/BroilerLogScreen';
-import FishLogScreen from './components/FishLogScreen';
 import AnalyticsScreen from './components/AnalyticsScreen';
 import LoginScreen from './components/LoginScreen';
 import OnboardingWizard from './components/OnboardingWizard';
@@ -22,7 +19,7 @@ import LogHistoryScreen from './components/LogHistoryScreen';
 import PrivacyPolicyScreen from './components/PrivacyPolicyScreen';
 import TermsAndConditionsScreen from './components/TermsAndConditionsScreen';
 import { GridIcon, ClipboardListIcon, WalletIcon, PlusIcon, TaskIcon, WarningIcon, CalculatorIcon } from './components/icons';
-import { AnalyticsIcon, SettingsIcon } from './components/CustomIcons';
+import { SettingsIcon } from './components/CustomIcons';
 import { FarmProvider, useFarm, Sector, Batch, Farm } from './contexts/FarmContext';
 import { TaskProvider } from './contexts/TaskContext';
 import { BusinessProvider } from './contexts/BusinessContext';
@@ -34,6 +31,7 @@ import { ActionsProvider } from './contexts/ActionsContext';
 import { UIProvider, useUI } from './contexts/UIContext';
 import ActionsScreen from './components/ActionsScreen';
 import CalculatorScreen from './components/CalculatorScreen';
+import { BRAND } from './config/brand';
 
 export type Screen = 'dashboard' | 'log' | 'tasks' | 'actions' | 'calculator' | 'sales' | 'batches' | 'settings' | 'team' | 'farms' | 'analytics' | 'business' | 'inventory' | 'health_schedules' | 'expenses' | 'log_history' | 'privacy_policy' | 'terms_and_conditions';
 export type Theme = 'light' | 'dark' | 'system';
@@ -226,10 +224,10 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
       <div className="lg:max-w-screen-xl lg:mx-auto lg:my-4 lg:shadow-2xl lg:shadow-slate-300/20 dark:lg:shadow-black/20 lg:rounded-3xl lg:overflow-hidden lg:border lg:border-border">
         <div className="lg:flex min-h-screen lg:min-h-0 bg-background">
           <aside className="hidden lg:flex lg:flex-col lg:w-60 xl:w-64 bg-card p-4 border-r border-border flex-shrink-0">
-            <div className="text-3xl font-bold text-primary mb-10 px-2">HomeFarm</div>
+            <div className="text-3xl font-bold text-primary mb-10 px-2">{BRAND.name}</div>
             <nav className="flex-grow space-y-2">
               <SidebarNavItem icon={GridIcon} label="Dashboard" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <SidebarNavItem icon={AnalyticsIcon} label="Analytics" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <SidebarNavItem icon={ClipboardListIcon} label="Log & Tasks" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
               <SidebarNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
             </nav>
             <div className="mt-auto">
@@ -257,7 +255,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
 
             <nav className={`fixed bottom-0 left-0 right-0 bg-card border-t border-border flex justify-around z-50 lg:hidden transition-transform duration-200 ${isBottomNavVisible ? 'translate-y-0' : 'translate-y-full'}`}>
               <BottomNavItem icon={GridIcon} label="Home" screen="dashboard" currentScreen={currentScreen} onNavigate={navigateTo} />
-              <BottomNavItem icon={AnalyticsIcon} label="Stats" screen="analytics" currentScreen={currentScreen} onNavigate={navigateTo} />
+              <BottomNavItem icon={ClipboardListIcon} label="Log" screen="tasks" currentScreen={currentScreen} onNavigate={navigateTo} />
               <BottomNavItem icon={SettingsIcon} label="Settings" screen="settings" currentScreen={currentScreen} onNavigate={navigateTo} />
             </nav>
           </div>
@@ -364,6 +362,8 @@ interface NavItemProps {
 
 const BottomNavItem: React.FC<NavItemProps> = ({ icon: Icon, label, screen, currentScreen, onNavigate }) => {
   const isActive = currentScreen === screen ||
+    (screen === 'dashboard' && currentScreen === 'analytics') ||
+    (screen === 'tasks' && currentScreen === 'log_history') ||
     (screen === 'business' && (currentScreen === 'sales' || currentScreen === 'inventory')) ||
     (screen === 'settings' && (currentScreen === 'team' || currentScreen === 'farms' || currentScreen === 'batches' || currentScreen === 'health_schedules'));
 
@@ -377,6 +377,8 @@ const BottomNavItem: React.FC<NavItemProps> = ({ icon: Icon, label, screen, curr
 
 const SidebarNavItem: React.FC<NavItemProps> = ({ icon: Icon, label, screen, currentScreen, onNavigate }) => {
   const isActive = currentScreen === screen ||
+    (screen === 'dashboard' && currentScreen === 'analytics') ||
+    (screen === 'tasks' && currentScreen === 'log_history') ||
     (screen === 'business' && (currentScreen === 'sales' || currentScreen === 'inventory')) ||
     (screen === 'settings' && (currentScreen === 'team' || currentScreen === 'farms' || currentScreen === 'batches' || currentScreen === 'health_schedules'));
 
