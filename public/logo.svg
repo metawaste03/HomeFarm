@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Bonchie Agro: a hen sitting on a nest of eggs">
+  <defs>
+    <clipPath id="inner"><circle cx="256" cy="256" r="214"/></clipPath>
+    <linearGradient id="egg" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#FFE7A8"/>
+      <stop offset="1" stop-color="#F2B847"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Badge -->
+  <circle cx="256" cy="256" r="252" fill="#FBF4E4"/>
+  <circle cx="256" cy="256" r="236" fill="none" stroke="#134E2C" stroke-width="10"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#134E2C" stroke-width="3"/>
+
+  <g clip-path="url(#inner)" stroke="#134E2C" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Nest (back) -->
+    <path d="M96 340C104 392 176 418 256 418C336 418 408 392 416 340Z" fill="#E8D39C" stroke-width="5"/>
+
+    <!-- Tail feathers -->
+    <g fill="#FBF4E4" stroke-width="5">
+      <path d="M170 262C130 252 100 224 92 186C88 166 96 150 110 146C110 186 136 222 180 248Z"/>
+      <path d="M176 252C140 228 120 190 124 150C126 128 140 116 156 116C148 156 160 200 192 240Z"/>
+      <path d="M188 244C164 206 160 164 174 130C182 112 198 104 214 108C192 140 190 190 206 234Z"/>
+      <path d="M204 236C196 200 202 164 222 140C232 128 246 124 258 130C232 152 222 194 224 230Z"/>
+    </g>
+    <g fill="none" stroke-width="2.5">
+      <path d="M172 254C140 236 116 208 104 166"/>
+      <path d="M182 244C156 216 140 182 140 132"/>
+      <path d="M196 236C178 204 174 166 192 120"/>
+      <path d="M212 230C208 196 214 166 238 136"/>
+    </g>
+
+    <!-- Body -->
+    <path d="M136 318C132 256 186 216 254 212C292 210 306 196 316 172C330 186 360 188 372 166C388 206 402 250 392 292C384 328 344 350 282 352L170 352C150 346 138 334 136 318Z" fill="#FBF4E4" stroke-width="6"/>
+
+    <!-- Back hatching -->
+    <g fill="none" stroke-width="2.5">
+      <path d="M200 228l10 10M222 220l10 10M244 214l10 10M266 210l9 9M288 206l8 8"/>
+      <path d="M184 246l9 9M172 268l8 8M162 292l8 8M158 316l8 8M178 330l8 8M300 324l8 8M322 316l8 8M346 306l8 8"/>
+    </g>
+
+    <!-- Breast scallops -->
+    <g fill="none" stroke-width="2.5">
+      <path d="M346 206q7 8 14 0M362 220q7 8 14 0M340 228q7 8 14 0M356 244q7 8 14 0M372 258q7 8 14 0"/>
+      <path d="M346 266q7 8 14 0M362 282q7 8 14 0M340 290q7 8 14 0M330 252q7 8 14 0"/>
+    </g>
+
+    <!-- Wing -->
+    <path d="M212 262C236 228 300 222 334 248C326 290 284 318 228 312C204 306 198 282 212 262Z" fill="#FBF4E4" stroke-width="5"/>
+    <g fill="none" stroke-width="2.5">
+      <path d="M226 272C258 256 296 254 326 254"/>
+      <path d="M222 288C256 276 292 276 318 272"/>
+      <path d="M232 304q10-10 20 0q10-10 20 0q10-10 20 0q10-10 18-2"/>
+    </g>
+
+    <!-- Head -->
+    <circle cx="346" cy="150" r="30" fill="#FBF4E4" stroke-width="6"/>
+    <path d="M322 128C316 110 330 102 337 116C336 96 354 94 354 113C360 98 378 103 368 126C352 120 336 122 322 128Z" fill="#C2532E" stroke-width="5"/>
+    <path d="M373 144L394 153L372 161Z" fill="#F2B847" stroke-width="4.5"/>
+    <path d="M366 164C374 180 362 190 356 174Z" fill="#C2532E" stroke-width="4"/>
+    <circle cx="357" cy="143" r="5" fill="#134E2C" stroke="none"/>
+    <circle cx="358.5" cy="141.5" r="1.6" fill="#FBF4E4" stroke="none"/>
+    <path d="M328 176q-2 10 4 16M342 180q-2 10 4 16M356 180q0 10 6 15M322 190q-2 9 3 14M336 196q-1 9 4 13" fill="none" stroke-width="2.5"/>
+
+    <g fill="none" stroke-width="2.5">
+      <path d="M96 340l-16-14M104 336l-10-20M118 334l-4-18M396 334l6-18M410 336l12-18M418 340l18-12"/>
+    </g>
+
+    <!-- Eggs -->
+    <g fill="url(#egg)" stroke-width="5">
+      <ellipse cx="146" cy="352" rx="30" ry="25" transform="rotate(-12 146 352)"/>
+      <ellipse cx="366" cy="352" rx="30" ry="25" transform="rotate(12 366 352)"/>
+      <ellipse cx="200" cy="360" rx="31" ry="26" transform="rotate(-6 200 360)"/>
+      <ellipse cx="312" cy="360" rx="31" ry="26" transform="rotate(6 312 360)"/>
+      <ellipse cx="256" cy="364" rx="32" ry="27"/>
+    </g>
+    <g fill="#FFF8E2" stroke="none" opacity="0.9">
+      <ellipse cx="136" cy="343" rx="8" ry="5" transform="rotate(-30 136 343)"/>
+      <ellipse cx="190" cy="350" rx="8" ry="5" transform="rotate(-25 190 350)"/>
+      <ellipse cx="246" cy="353" rx="8" ry="5" transform="rotate(-20 246 353)"/>
+      <ellipse cx="302" cy="350" rx="8" ry="5" transform="rotate(-20 302 350)"/>
+      <ellipse cx="356" cy="342" rx="8" ry="5" transform="rotate(-15 356 342)"/>
+    </g>
+
+    <!-- Nest (front band of woven straw) -->
+    <path d="M88 362C128 392 384 392 424 362C414 414 340 436 256 436C172 436 98 414 88 362Z" fill="#E8D39C" stroke-width="5"/>
+    <g fill="none" stroke-width="2.5">
+      <path d="M100 378C160 402 352 402 412 378"/>
+      <path d="M112 394C170 414 342 414 400 394"/>
+      <path d="M132 382l20 16M170 388l18 16M210 392l16 16M250 393l14 16M290 392l12 16M330 390l10 15M368 386l8 14"/>
+      <path d="M78 360l26 10M434 360l-26 10M84 350l22 14M428 348l-22 16"/>
+    </g>
+  </g>
+</svg>

@@ -223,9 +223,9 @@ const LoginScreen: React.FC = () => {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <img
-            src="/icons/icon-192.png"
+            src="/logo.svg"
             alt={`${BRAND.name} logo`}
-            className="w-24 h-24 mx-auto mb-3 rounded-2xl shadow-lg"
+            className="w-28 h-28 mx-auto mb-3 rounded-full shadow-lg"
           />
           <h1 className="text-4xl font-bold text-primary">{BRAND.name}</h1>
           <p className="text-text-secondary mt-2">Your Farm's Data, Simplified.</p>
