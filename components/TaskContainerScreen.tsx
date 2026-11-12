@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { Screen } from '../App';
 import DailyLogScreen from './DailyLogScreen';
 import TaskManagementScreen from './TaskManagementScreen';
@@ -9,6 +9,8 @@ import LogHistory from './LogHistory';
 import type { Farm } from './FarmManagementScreen';
 import type { Batch, Sector } from './BatchManagementScreen';
 import { ClipboardListIcon, TaskIcon, PlusIcon, ClockIcon, ChevronLeftIcon } from './icons';
+import { useFarm } from '../contexts/FarmContext';
+import { isSectorEnabled, sectorConfig } from '../config/sectors';
 
 interface TaskContainerScreenProps {
     onNavigate: (screen: Screen) => void;
@@ -25,21 +27,92 @@ const TaskContainerScreen: React.FC<TaskContainerScreenProps> = ({ onNavigate, f
     const [logSubView, setLogSubView] = useState<SubView>('new');
     const [assignSubView, setAssignSubView] = useState<SubView>('new');
 
+    // The batch being logged for is chosen here, so a log always has a farm and a
+    // batch even when the dashboard is showing "All farms".
+    const { farms, batches } = useFarm();
+    const loggableBatches = useMemo(
+        () => batches.filter(b => b.status === 'Active' && isSectorEnabled(b.sector)),
+        [batches]
+    );
+    const [logBatchId, setLogBatchId] = useState('');
+
+    useEffect(() => {
+        if (logBatchId && loggableBatches.some(b => String(b.id) === logBatchId)) return;
+        // Preselect only when there is no doubt which batch is meant
+        let preselected = batch && loggableBatches.find(b => b.id === batch.id);
+        if (!preselected) {
+            const inScope = loggableBatches.filter(b => b.sector === activeSector && (!farm || b.farm === farm.name));
+            if (inScope.length === 1) preselected = inScope[0];
+            else if (loggableBatches.length === 1) preselected = loggableBatches[0];
+        }
+        setLogBatchId(preselected ? String(preselected.id) : '');
+    }, [loggableBatches, batch, farm, activeSector, logBatchId]);
+
+    const logBatch = loggableBatches.find(b => String(b.id) === logBatchId) || null;
+    const logFarm = logBatch
+        ? farms.find(f => String(f.id) === logBatch.farmId || f.name === logBatch.farm) || null
+        : null;
+
     const renderLogScreen = () => {
-        switch (activeSector) {
+        if (!logBatch || !logFarm) return null;
+        switch (logBatch.sector) {
             case 'Broiler':
-                return <BroilerLogScreen onNavigate={onNavigate} farm={farm} batch={batch} />;
+                return <BroilerLogScreen key={logBatchId} onNavigate={onNavigate} farm={logFarm} batch={logBatch} />;
             case 'Fish':
-                return <FishLogScreen onNavigate={onNavigate} farm={farm} batch={batch} />;
+                return <FishLogScreen key={logBatchId} onNavigate={onNavigate} farm={logFarm} batch={logBatch} />;
             case 'Layer':
             default:
-                return <DailyLogScreen onNavigate={onNavigate} farm={farm} batch={batch} activeSector={activeSector} />;
+                return <DailyLogScreen key={logBatchId} onNavigate={onNavigate} farm={logFarm} batch={logBatch} activeSector={logBatch.sector} />;
         }
+    };
+
+    const renderBatchPicker = () => {
+        if (loggableBatches.length === 0) {
+            return (
+                <div className="p-4 max-w-2xl mx-auto">
+                    <div className="bg-card border border-border rounded-2xl p-6 text-center">
+                        <p className="font-bold text-text-primary mb-1">No active batch yet</p>
+                        <p className="text-sm text-text-secondary mb-4">Add a batch of birds first, then you can log feed, deaths and eggs for it.</p>
+                        <button onClick={() => onNavigate('batches')} className="bg-primary text-white font-bold px-5 py-2.5 rounded-xl">
+                            Add a batch
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+        return (
+            <div className="px-4 pt-4 max-w-2xl mx-auto">
+                <label htmlFor="log-batch" className="block text-xs font-bold uppercase tracking-wide text-text-secondary mb-1">
+                    Logging for
+                </label>
+                <select
+                    id="log-batch"
+                    value={logBatchId}
+                    onChange={e => setLogBatchId(e.target.value)}
+                    className="w-full p-3 border border-border rounded-xl bg-card text-text-primary font-medium"
+                >
+                    <option value="">Choose a batch…</option>
+                    {loggableBatches.map(b => (
+                        <option key={String(b.id)} value={String(b.id)}>
+                            {b.farm} · {b.name} ({sectorConfig(b.sector)?.label || b.sector})
+                        </option>
+                    ))}
+                </select>
+                {!logBatch && (
+                    <p className="text-sm text-text-secondary mt-3">Choose which batch this log is for to continue.</p>
+                )}
+            </div>
+        );
     };
 
     const renderLogContent = () => {
         if (logSubView === 'new') {
-            return renderLogScreen();
+            return (
+                <>
+                    {renderBatchPicker()}
+                    {renderLogScreen()}
+                </>
+            );
         } else {
             return (
                 <div className="p-4">

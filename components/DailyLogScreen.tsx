@@ -174,7 +174,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
         if (feedKg > 0 && selectedFeedId) {
             const availability = checkAvailability(selectedFeedId, feedKg);
             if (!availability.available) {
-                setFeedError(`Insufficient stock! Only ${availability.currentQty} ${availableFeed.find(f => f.id === selectedFeedId)?.unit || 'units'} of ${availability.itemName} available.`);
+                setFeedError(`Insufficient stock! Only ${availability.currentQty} kg of ${availability.itemName} available.`);
                 return;
             }
         }
@@ -203,7 +203,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
         try {
             // First, deduct from inventory if feed was logged
             if (feedKg > 0 && selectedFeedId) {
-                await recordUsage(selectedFeedId, feedKg, `Daily log - ${date}`);
+                await recordUsage(selectedFeedId, feedKg, `Daily log - ${date}`, { inBaseUnits: true });
             }
 
             await dailyLogsService.create({
@@ -244,7 +244,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
             if (error.message?.includes('Insufficient stock')) {
                 setFeedError(error.message);
             } else {
-                alert('Failed to save log. Please try again.');
+                alert(`Failed to save log: ${error?.message || 'unknown error'}. Please try again.`);
             }
         } finally {
             setIsSaving(false);

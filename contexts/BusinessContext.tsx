@@ -61,7 +61,7 @@ interface BusinessContextType {
     deleteInventoryItem: (itemId: string) => Promise<void>;
     updateInventoryItem: (itemId: string, updates: Partial<InventoryItem>) => Promise<void>;
     // New inventory usage functions
-    recordUsage: (itemId: string, quantity: number, notes?: string) => Promise<void>;
+    recordUsage: (itemId: string, quantity: number, notes?: string, options?: { inBaseUnits?: boolean }) => Promise<void>;
     recordProduction: (farmId: string, itemName: string, category: InventoryCategory, quantity: number, unit: string, notes?: string) => Promise<void>;
     getAvailableFeed: () => InventoryItem[];
     getAvailableMedication: () => InventoryItem[];
@@ -327,12 +327,14 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
     };
 
     // Record usage of inventory item (deduct from stock)
-    const recordUsage = async (itemId: string, quantity: number, notes?: string) => {
+    // `quantity` is in the item's display unit (e.g. bags) unless options.inBaseUnits
+    // is set, in which case it is already in base units (kg), as the daily log enters it.
+    const recordUsage = async (itemId: string, quantity: number, notes?: string, options?: { inBaseUnits?: boolean }) => {
         const item = inventoryItems.find(i => i.id === itemId);
         if (!item) throw new Error('Inventory item not found');
 
-        // Convert quantity to base units if needed
-        const quantityInBaseUnits = convertToBaseUnits(item, quantity);
+        const quantityInBaseUnits = options?.inBaseUnits ? quantity : convertToBaseUnits(item, quantity);
+        const quantityInDisplayUnits = options?.inBaseUnits ? convertToDisplayUnits(item, quantity) : quantity;
 
         if (item.quantity < quantityInBaseUnits) {
             const displayUnit = item.unit.toLowerCase().includes('bag') ? 'bags' : item.unit;
@@ -351,7 +353,7 @@ export const BusinessProvider: React.FC<{ children: ReactNode }> = ({ children }
                 item_id: itemId,
                 transaction_date: new Date().toISOString().split('T')[0],
                 type: 'usage',
-                quantity: quantity, // Display quantity (what user entered)
+                quantity: quantityInDisplayUnits,
                 unit: item.unit,
                 cost: null,
                 supplier: null,
