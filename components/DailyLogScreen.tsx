@@ -215,20 +215,27 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                 created_by: user.id,
             });
 
-            // Record each egg category in inventory
+            // Record each egg category in inventory. The log is already saved at this
+            // point, so a failure here must not look like a failed log (a retry would
+            // save the log twice).
             if (grandTotalEggs > 0) {
-                for (const [category, data] of Object.entries(eggData)) {
-                    const counts = data as { crates: number; eggs: number; subTotal: number };
-                    if (counts.subTotal > 0) {
-                        await recordProduction(
-                            String(farm.id),
-                            `${category} Eggs`,
-                            'Product',
-                            counts.subTotal,
-                            'eggs',
-                            `Daily production - ${date}`
-                        );
+                try {
+                    for (const [category, data] of Object.entries(eggData)) {
+                        const counts = data as { crates: number; eggs: number; subTotal: number };
+                        if (counts.subTotal > 0) {
+                            await recordProduction(
+                                String(farm.id),
+                                `${category} Eggs`,
+                                'Product',
+                                counts.subTotal,
+                                'eggs',
+                                `Daily production - ${date}`
+                            );
+                        }
                     }
+                } catch (inventoryError: any) {
+                    console.error('Error adding eggs to inventory:', inventoryError);
+                    alert(`Your log was saved, but the eggs could not be added to inventory: ${inventoryError?.message || 'unknown error'}`);
                 }
             }
 
