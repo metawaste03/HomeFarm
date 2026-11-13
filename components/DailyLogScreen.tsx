@@ -1,6 +1,6 @@
 
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { EggIcon, FeedBagIcon, MortalityIcon, CalendarIcon, CheckCircleIcon, PlusIcon, MinusIcon, StethoscopeIcon, NotepadIcon, WarningIcon } from './icons';
 import InputCard from './InputCard';
 import { dailyLogsService } from '../services/database';
@@ -32,6 +32,8 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
     const { getAvailableFeed, checkAvailability, recordUsage, recordProduction } = useBusiness();
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [isSaving, setIsSaving] = useState(false);
+    // Blocks a second save from a double tap before the first has finished
+    const savingRef = useRef(false);
 
     // Egg Production State ('Crate-First' Logic)
     const [eggCategories, setEggCategories] = useState<string[]>(DEFAULT_CATEGORIES);
@@ -159,6 +161,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
     }, []);
 
     const handleSave = async () => {
+        if (savingRef.current) return;
         if (!user || !farm) {
             alert('Please select a farm before saving.');
             return;
@@ -179,6 +182,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
             }
         }
 
+        savingRef.current = true;
         setIsSaving(true);
         setFeedError(null);
 
@@ -254,6 +258,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                 alert(`Failed to save log: ${error?.message || 'unknown error'}. Please try again.`);
             }
         } finally {
+            savingRef.current = false;
             setIsSaving(false);
         }
     };
@@ -513,7 +518,7 @@ const DailyLogScreen: React.FC<DailyLogScreenProps> = ({ onNavigate, farm, batch
                         <div className="max-w-md mx-auto lg:max-w-2xl space-y-2">
                             <button
                                 onClick={handleSave}
-                                disabled={showConfirmation}
+                                disabled={isSaving || showConfirmation}
                                 className={`w-full text-white font-bold py-4 px-4 rounded-2xl text-lg transition-all duration-300 ease-in-out transform flex items-center justify-center ${showConfirmation
                                     ? 'bg-green-500'
                                     : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95'

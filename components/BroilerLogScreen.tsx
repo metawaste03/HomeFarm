@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { FeedBagIcon, MortalityIcon, NotepadIcon, CalendarIcon, CheckCircleIcon, PlusIcon, MinusIcon, ScaleIcon, StethoscopeIcon } from './icons';
 import InputCard from './InputCard';
 import { dailyLogsService } from '../services/database';
@@ -32,6 +32,8 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isHealthModalOpen, setIsHealthModalOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    // Blocks a second save from a double tap before the first has finished
+    const savingRef = useRef(false);
 
     const averageWeightInGrams = useMemo(() => {
         if (sampledBirds > 0 && totalWeight > 0) {
@@ -65,6 +67,7 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
     };
 
     const handleSave = async () => {
+        if (savingRef.current) return;
         if (!user || !farm) {
             alert('Please select a farm before saving.');
             return;
@@ -79,6 +82,7 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
             }
         }
 
+        savingRef.current = true;
         setIsSaving(true);
         setFeedError(null);
 
@@ -119,6 +123,7 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
                 alert(`Failed to save log: ${error?.message || 'unknown error'}. Please try again.`);
             }
         } finally {
+            savingRef.current = false;
             setIsSaving(false);
         }
     };
@@ -254,7 +259,7 @@ const BroilerLogScreen: React.FC<BroilerLogScreenProps> = ({ onNavigate, farm, b
                         <div className="max-w-md mx-auto lg:max-w-2xl space-y-2">
                             <button
                                 onClick={handleSave}
-                                disabled={showConfirmation}
+                                disabled={isSaving || showConfirmation}
                                 className={`w-full text-white font-bold py-4 px-4 rounded-2xl text-lg transition-all duration-300 ease-in-out transform flex items-center justify-center ${showConfirmation
                                     ? 'bg-green-500'
                                     : 'bg-primary hover:bg-primary-600 active:bg-primary-700 active:scale-95'
