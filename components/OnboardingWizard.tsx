@@ -19,8 +19,9 @@ const SECTOR_OPTIONS = ENABLED_SECTORS.map(s => ({ value: s.id, label: s.longLab
 
 const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ onComplete, onSkip }) => {
     // Step state: 1 = Create Farm, 2 = Create Batch, 3 = Celebration
-    const [step, setStep] = useState<1 | 2 | 3>(1);
     const { addFarm, addBatch, farms, refreshData } = useFarm();
+    // A user who already has a farm (but no batch yet) resumes at the batch step
+    const [step, setStep] = useState<1 | 2 | 3>(farms.length > 0 ? 2 : 1);
 
     // --- Step 1: Farm ---
     const [farmName, setFarmName] = useState('');

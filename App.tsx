@@ -47,6 +47,7 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
   const [activeSector, setActiveSector] = useState<Sector>('Layer');
   const [selectedScope, setSelectedScope] = useState("");
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [inOnboarding, setInOnboarding] = useState(false);
 
 
   // Initialize selectedScope if not set and farms exist
@@ -101,11 +102,16 @@ const AppContent: React.FC<{ theme: Theme; setTheme: (t: Theme) => void }> = ({ 
     }
   };
 
-  // ONBOARDING GATE: Show wizard after login if user has no farms AND no batches
-  // This is bulletproof: farmLoading=true while fetching, so existing users see a spinner, never the wizard.
-  // Once onboardingComplete is set, we skip even if there's a brief re-render before context updates.
+  // ONBOARDING GATE: Show wizard after login if the user has no farm or no batch.
+  // Once shown, the wizard stays mounted until it completes or is skipped. Otherwise
+  // the data refresh after "create farm" (farmLoading=true) unmounts it and it
+  // restarts at step 1 every time.
   const hasNoFarmOrBatch = farms.length === 0 || batches.length === 0;
-  if (!onboardingComplete && !farmLoading && hasNoFarmOrBatch) {
+  const needsOnboarding = !farmLoading && hasNoFarmOrBatch;
+  useEffect(() => {
+    if (needsOnboarding) setInOnboarding(true);
+  }, [needsOnboarding]);
+  if (!onboardingComplete && (inOnboarding || needsOnboarding)) {
     return (
       <OnboardingWizard 
         onComplete={() => {
